@@ -1,24 +1,16 @@
 <hr>
 <div class="post-nav" style="display: flex; justify-content: space-between; flex-wrap: wrap;">
   {%- if page.previous.url -%}
-  <p style="flex: 1 1 0; width: 45%; padding-right: 0.5em;"></p>>
+  <p style="flex: 1 1 0; width: 45%; padding-right: 0.5em;">
   <a class="post_navi-item nav_prev" href="/nova64{{ page.previous.url }}" title="{{ page.previous.title }}">
     ⇠&nbsp; {{ page.previous.title }}
-  </a>
-  {%- else -%}
-  <a class="post_navi-item nav_prev" href="{{ 'archive.html' | absolute_url }}" title="Blog Archive">
-    <div class="post_navi-arrow">&lt;</div><div class="post_navi-label">Blog Archive</div><div><span>Archive of all previous blog posts</span></div>
   </a>
   </p>
   {%- endif -%}
   {%- if page.next.url -%}
-  <p style="flex: 1 1 0; width: 45%; padding-left: 0.5em; text-align: right"></p>>
+  <p style="flex: 1 1 0; width: 45%; padding-left: 0.5em; text-align: right">
   <a class="post_navi-item nav_next" href="/nova64{{ page.next.url }}" title="{{ page.next.title }}">
     {{ page.next.title }} &nbsp;⇢
-  </a>
-  {%- else -%}
-  <a class="post_navi-item nav_next" href="{{ 'archive.html' | absolute_url }}" title="Blog Archive">
-    <div class="post_navi-arrow">&gt;</div><div class="post_navi-label">Blog Archive</div><div><span>Archive of all previous blog posts</span></div>
   </a>
   </p>
   {%- endif -%}
