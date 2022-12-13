@@ -3,7 +3,7 @@
   
     <div class="wrapper">
   
-      <h2 class="footer-heading">{{ site.title}} </h2>
+      <h2 class="footer-heading">{{ site.title }}</h2>
 
       <div class="footer-col-wrapper">
         <div class="footer-col footer-col-1">
@@ -21,7 +21,12 @@
 
         <div class="footer-col footer-col-2">
 	        <div class="social-links">
-            {%- include social.html -%}
+            <ul class="social-media-list">
+              <li><a href="https://github.com/githubuser"><svg class="svg-icon"><use xlink:href="/nova64/assets/minima-social-icons.svg#github"></use></svg> <span class="username">githubuser</span></a></li>
+              <li><a href="https://www.linkedin.com/in/linkedinuser"><svg class="svg-icon"><use xlink:href="/nova64/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">linkedinuser</span></a></li>
+              <li><a href="https://www.twitter.com/twitteruser"><svg class="svg-icon"><use xlink:href="/nova64/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">twitteruser</span></a></li>
+              <li><a href="/nova64/feed.xml"><svg class="svg-icon"><use xlink:href="/nova64/assets/minima-social-icons.svg#rss"></use></svg> <span>rss</span></a></li>
+            </ul>
           </div>
         </div>
 
