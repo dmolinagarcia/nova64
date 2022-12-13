@@ -1,10 +1,12 @@
 title: "noVa64"
-author: "Dani Molina"
+author: 
+   name: "Dani Molina"
+   email: "nova64@mail.com"
+
 description: "noVa64 computer development diary." # This will show up in places like twitter, linkedin, etc, if you share your sites url as a post.
 
 # Email / Social media user names used by the minima theme:
 # All of these are optional and can be removed or commented out
-email: "nova64@mail.com"
 twitter_username: "nnn"
 github_username: "nnn"
 linkedin_username: "nnn"
