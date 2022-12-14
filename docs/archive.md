@@ -14,6 +14,9 @@ title: Blog Archive
   </ul>
 {% endfor %}
 
-{% for category in site.categories %}
-    <li><a href="{{category.url}}"><strong>{{category|first}}</strong></a></li>
-{% endfor %}
+<ul>
+  {% for category in site.categories %}
+    {% capture category_name %}{{ category | first }}{% endcapture %}
+      <li><a href="{{site.baseurl}}/{{category_name}}">{{category_name}}</a></li>
+  {% endfor %}
+</ul>
