@@ -56,22 +56,24 @@ Hopefully, at some point. That's all I can say.
 - External monitor an option (mirror, or extend if possible)
 - VGA or HDMI for external monitor
 - Brightness controlled via software
+- Still not sure about dedicated video RAM
 
 ### Audio
 
 - Stereo audio and built-in speakers
+- FPGA is allowed here too
 - External audio an option (Through audio jack, or, if possible HDMI)
 - Volumen control through software
-
-### Storage
-
-- Dual SD. One acting as internal hd, one acting as eternal storage
 
 ### Peripherals
 
 - USB Support for storage, and HID
 - Internal keyboard and trackpad are USB
 - External ports too
+
+### Storage
+
+- Dual SD. One acting as internal hd, one acting as eternal storage
 
 ### Connectivity
 

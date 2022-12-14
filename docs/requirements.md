@@ -18,11 +18,13 @@ menu: main
 - Learn
 - Have fun
 
-## Form factor
+## Requirements
+
+### Form factor
 
 - Computer should be a laptop, fully portable
 
-## Power
+### Power
 
 - Single and low voltage. 5v is very obsolete. At least 3.3v, maybe even lower
 - Battery powered
@@ -30,13 +32,13 @@ menu: main
 - Battery pack reports to the computer. Charge status, capacity, etc
 - Computer then display this
 
-## CPU
+### CPU
 
 - Based around a 65816. Real CPU, no FPGA here
 - DRAM. Maximum memory at 16MB for the CPU
 - Maybe bigger and faster DRAM, via an FPGA acting as MMU, as ASYNC RAM
 
-## Video
+### Video
 
 - At least 640x400 (Twice a C64). 256 colors
 - FPGA is allowed here
@@ -44,27 +46,29 @@ menu: main
 - External monitor an option (mirror, or extend if possible)
 - VGA or HDMI for external monitor
 - Brightness controlled via software
+- Still not sure about dedicated video RAM
 
-## Audio
+### Audio
 
 - Stereo audio and built-in speakers
+- FPGA is allowed here too
 - External audio an option (Through audio jack, or, if possible HDMI)
 - Volumen control through software
 
-## Storage
-
-- Dual SD. One acting as internal hd, one acting as eternal storage
-
-## Peripherals
+### Peripherals
 
 - USB Support for storage, and HID
 - Internal keyboard and trackpad are USB
 - External ports too
 
-## Connectivity
+### Storage
+
+- Dual SD. One acting as internal hd, one acting as eternal storage
+
+### Connectivity
 
 - Is TCP/IP Possible? Wifi? Ethernet?
 
-## Boot sequence
+### Boot sequence
 
-- Small ROM to handle booting. Then, SO from "INTERNAL" sd is loaded into meemory
+- Small ROM to handle booting. Then, SO from "INTERNAL" sd is loaded into memory
