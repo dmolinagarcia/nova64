@@ -2,6 +2,7 @@
 layout: page
 title: Requirements
 permalink: /requirements
+menu: main
 ---
 
 * Todo con 3.3v

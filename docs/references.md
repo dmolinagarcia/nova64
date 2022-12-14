@@ -2,6 +2,7 @@
 layout: page
 title: References
 permalink: /references
+menu: main
 ---
 
 https://github.com/jekyll/minima
