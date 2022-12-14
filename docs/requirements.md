@@ -53,4 +53,4 @@ menu: main
 
 ## Boot sequence
 
-- Small ROM to handle booting. Then, file from "INTERNAL" sd is loaded into meemory
+- Small ROM to handle booting. Then, SO from "INTERNAL" sd is loaded into meemory
