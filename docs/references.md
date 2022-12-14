@@ -11,7 +11,7 @@ Build a blog under github Pages : https://chadbaldwin.net/2021/03/14/how-to-buil
 
 Adding comments to the site : https://web.archive.org/web/20220509041455/https://utteranc.es/
 
-
+Nova (Digital Desolation) font by : https://www.behance.net/japanyoshi
 
 Colores del logo
 
