@@ -1,5 +1,5 @@
 ---
-categories: CPU
+categories: cpu
 ---
 ## Segunda entrada real
 

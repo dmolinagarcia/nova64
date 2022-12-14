@@ -1,5 +1,5 @@
 ---
-categories: Video
+categories: video
 ---
 
 ## Blog Post Title From First Header
