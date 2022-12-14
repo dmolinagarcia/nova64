@@ -7,7 +7,7 @@ title: Category Video
 
 <div id="archives">
   <div class="archive-group">
-    {% for post in site.categories.Video %}
+    {% for post in site.categories.video %}
        <li>
           <span>{{ post.date | date_to_string }}</span> &nbsp; 
           <a href="{{ post.url }}">{{ post.title }}</a>
