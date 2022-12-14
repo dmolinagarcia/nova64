@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Blog Archive
-permalink: /archive/
+permalink: /archive
 ---
 
 {% for category in site.categories %}

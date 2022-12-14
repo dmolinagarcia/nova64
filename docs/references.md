@@ -1,6 +1,7 @@
 ---
 layout: page
 title: References
+permalink: /references
 ---
 
 https://github.com/jekyll/minima
