@@ -1,5 +1,5 @@
 ---
-categories: CATEGORY-1 CATEGORY-2
+categories: Audio
 ---
 
 ## Primera entrada real
