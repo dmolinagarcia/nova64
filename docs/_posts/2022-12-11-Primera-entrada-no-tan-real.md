@@ -1,5 +1,5 @@
 ---
-tags: tag1 tag2
+categories: CATEGORY-1 CATEGORY-2
 ---
 
 ## Primera entrada real

@@ -1,5 +1,5 @@
 ---
-tags: tag1
+categories: CATEGORY-1
 ---
 
 ## Blog Post Title From First Header
