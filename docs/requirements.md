@@ -1,3 +1,9 @@
+---
+layout: page
+title: Requirements
+permalink: /requirements
+---
+
 * Todo con 3.3v
 * Operado por bateria
 * La bateria debe ofrecer un puerto de información. Estado, carga, etc
