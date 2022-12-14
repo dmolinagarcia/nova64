@@ -10,8 +10,8 @@ title: Category CPU
     {% for post in site.categories.CPU %}
        <li>
           <span>{{ post.date | date_to_string }}</span> &nbsp; 
-          <a href="{{ post.url }}">{{ post.title }}</a><
-       /li>
+          <a href="{{ post.url }}">{{ post.title }}</a>
+       </li>
     {% endfor %}
   </div>
 </div>
