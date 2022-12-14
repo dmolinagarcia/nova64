@@ -5,6 +5,19 @@ permalink: /requirements
 menu: main
 ---
 
+## Principles
+
+- Not here for the money. This is not meant to be a commercial product
+- Hence, no restrictions on parts (Used, obsolete, questionable sources)
+- Learn from scratch. No off-the-shelf solution
+- Inspiration on others is encouraged though
+- Give credit to all sources of information
+- Everything will be open sourced, under the GNU v3 License
+- Log all the steps, right here on this blog
+- No deadline. 
+- Learn
+- Have fun
+
 ## Form factor
 
 - Computer should be a laptop, fully portable
@@ -23,19 +36,20 @@ menu: main
 - DRAM. Maximum memory at 16MB for the CPU
 - Maybe bigger and faster DRAM, via an FPGA acting as MMU, as ASYNC RAM
 
-## VIDEO
+## Video
 
 - At least 640x400 (Twice a C64). 256 colors
 - FPGA is allowed here
 - Built in Laptop Screen
 - External monitor an option (mirror, or extend if possible)
 - VGA or HDMI for external monitor
+- Brightness controlled via software
 
-## AUDIO
+## Audio
 
-- Stereo audio and builting speakers
-- External audio an option
-- Volumen control trhough software
+- Stereo audio and built-in speakers
+- External audio an option (Through audio jack, or, if possible HDMI)
+- Volumen control through software
 
 ## Storage
 
