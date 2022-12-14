@@ -13,7 +13,6 @@ Adding comments to the site : https://web.archive.org/web/20220509041455/https:/
 
 Nova (Digital Desolation) font by : https://www.behance.net/japanyoshi
 
-Colores del logo
-
-Azul: #2E3092
-Rojo: #ec1920
+Logo colors 
+- Blue: #2E3092
+- Red: #ec1920
