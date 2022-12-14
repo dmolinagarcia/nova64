@@ -5,8 +5,13 @@ permalink: /references
 menu: main
 ---
 
-https://github.com/jekyll/minima
-https://chadbaldwin.net/2021/03/14/how-to-build-a-sql-blog.html
+Default theme for this site : https://github.com/jekyll/minima
+
+Build a blog under github Pages : https://chadbaldwin.net/2021/03/14/how-to-build-a-sql-blog.html
+
+Adding comments to the site : https://web.archive.org/web/20220509041455/https://utteranc.es/
+
+
 
 Colores del logo
 
