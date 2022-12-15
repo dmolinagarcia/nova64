@@ -15,6 +15,7 @@ Nova (Digital Desolation) font by : https://www.behance.net/japanyoshi
 
 Syntax highlight for the blog: https://prismjs.com/
 
+forum at 6502.org : http://forum.6502.org/viewtopic.php?f=4&t=7434
 
 Logo colors 
 - Blue: #2E3092
