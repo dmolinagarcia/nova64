@@ -39,16 +39,14 @@ ForEach ($thing in $things) {
 
 #### Some Assembler
 
-```
+<pre><code class="language-css">p { color: red }
 LDA #$FF
 STA $8000           ; Is this a comment?
                     // Or is this a comment?
 RTS
-```                    
+LDA #$FF
+STA $8000           ; Is this a comment?
+                    // Or is this a comment?
+RTS
+</code></pre>
 
-```
-LDA #$FF
-STA $8000           ; Is this a comment?
-                    // Or is this a comment?
-RTS
-```  
