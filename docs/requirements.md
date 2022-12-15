@@ -36,7 +36,13 @@ menu: main
 
 - Based around a 65816. Real CPU, no FPGA here
 - DRAM. Maximum memory at 16MB for the CPU
-- Maybe bigger and faster DRAM, via an FPGA acting as MMU, as ASYNC RAM
+
+### Chipset
+
+- Set of sustaining chips
+- FPGA acting as MMU, handling DRAM, with potential for bigger RAM
+- IO/TIMER. Could use a 6526 in FPGA maybe. TIMERs need to be driven by independent clock
+- RTC. Used to keep time. Can act as TIMERS too for interrupts
 
 ### Video
 
