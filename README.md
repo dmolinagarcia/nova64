@@ -45,7 +45,7 @@ Hopefully, at some point. That's all I can say.
 ### CPU
 
 - Based around a 65816. Real CPU, no FPGA here
-- DRAM. Maximum memory at 16MB for the CPU
+- DRAM. Maximum memory at 16MB for the CPU 
 
 ### Chipset
 
