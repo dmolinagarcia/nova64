@@ -36,3 +36,19 @@ ForEach ($thing in $things) {
     Write-Output "It highlights it using the GitHub style"
 }
 ```
+
+#### Some Assembler
+
+```
+LDA #$FF
+STA $8000           ; Is this a comment?
+                    // Or is this a comment?
+RTS
+```                    
+
+```
+LDA #$FF
+STA $8000           ; Is this a comment?
+                    // Or is this a comment?
+RTS
+```  
