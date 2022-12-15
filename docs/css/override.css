@@ -43,7 +43,3 @@ hr {
   font-size: 2.5em;
   opacity: 0.3;
 }
-
-.wrapper {
-  max-width: calc(1000px - (30px * 2));
-}
