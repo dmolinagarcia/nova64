@@ -10,7 +10,7 @@ title: Category Video
     {% for post in site.categories.video %}
        <li>
           <span>{{ post.date | date_to_string }}</span> &nbsp; 
-          <a href="{{ post.url }}">{{ post.title }}</a>
+          <a href="/nova64{{ post.url }}">{{ post.title }}</a>
        </li>
     {% endfor %}
   </div>
