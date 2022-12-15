@@ -13,6 +13,9 @@ Adding comments to the site : https://web.archive.org/web/20220509041455/https:/
 
 Nova (Digital Desolation) font by : https://www.behance.net/japanyoshi
 
+Syntax highlight for the blog: https://prismjs.com/
+
+
 Logo colors 
 - Blue: #2E3092
 - Red: #ec1920
