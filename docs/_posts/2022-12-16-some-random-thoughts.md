@@ -23,7 +23,7 @@ Address Bus is 16 bit, and data is 8bit. This is the 65816 bus. MMU demultiplexe
 
 Depending on the speed of the DRAM, it may not be possible to execute a read or write within a single CPU cycle. If this is the case, I need to provide some short of cache. Maybe a smaller SRAM outside of the MMU, or even inside. The GOWIN also has some BSRAM or PSRAM. Maybe I can turn this into a cache, fetching pages from DRAM?
 
-´´´
+```
             CPU                             MMU              MAIN DRAM
     ┌─────────────────┐             ┌─────────────────┐     ┌─────────┐
     │                 │Addr + Data  │                 │     │         │
@@ -43,7 +43,7 @@ Depending on the speed of the DRAM, it may not be possible to execute a read or 
                                     │       └─────┘   │    
                                     └─────────────────┘    
                                             VIDEO
-´´´
+```
 
 
 
