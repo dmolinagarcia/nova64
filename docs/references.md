@@ -17,6 +17,10 @@ Syntax highlight for the blog: https://prismjs.com/
 
 forum at 6502.org : http://forum.6502.org/viewtopic.php?f=4&t=7434
 
+Andre and Bil Herd on DRAM : http://www.6502.org/users/andre/icaphw/design.html
+
+Andre microPet : https://github.com/fachat/MicroPET
+
 Logo colors 
 - Blue: #2E3092
 - Red: #ec1920
