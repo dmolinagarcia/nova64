@@ -4,6 +4,8 @@ categories: memory
 
 ## Memory architecture. Cache and DRAM
 
+Memory choice? Sram? dram? psram?
+
 DRAM, SRAM
 
 A23-A10 es el identificador de página. Esto se almacena en una tabl de cache pagees
@@ -34,6 +36,8 @@ On System start
 Cargamos con esto las primeras 64 paginas en cache
  A23-A10 es el identificador de pagina
  A9-A0 son los 1024 bytes de la página
+
+always on posedge PHI2
 
 On read
  - once address is latched
