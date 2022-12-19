@@ -19,3 +19,7 @@ Then, deep dive into each of the different blocks. They will probably be
 During the deep dive phase, each of the componentes will be try and tested, with probably different prototypes build along the way. 
 
 I've been using for some time the Github Projects functionality and I find it very useful. As I identify things to solve, they will find a place in there.
+
+
+steps
+    crear sch para CPU + MMU + SRAM + PSRAM + VIDEO
