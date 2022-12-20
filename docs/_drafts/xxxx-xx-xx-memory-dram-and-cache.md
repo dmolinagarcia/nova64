@@ -144,3 +144,21 @@ for (page = 0 to 63) {
                         |             A[15:0]          |                    +---------->      |
                         +------------------------------+                    |          |      |
                                                        +--------------------+          +------+
+
+
+
+Helium es una state machine
+
+0 PHI2=0
+1 WAIT
+2 LATCH BANK
+3 WAIT
+4 PHI2=1
+5 LATCH ADDR
+6 IF CACHE enble RAM
+7 NOT CACHE enter recache
+  -
+  -
+  -
+  -
+
