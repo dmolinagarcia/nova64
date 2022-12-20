@@ -36,6 +36,7 @@ menu: main
 
 - Based around a 65816. Real CPU, no FPGA here
 - DRAM. Maximum memory at 16MB for the CPU
+- SRAM cache for the main DRAM
 
 ### Chipset
 
