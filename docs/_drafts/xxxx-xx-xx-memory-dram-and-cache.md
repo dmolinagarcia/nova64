@@ -96,7 +96,7 @@ wire [0:63] cacheHit;
 assign cacheHit[0] = cachePages[0] == A[23:10];
 ...
 
-    assign extAddr = encoder(cachehit)
+    assign extAddr = cachepages[encoder(cachehit)]
 
 
 
