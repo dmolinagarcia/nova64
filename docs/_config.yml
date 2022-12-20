@@ -23,8 +23,8 @@ show_excerpts: "yes"
 ######### Nothing below needs to be changed (unless you know what you're doing) #########
 #########################################################################################
 theme: "minima"
-baseurl: "nova64"
-url: "https://dmolinagarcia.github.io/nova64"
+url: https://dmolinagarcia.github.io
+baseurl: nova64
 rss: rss
 
 kramdown:
