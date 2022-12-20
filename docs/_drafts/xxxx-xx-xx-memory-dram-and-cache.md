@@ -96,9 +96,8 @@ wire [0:63] cacheHit;
 assign cacheHit[0] = cachePages[0] == A[23:10];
 ...
 
-for (page = 0 to 63) {
-    if cacheHit[page] assign extAddr = page
-}
+    assign extAddr = encoder(cachehit)
+
 
 
       CPU                                               HELIUM (NorthBridge)             PSRAM1            PSRAM2
