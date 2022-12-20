@@ -24,6 +24,7 @@ show_excerpts: "yes"
 #########################################################################################
 theme: "minima"
 baseurl: "nova64"
+url: "https://dmolinagarcia.github.io/nova64"
 rss: rss
 
 kramdown:
