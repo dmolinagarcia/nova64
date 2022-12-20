@@ -35,5 +35,5 @@
 
 <pre>
 safeurl : {{ safeurl }}
-fullurl : {{ site.url | "/" | site.baseurl | page.url }}
+fullurl : {{ site.url }}"/"{{ site.baseurl }}{{ page.url }}
 </pre>
