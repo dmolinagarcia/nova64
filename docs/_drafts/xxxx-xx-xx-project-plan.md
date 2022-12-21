@@ -1,0 +1,32 @@
+
+- High speed digital design
+- The art of electronics
+- CPu 65816 - basics
+  - NOP TEST?
+  - Prototype board
+    - FPGA
+        - Start from FPGA/ROM and SRAM
+        - Simple Serial - https://nandland.com/uart-serial-port-module/
+        - Clock strecthing
+        - SPI - all peripherals can be SPI?
+            - Screen controller (brigthness)
+            - Battery management pack
+            - USB - HID
+            - USB - Storage
+            - RTC
+            - Boot ROM
+            - Network  
+        - Fpga + DRAM (PSRAM?)
+            - Sin SRAM/CACHE
+        - FPGA - cache algorithm
+            - Enable CACHE
+        - Video generation
+            - Test with no CPU
+            - Text mode with no CPU
+            - Graphics with no CPU
+            - Add CPU
+            - Text mode with CPU
+            - Graphics
+            - Isolate video RAM. Implement DMA
+        - FPGA - Audio Generation
+
