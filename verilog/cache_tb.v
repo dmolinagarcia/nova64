@@ -16,8 +16,9 @@ module test;
   always #1 fpga = !fpga;
 
   wire phi2;
+  reg  [15:0] a = 16'h0000;
 
-  cache cache1 ( , , phi2, fpga);           
+  cache cache1 ( a, , phi2, fpga);           
 
 endmodule // test
 

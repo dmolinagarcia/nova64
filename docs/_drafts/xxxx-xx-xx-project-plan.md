@@ -5,6 +5,8 @@
   - NOP TEST?
   - Prototype board
     - FPGA
+        - Boot sequence. Capture BA, A, D
+        - NOP TEST with FPGA only
         - Start from FPGA/ROM and SRAM
         - Simple Serial - https://nandland.com/uart-serial-port-module/
         - Clock strecthing

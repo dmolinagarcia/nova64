@@ -8,6 +8,27 @@ module cache (
 reg [3:0]   mmuState     = 4'b0000;
 reg [3:0]   mmuStatePrev = 4'b0000;
 
+// Cache table
+reg [13:0]  cachePages   [3:0];
+
+initial begin
+
+   for (int i=0; i<=4; i++) begin
+      cachePages[i] = 14'b00000000000000 + i;
+   end
+
+end
+
+wire [7:0] cachePages0 = cachePages[0];
+wire [7:0] cachePages1 = cachePages[1];
+wire [7:0] cachePages2 = cachePages[2];
+wire [7:0] cachePages3 = cachePages[3];
+
+wire [3:0] cachePagesHit = { cachePages[3] == a[13:0], 
+                             cachePages[2] == a[13:0],
+                             cachePages[1] == a[13:0],
+                             cachePages[0] == a[13:0]};
+
 assign phi2 = (mmuState < 4'b0101) ? 1'b0 : 1'b1;
 
 always @(posedge fpgaClk) begin
@@ -26,8 +47,7 @@ always @(posedge fpgaClk) begin
                 4'b1001 : mmuState <= 4'b0000;
             endcase
         end
-
-end
+    end
 
 
 endmodule

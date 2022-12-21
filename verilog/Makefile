@@ -1,7 +1,7 @@
 simu: simulate clean
 
 simulate:
-	iverilog -o cache *.v
+	iverilog -g2012 -o cache *.v
 	vvp cache
 	gtkwave /tmp/cache.vcd
 
