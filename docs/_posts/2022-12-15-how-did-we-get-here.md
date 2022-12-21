@@ -4,9 +4,7 @@ categories: general
 
 ## How did we get here?
 
-And also, who am i? And what was I thinking?
-
-I suppose those are very valid questions. I'm a child of the 80's. I grew up with, among many other things, an 8-bit computer. I enjoyed that machine a lot. Played games, did homework, and, at some point, learn to program in BASIC and then in ML. Around 4 decades later, I felt the need to own a Commodore computer again. And with that... a new interest was born.
+And also, who am i? And what was I thinking? I suppose those are very valid questions. I'm a child of the 80's. I grew up with, among many other things, an 8-bit computer. I enjoyed that machine a lot. Played games, did homework, and, at some point, learn to program in BASIC and then in ML. Around 4 decades later, I felt the need to own a Commodore computer again. And with that... a new interest was born.
 
 For the last 4 years, I've been involved on a [project to recreate the MOS6526](https://github.com/dmolinagarcia/74HCT6526), used in many Commodore computers and disk drives during the 80's. One key tool for this project has been a [custom 6502 computer](https://github.com/dmolinagarcia/SBC6526) to test and debug my design.
 
