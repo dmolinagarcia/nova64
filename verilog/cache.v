@@ -29,6 +29,14 @@ wire [3:0] cachePagesHit = { cachePages[3] == a[13:0],
                              cachePages[1] == a[13:0],
                              cachePages[0] == a[13:0]};
 
+/*
+wire [5:0] pageHit = encoder(cachePagesHit);
+   esto me dará en binario la pagina qe me ha atinado
+wire addressInCache = cachePages [pageHit];
+*/
+
+
+
 assign phi2 = (mmuState < 4'b0101) ? 1'b0 : 1'b1;
 
 always @(posedge fpgaClk) begin
