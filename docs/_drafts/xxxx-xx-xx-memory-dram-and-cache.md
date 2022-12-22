@@ -161,3 +161,39 @@ Helium es una state machine
   -
   -
 back to 0
+
+
+
+
+
+
+
+The more I think about it, the more clear is seems that the MMU will be the core of the nervous system of the noVa64. To further complicate my life, and following fachat idea of adding some SRAM to the system but with a twist. I've added the last of the requirements to the list.
+
+The noVa64 will have 16MB of DRAM as main memory, plus a still to be determined amount of SRAM to act as cache. Following the principles of the project, this is mostly educational, so complexity is welcome.
+
+The easiest solution would be to have direct page on a 64KB RAM, the rest on DRAM. I'm drafting however a cache method. My first draft currently looks like this: The memory will be divided in 1KB pages. Thus, 64 pages on a 64 KB SRAM. It can easily be adapted for bigger SRAMS, but let's stick to this size for now.
+
+Bits A9-A0 from the address bus connect to same pins of the SRAM.
+Bits A23-A10 are the page identifier.
+Bits A15-A10 for the SRAM come from the MMU. WE, CE, OE also are driven by the MMU.
+
+The MMU will be controled by a state machine that handles the whole timing of the computer.
+
+PHI2 is driven low.
+CPU outputs BA over the databus
+MMU drives PHI2 high, latching BA
+Wait until the address bus is stable, and latch the rest of the Address
+Now that we have the address, check if is the page (A23-A10) exists on the SRAM
+If it does, output the corresponding A10-A15 for the SRAM
+If it doesn't, halt the MMU state machine, get the 1KB page from DRAM, store in the SRAM, and continue
+Drive CE, WE and OE for the SRAM as needed
+PHI2 is driven low, CE, WE and OE are deasserted, and the cycle begins
+
+Sure, implemeting the cache algorithm is going to be fun. I've just starting toying with verilog!
+
+In order to reduce pin count, and facilitate the PCB design, I will give PSRAM a try. With a handful of lines, I can have 16MB on 2 ICs. No routing nightmares, and, as this may very well be in the 100MHz speed.... I can have a very tightly packed PCB. I'm prepared to enter some very unknown realm here.
+
+For this idea to be feasible, with a nice CPU clock speed, the MMU itself will need to run at fairly high speed. Probably no less that 4 times the CPU (14Mhz for the CPU, 56Mhz for the FPGA) and even faster if I want to get the max performance out of the DRAM. By using PSRAM I avoid a considerable amount of work at all levels, while maintaining a fairly complex and powerful design.
+
+Finally, as the MMU will be, as I said, the core of the noVa64, I'm giving it a proper name now. Following the stellar theme, I'll use elements created in stars for the components. So, Helium it is.
