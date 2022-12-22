@@ -15,7 +15,6 @@ module test;
 
 
 /* FPGA CLOCK */
-  // Required for the 6502. At 10x PHI2, already fails
   reg fpga=1;
   always #1 fpga = !fpga;
 
@@ -23,6 +22,7 @@ module test;
   reg  [15:0] a = 16'h0000;
 
   always @(posedge phi2) a <= a + 1'b1;
+    // Simulated address... I need a better CPU emulator here
 
   cache cache1 ( a, , phi2, fpga);           
 
