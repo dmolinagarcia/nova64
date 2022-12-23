@@ -80,32 +80,35 @@ A la SRAM van directos los datos, A9-A10. A15-A10 vienen de la MMU
 module cache (
     input   [15:0]  a,
     input   [ 7:0]  d,
-    output          phi2,
-    input           fpgaClk
+    output  reg     phi2,
+    input           fpgaClk,
+    output  [ 5:0]  sram_addr
 );
 
-reg [3:0]   mmuState     = 4'b0000;
+reg [ 3:0]   mmuState     = 4'b0000;
+reg [23:0]   Addr         = 24'h000000;
 
 // Cache table
 reg [13:0]  cachePages   [3:0];
 
 initial begin
    for (int i=0; i<=4; i++) begin
-      cachePages[i] = 14'b00000000000010 + i;
+      cachePages[i] = 14'b00000000000000 + i;
    end
+   phi2 <= 1'b0;
 end
 
-wire [3:0] cachePagesHit = { cachePages[3] == a[13:0], 
-                             cachePages[2] == a[13:0],
-                             cachePages[1] == a[13:0],
-                             cachePages[0] == a[13:0]};
+wire [3:0] cachePagesHit = { cachePages[3] == Addr[23:10], 
+                             cachePages[2] == Addr[23:10], 
+                             cachePages[1] == Addr[23:10], 
+                             cachePages[0] == Addr[23:10]
+                           };
 
 wire       cacheHit = !(cachePagesHit == 0);
 
 reg [1:0] pageHit;
-wire [5:0] addressInCache;
 
-assign addressInCache = cacheHit ? pageHit : 6'bz;
+assign sram_addr = cacheHit ? pageHit : 6'bz;
 
 always @* begin
     case (cachePagesHit)
@@ -116,28 +119,46 @@ always @* begin
     endcase
 end
 
-assign phi2 = (mmuState < 4'b0101) ? 1'b0 : 1'b1;
+
+
+
 
 always @(posedge fpgaClk) begin
         begin
-            mmuStatePrev <= mmuState;
             case (mmuState)
-                4'b0000 : mmuState <= 4'b0001;
+                4'b0000 : mmuState <= 4'b0001;                                  
                 4'b0001 : mmuState <= 4'b0010;
-                4'b0010 : mmuState <= 4'b0011;
-                4'b0011 : mmuState <= 4'b0100;
-                4'b0100 : mmuState <= 4'b0101;
-                4'b0101 : mmuState <= 4'b0110;
-                4'b0110 : mmuState <= 4'b0111;
-                4'b0111 : mmuState <= 4'b1000;
-                4'b1000 : mmuState <= 4'b1001;
-                4'b1001 : mmuState <= 4'b0000;
+                4'b0010 : mmuState <= 4'b0101;
+                4'b0101 : begin 
+                    mmuState    <= 4'b0110;                                     // PHI2 HIGH    
+                    Addr[23:16] <= d;                                           // Latch BA from DB
+                    phi2        <= 1'b1;
+                end           
+                4'b0110 : mmuState <= 4'b0111;                                  // NOP. Wait for Addr
+                4'b0111 : begin
+                    mmuState   <= 4'b1000;                                  
+                    Addr[15:0] <= a;                                             // Latch A
+                end
+                4'b1000 : if ( cacheHit ) begin
+                             mmuState <= 4'b1001;                                // Cache Hit. Execute
+                          end else begin
+                             mmuState <= 4'b1010;                                // CACHE REFRESH
+                          end
+                4'b1001 : begin
+                    mmuState <= 4'b0000;                                          // Restart cycle
+                    phi2 <= 1'b0;
+                end
+                4'b1010 : mmuState <= 4'b1011;                                  // CACHE REfresh cycle 1
+                4'b1011 : mmuState <= 4'b1100;                                  // CACHE REfresh cycle 1
+                4'b1100 : mmuState <= 4'b1101;                                  // CACHE REfresh cycle 1
+                4'b1101 : mmuState <= 4'b1001;                                  // Cache Refreshed, Resume.
             endcase
         end
     end
-```  
+
 
 endmodule
+``` 
 
 
 
@@ -188,22 +209,18 @@ endmodule
 ``` 
 
 
+Helium state machine
 
-Helium es una state machine
+* CycleStart. PHI2 is low. Wait for Address to be stable (tADS or tBAS)
+* NOP. If needed, wait more cycles for Address to be stable
+* AddressLatch. Latch BA and A into ADDR
+* CheckCache. If cacheHit, we have the page into SRAM. sramAddr outputs the page selection for SRAM. If not, jump to CacheRefers
+* OpFromCache. Output OE, WE, CE as needed. Back to CycleStart
 
-0 PHI2=0
-1 WAIT
-2 LATCH BANK
-3 WAIT
-4 PHI2=1
-5 LATCH ADDR
-6 IF CACHE enble RAM
-7 NOT CACHE enter recache
-  -
-  -
-  -
-  -
-back to 0
+
+
+
+
 
 
 
