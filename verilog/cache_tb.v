@@ -24,7 +24,7 @@ module test;
 
   always @(negedge phi2) Addr <= Addr + 24'b001010001010010010010010;
   assign d = phi2 ? 8'bz : Addr[23:16];
-  assign a = phi2 ? Addr [15:0] : 16'bz;
+  assign a = Addr [15:0];
 
   cache cache1 ( a, d , phi2, fpga, );           
 
