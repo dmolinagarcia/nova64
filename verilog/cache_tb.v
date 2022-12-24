@@ -26,7 +26,7 @@ module test;
   assign d = phi2 ? 8'bz : Addr[23:16];
   assign a = Addr [15:0];
 
-  cache cache1 ( a, d , phi2, fpga, );           
+  cache cache1 ( a, d , phi2, fpga, , );           
 
 endmodule // test
 

@@ -3,7 +3,8 @@ module cache (
     input   [ 7:0]  d,
     output          phi2,
     input           fpgaClk,
-    output  [ 5:0]  sram_addr
+    output  [ 5:0]  sram_addr,
+    output          sram_ce
 );
 
 reg  [ 3:0]   mmuState     = 4'b0000;
@@ -17,6 +18,7 @@ initial begin
    for (int i=0; i<=4; i++) begin
       cachePages[i] = 14'b00000000000000 + i;
    end
+
 end
 
 wire [3:0] cachePagesHit = { cachePages[3] == Addr[23:10], 
@@ -29,6 +31,7 @@ wire       cacheHit = !(cachePagesHit == 0) & phi2;
 
 reg [1:0] pageHit;
 assign sram_addr = cacheHit ? pageHit : 6'bz;
+assign sram_ce   = mmuState == 4'b1001;
 
 // Encoder
 always @* begin
@@ -50,10 +53,18 @@ always @(posedge fpgaClk) begin
                     mmuState <= 4'b1000;
                     Addr <= {d, a};
                 end                    
-                4'b1000 : mmuState <= 4'b1001;      // Here we enable SRAM if pageHit
-                                                    // If not, we jump tp page refresh. SRAM will be enbled when doen
-                                                    // And we return to next state
-                4'b1001 : mmuState <= 4'b0000;      // Here we disable SRAM
+                4'b1000 : if ( cacheHit ) begin
+                            mmuState <= 4'b1001;        // Here we enable SRAM if pageHit
+                          end else begin
+                            mmuState <= 4'b1100;        // If not, we jump tp page refresh. SRAM will be enbled when doen
+                          end
+                4'b1001 : mmuState <= 4'b0000;          // Here we disable SRAM
+
+                // Cache Refresh
+                4'b1100 : mmuState <= 4'b1101;
+                4'b1101 : mmuState <= 4'b1110;
+                4'b1110 : mmuState <= 4'b1111;
+                4'b1111 : mmuState <= 4'b1001;          // Return to SRAM 
             endcase
         end
     end
