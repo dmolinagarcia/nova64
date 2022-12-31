@@ -22,7 +22,7 @@ module test;
   wire [15:0] a;
   wire [ 7:0] d;
 
-  always @(negedge phi2) Addr <= Addr + 24'b001010001010010010010010;
+  always @(negedge phi2) Addr <= Addr + 24'b010000000000000000000000;
   assign d = phi2 ? 8'bz : Addr[23:16];
   assign a = Addr [15:0];
 
