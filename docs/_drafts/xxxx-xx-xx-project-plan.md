@@ -1,9 +1,10 @@
 
 - High speed digital design
 - The art of electronics
+
 - CPu 65816 - basics
-  - NOP TEST?
   - Prototype board
+    - I t
     - FPGA
         - Boot sequence. Capture BA, A, D
         - NOP TEST with FPGA only
