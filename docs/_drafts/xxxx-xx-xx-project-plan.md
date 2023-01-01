@@ -4,10 +4,11 @@
 
 - CPu 65816 - basics
   - Prototype board
-    - I t
+    - It needs to have, cpu, sram, mmu, main dra, video, video ram
     - FPGA
+        - Gowin Osciloscope
         - Boot sequence. Capture BA, A, D
-        - NOP TEST with FPGA only
+        - NOP TEST with FPGA only (Feed NOP in DATABUS always)
         - Start from FPGA/ROM and SRAM
         - Simple Serial - https://nandland.com/uart-serial-port-module/
         - Clock strecthing
