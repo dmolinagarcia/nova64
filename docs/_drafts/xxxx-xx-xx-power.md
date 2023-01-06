@@ -32,3 +32,9 @@ http://www.injoinic.com/wwwroot/uploads/files/20200221/277b7d7f99700b3307be2cda1
 Powerbank SOC
 I2c y QC. Admite más de 1 celda????
 
+
+https://github.com/YC-Lammy/IP5328P-powerbank_design
+
+
+
+
