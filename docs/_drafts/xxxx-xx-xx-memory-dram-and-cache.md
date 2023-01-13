@@ -26,7 +26,7 @@ If not... cache??
 
 Table. 64 entries, A23-A10 plus a modtifier flag
 
-On System start
+On System start (load from SD?)
 
 - cacheCounter := 0
    transfer page[cacheCounter] to slot cacheCounter
