@@ -7,7 +7,7 @@
   
 - CPu 65816 - basics
   - Prototype board
-    - It needs to have, cpu, sram, mmu, main dra, video, video ram
+    - It needs to have, cpu, sram, mmu, main dram, video, video dram
     - FPGA
         - Gowin Osciloscope
         - Boot sequence. Capture BA, A, D
@@ -40,9 +40,7 @@
 - Compilador!
   - https://github.com/andrew-jacobs/w65c816sxb-cdemo/blob/master/w65c22.h
   - https://www.westerndesigncenter.com/wdc/tools.php
-
-- SO
-  - Relocatable code?
+  - Relocatable code? Mirar las instrucciones PEr, BRL, BRA. Esto ya existe.
 
 
 
