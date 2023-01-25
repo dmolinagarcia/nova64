@@ -38,3 +38,14 @@ https://github.com/YC-Lammy/IP5328P-powerbank_design
 
 
 
+ip5328P
+Parece interesante
+
+https://www.eevblog.com/forum/projects/injoinic-ip5328-i2c-register-map/
+
+mapa de registros i2c!
+
+Tengo que hacer una placa con el 5328. Carga de una celda, y lectura desde un arduino mismamente. 
+Esta placa irá al puerto USB de carga. Y puede ser la definitiva para el nova
+
+
