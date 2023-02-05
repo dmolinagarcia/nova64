@@ -49,3 +49,29 @@ Tengo que hacer una placa con el 5328. Carga de una celda, y lectura desde un ar
 Esta placa irá al puerto USB de carga. Y puede ser la definitiva para el nova
 
 
+
+
+>>> Power sequence
+
+Hard Reset . Repeats cycle.
+Soft Reset . Jump to vector. 
+
+Can I use the soft button from the IP????
+
+It seems I can
+
+9. Button control:
+Reg_READ2 = 0x77:
+•	bit 3 (read; write 1 = reset) flag button double clicked (=1)
+•	bit 1 (read; write 1 = reset) flag button pressed (=1)
+•	bit 0 (read; write 1 = reset) flag button clicked (=1)
+
+FGA reads 0x77 from time to time via a watchdog. If I keep everything partially powered on...
+
+When OFF
+    any push = power on
+
+When ON
+    click           = soft reset
+    double click    = hard reset
+    pressed         = power off
