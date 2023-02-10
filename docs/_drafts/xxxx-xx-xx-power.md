@@ -75,3 +75,13 @@ When ON
     click           = soft reset
     double click    = hard reset
     pressed         = power off
+
+Power stages has    
+    IP5108 board. with battery ,button, charger, regulators for pcb
+    Input
+        i2c from fpga
+        reset to 
+
+During power off, only power stage and norbridge need power
+https://www.mouser.es/ProductDetail/onsemi/NCV8114ASN180T1G?qs=5aG0NVq1C4yUww71t88ZYw%3D%3D&mgh=1&vip=1&gclid=CjwKCAiA_vKeBhAdEiwAFb_nrelQdB7bG4c2qsudjc-aMqG-thg4oxCiP913Bn5oqT-sX2LtngNQ0RoCu6cQAvD_BwE
+    
