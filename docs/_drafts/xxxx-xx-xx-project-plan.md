@@ -1,10 +1,6 @@
-
-- Lecturas
-  - High speed digital design
-    - impedance matching on pcbs
-    - high speed pcb design - https://www.youtube.com/watch?v=VRJI0X-6yTg
-  - The art of electronics
   
+- FPGA Very very basics
+  - FPGA serial console. 
 - CPu 65816 - basics
   - Prototype board
     - Draft post and publish. 
@@ -46,5 +42,11 @@
   - https://www.westerndesigncenter.com/wdc/tools.php
   - Relocatable code? Mirar las instrucciones PEr, BRL, BRA. Esto ya existe.
 
+
+- Lecturas
+  - High speed digital design
+    - impedance matching on pcbs
+    - high speed pcb design - https://www.youtube.com/watch?v=VRJI0X-6yTg
+  - The art of electronics
 
 
