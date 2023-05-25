@@ -98,6 +98,7 @@ El arudino habilitaria los LDO
 
 https://oshwlab.com/leonidy85/charger-ip5106
 
+```
 int8_t getBatteryLevel()
 {
   Wire.beginTransmission(0x75);
@@ -149,5 +150,5 @@ void loop() {
   M5.Lcd.print(getBatteryLevel());
   M5.Lcd.print("%");
 }
-
+```
     

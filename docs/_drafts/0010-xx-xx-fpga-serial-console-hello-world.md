@@ -4,9 +4,14 @@ categories: hid
 
 Before we can see anything coming out from the noVa64, a very basic IO is needed. As an FPGA will be the nervous system of the computer, and as I have a couple Tang Nano 1k boards lying around, and some cheap FTDI Serial2USB adapters, so I can implement a serial console inside the FPGA and begin some testing with the components I have.
 
-In this website : https://learn.lushaylabs.com/tang-nano-9k-debugging/ someone iplementes exactly this with a Tang nano 9k
+In this website : https://learn.lushaylabs.com/tang-nano-9k-debugging/ someone iplements exactly this with a Tang nano 9k
 
-there, two pins of the FPGA go to pins 29 and 30 in the BL702 which then, moves serial comunitation over its usb port. i need to check if I have this on the 1k.
+https://nandland.com/uart-serial-port-module/
+https://github.com/Hariharan-2711/UART-FIFO
+https://mjseemjdo.com/2021/03/28/the-15-fpga-with-20-000-luts/
+
+
+there, two pins of the FPGA go to pins 29 and 30 in the BL702 which then, moves serial communication over its usb port. i need to check if I have this on the 1k.
 
 Pins 29 and 30 are unconnected but exposed over the pins. on the FPGA 9k, the FPGA pins are not specially marked so seems this is doable. I not sure if the BL702 (Being a microcontroller) on the TANG NANO 1K has the UART enabled, as it could have a different program when compared to the 9k
 
@@ -29,4 +34,9 @@ Una vez la fpga reciba y emita... esto será el puente con dos dispositivos para
 La consola es independiente del VIDEO. Habrá un dispositivo al que pintar que será la consola y se puede usar  como debug. El video es otro tema.
 
 La consola escupirá cosas durante el arranque, por ejemplo.
+
+La consola es un dispositivo "vivo" dentro de la FPGA. Un ILOM?'????
+
+STAGE 0. UART que reciba y emita datos
+STAGE 1. Consola que use la UART y procese cosas 
 
