@@ -18,4 +18,4 @@ cpu fpga
         audio
         network
         6526 or equivalent?
-        rtc? rtc será externo
+        rtc? rtc será externo por consumo

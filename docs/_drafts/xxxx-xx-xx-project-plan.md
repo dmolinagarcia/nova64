@@ -2,7 +2,7 @@
 - FPGA Very very basics
   - FPGA serial console. 
 - CPu 65816 - basics
-  - Prototype board
+  - Prototype board. All pads exposed.
     - Draft post and publish. 
     - It needs to have, cpu, sram, mmu, main dram, video, video dram, plus charging.
     - spi AND i2c exposed in FPGA
