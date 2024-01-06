@@ -152,3 +152,13 @@ void loop() {
 }
 ```
     
+
+
+
+https://www.tindie.com/products/manuat/18650-lipo-battery-manager/
+
+charger, gauge, with i2c exposed and source code.
+
+let's start here
+
+
