@@ -156,6 +156,7 @@ void loop() {
 
 
 https://www.tindie.com/products/manuat/18650-lipo-battery-manager/
+https://d3s5r33r268y59.cloudfront.net/datasheets/22652/2021-02-20-23-09-06/18650_Manager_schematic.pdf
 
 charger, gauge, with i2c exposed and source code.
 
@@ -183,7 +184,7 @@ Con esto tengo, carga, monitor con salida i2c, 5v y 3v3
 
 los reguladores tienen enable input.... para que?
 
-Puedo tener un FF, activado con el boton (set) y que ademas, el boton sea output hacia el PC. hay un input que es apagado (reset al ff)
+Puedo tener un FF, activado con el boton (set) y que ademas, el boton sea output hacia el PC. hay un input que es apagado (reset al ff) -- Descartado
 
 
 inputs del power pack
@@ -196,9 +197,18 @@ outputs del powerpack
   button press
   i2c del fuel gauge
 
+MCU
+  input - button
+  output -  5v enable 
+            3v3 enable
+            button press to computer
+
+
+
 al pulsar el boton, se habilitan los reguladores y se enciende el noVa
 el off tiene que venir desde el nova
 hard power off? long press? como? un RC?
+Puedo usar un MCU de estos de 3 cts????
 
 
 
