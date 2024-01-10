@@ -2,6 +2,10 @@
 categories: power
 ---
 
+## Exploring power delivery
+
+Aqui hablamos del proceso de descubrimiento
+
 Entrada USB-c
 
 >>> Power Delivery

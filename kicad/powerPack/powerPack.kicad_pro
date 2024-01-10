@@ -471,6 +471,14 @@
     [
       "525d3fa8-6036-45c4-9966-b4c0f10cc35f",
       ""
+    ],
+    [
+      "3a351165-d033-46ff-b36b-51febe6bf08c",
+      "powerButton"
+    ],
+    [
+      "5b443d8b-f35f-4c16-9994-29a3e18da275",
+      "powerBattery"
     ]
   ],
   "text_variables": {}
