@@ -20,6 +20,9 @@ Al arrancar el equipo, FPGA carga pequeña ROM en RAM. Esto es la BIOS.
         Test for SD
         Load SO from SD into RAM
         Jump to SO Start
+        basic functions to be used by SO
+            only SO can call bios!
+            print char and so on?
 
     *=$RESET
         :F000
