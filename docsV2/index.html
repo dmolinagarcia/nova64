@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DANI-65816 — Synthesis document · index and outline</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#061E17;color:#F1ECD9;}
+  body{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;font-size:13px;line-height:1.55;padding:26px 14px 60px;}
+  .wrap{max-width:980px;margin:0 auto;}
+  a{color:#7FD8BD;text-decoration:none}
+  a:hover{text-decoration:underline}
+  a:focus-visible{outline:2px solid #7FD8BD;outline-offset:2px}
+
+  .masthead{border:1.6px solid rgba(241,236,217,.75);padding:22px 24px 18px;}
+  .masthead h1{margin:0;font-size:30px;letter-spacing:4px;font-weight:800;}
+  .masthead .sub{margin-top:6px;color:rgba(241,236,217,.75);font-size:12px;letter-spacing:2px;text-transform:uppercase;}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+  .tag{border:1px solid rgba(241,236,217,.5);padding:2px 8px;font-size:10px;letter-spacing:1.5px;color:rgba(241,236,217,.8);}
+  .tag.g{border-color:#D9A93F;color:#D9A93F;}
+  .tag.m{border-color:#7FD8BD;color:#7FD8BD;}
+
+  .idx{margin-top:26px;border:1.3px solid rgba(241,236,217,.55);}
+  .idx .cap{padding:10px 16px;border-bottom:1px solid rgba(241,236,217,.35);font-size:11px;letter-spacing:3px;color:rgba(241,236,217,.6);font-weight:700;}
+  .idx table{width:100%;border-collapse:collapse;}
+  .idx td{padding:7px 16px;border-top:1px solid rgba(241,236,217,.16);font-size:12px;}
+  .idx tr:first-child td{border-top:0}
+  .idx tr:hover td{background:rgba(127,216,189,.06);}
+  .idx .no{color:rgba(241,236,217,.5);width:46px}
+  .idx .de{color:#D9A93F;width:34px;font-weight:700}
+  .idx .fg{color:#7FD8BD;text-align:right;width:120px}
+
+  .hoja{border:1.3px solid rgba(241,236,217,.55);margin-top:26px;padding:16px 20px 20px;}
+  .sechead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:1px solid rgba(241,236,217,.3);padding-bottom:10px;margin-bottom:12px;}
+  .des{background:#0E3A2C;border:1.3px solid #F1ECD9;padding:2px 9px;font-weight:800;font-size:14px;}
+  .sechead h2{margin:0;font-size:16px;letter-spacing:2px;font-weight:800;}
+  .aim{color:rgba(241,236,217,.55);font-size:10px;letter-spacing:2px;text-transform:uppercase;}
+  .sheet{margin-left:auto;color:rgba(241,236,217,.4);font-size:10px;letter-spacing:2px;}
+  .lead{margin:0 0 12px;color:rgba(241,236,217,.85);}
+
+  ol.steps{list-style:none;margin:0;padding:0;}
+  ol.steps li{display:flex;gap:10px;padding:6px 0;border-top:1px dashed rgba(241,236,217,.14);}
+  ol.steps li:first-child{border-top:0}
+  .id{color:#7FD8BD;font-weight:700;min-width:38px;}
+  .itx{flex:1;color:rgba(241,236,217,.88);}
+  .itx .test{display:block;margin-top:3px;color:#D9A93F;font-size:11.5px;}
+  .itx .note{display:block;margin-top:2px;color:rgba(241,236,217,.55);font-size:11.5px;}
+  .pad{width:13px;height:13px;border:1.4px solid #F1ECD9;margin-top:3px;flex:none;background:transparent;}
+  .pad.done{background:#F1ECD9;}
+  .pad.half{background:linear-gradient(90deg,#F1ECD9 50%,transparent 50%);}
+  .pad.optl{border-style:dashed;opacity:.75;}
+  .chip{display:inline-block;border:1px solid #7FD8BD;color:#7FD8BD;font-size:9.5px;letter-spacing:1px;padding:0 5px;margin-left:6px;vertical-align:1px;}
+  .chip.g{border-color:#D9A93F;color:#D9A93F;}
+  code{color:#7FD8BD;background:rgba(127,216,189,.08);padding:0 4px;}
+
+  table.simple{width:100%;border-collapse:collapse;margin-top:4px;}
+  table.simple th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(241,236,217,.55);text-align:left;padding:6px 8px;border-bottom:1px solid rgba(241,236,217,.4);}
+  table.simple td{font-size:12px;color:rgba(241,236,217,.86);padding:6px 8px;border-bottom:1px solid rgba(241,236,217,.14);vertical-align:top;}
+  table.simple td:first-child{color:#F1ECD9;font-weight:700;}
+
+  figure{margin:16px 0 4px;}
+  figure svg{width:100%;height:auto;display:block;}
+  figcaption{margin-top:8px;color:rgba(241,236,217,.55);font-size:11px;letter-spacing:1px;}
+  .legend{color:rgba(241,236,217,.5);font-size:10.5px;margin-top:2px}
+  .legend .m{color:#7FD8BD}.legend .g{color:#D9A93F}
+
+  .hito{border:2px solid #D9A93F;background:rgba(217,169,63,.07);color:#D9A93F;letter-spacing:2px;font-weight:800;padding:8px 14px;margin:12px 0 4px;font-size:12.5px;}
+
+  .cajetin{margin-top:30px;border:1.6px solid rgba(241,236,217,.75);}
+  .cj{display:flex;border-top:1px solid rgba(241,236,217,.35);flex-wrap:wrap;}
+  .cj:first-child{border-top:0}
+  .cj>div{padding:9px 14px;font-size:11px;letter-spacing:1px;color:rgba(241,236,217,.8);}
+  .cj>div+div{border-left:1px solid rgba(241,236,217,.35);flex:1;min-width:220px}
+  .cj .big{font-size:16px;font-weight:800;letter-spacing:3px;color:#F1ECD9;min-width:250px}
+  .cj .gold{color:#D9A93F;font-weight:700}
+
+  svg .blk{fill:#0E3A2C;stroke:#F1ECD9;stroke-width:1.3;}
+  svg .opt{stroke-dasharray:5 4;opacity:.85;}
+  svg .t{fill:#F1ECD9;font-size:13px;font-weight:700;text-anchor:middle;}
+  svg .s{fill:rgba(241,236,217,.72);font-size:10px;text-anchor:middle;}
+  svg .li{fill:rgba(241,236,217,.85);font-size:11px;}
+  svg .li10{fill:rgba(241,236,217,.85);font-size:10px;}
+  svg .eye{fill:rgba(241,236,217,.55);font-size:11px;letter-spacing:3px;font-weight:700;}
+  svg .lbl{fill:#7FD8BD;font-size:9px;text-anchor:middle;}
+  svg .plbl{fill:#D9A93F;font-size:9px;text-anchor:middle;}
+  svg .gtx{fill:#D9A93F;font-size:11px;}
+  svg .htx{fill:#D9A93F;font-size:11px;font-weight:800;letter-spacing:1px;text-anchor:middle;}
+  svg .nlbl{fill:#F1ECD9;font-size:11px;font-weight:700;text-anchor:middle;}
+  svg .pw{stroke:#D9A93F;stroke-width:3;fill:none;}
+  svg .pwd{stroke:#D9A93F;stroke-width:1.6;fill:none;stroke-dasharray:5 4;}
+  svg .dt{stroke:#7FD8BD;stroke-width:2;fill:none;}
+  svg .dtb{stroke:#7FD8BD;stroke-width:5;fill:none;}
+  svg .dts{stroke:#7FD8BD;stroke-width:1.6;fill:none;stroke-dasharray:5 4;}
+  svg .op{stroke:rgba(241,236,217,.6);stroke-width:1.6;fill:none;stroke-dasharray:5 4;}
+  svg text{font-family:inherit}
+
+  @media (max-width:560px){ .masthead h1{font-size:22px;letter-spacing:2px} .sheet{display:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="masthead">
+  <h1>noVa64</h1>
+  <div class="sub">Synthesis document — index and content outline</div>
+  <div class="meta">
+    <span class="tag">W65C816S · 3× iCE40 TQ144 · RP2040</span>
+    <span class="tag">all 3.3V · hand-solderable</span>
+    <span class="tag m">100% open toolchain</span>
+    <span class="tag g">MILESTONE 1 · APPLE II — autonomous boot to prompt</span>
+    <span class="tag g">MILESTONE 2 · AMIGA — multitasking + windowed GUI</span>
+  </div>
+</header>
+
+<nav class="idx" aria-label="Sheet index">
+  <div class="cap">SHEET INDEX</div>
+  <table>
+    <tbody>
+      <tr><td class="no">01</td><td class="de">A</td><td><a href="#a">Project vision and philosophy</a></td><td class="fg">—</td></tr>
+      <tr><td class="no">02</td><td class="de">B</td><td><a href="#b">Global architecture</a></td><td class="fg">Fig. 1</td></tr>
+      <tr><td class="no">03</td><td class="de">C</td><td><a href="#c">Power supply</a></td><td class="fg">Fig. 2</td></tr>
+      <tr><td class="no">04</td><td class="de">D</td><td><a href="#d">RP2040 — embedded controller</a></td><td class="fg">Fig. 3</td></tr>
+      <tr><td class="no">05</td><td class="de">E</td><td><a href="#e">Physical memory structure</a></td><td class="fg">Fig. 4</td></tr>
+      <tr><td class="no">06</td><td class="de">F</td><td><a href="#f">Persistent storage — microSD</a></td><td class="fg">—</td></tr>
+      <tr><td class="no">07</td><td class="de">G</td><td><a href="#g">Peripherals and their location</a></td><td class="fg">table</td></tr>
+      <tr><td class="no">08</td><td class="de">H</td><td><a href="#h">BIOS — what it provides</a></td><td class="fg">—</td></tr>
+      <tr><td class="no">09</td><td class="de">I</td><td><a href="#i">Operating system</a></td><td class="fg">—</td></tr>
+      <tr><td class="no">10</td><td class="de">J</td><td><a href="#j">Virtual memory management</a></td><td class="fg">Fig. 5</td></tr>
+      <tr><td class="no">11</td><td class="de">K</td><td><a href="#k">Process management</a></td><td class="fg">—</td></tr>
+      <tr><td class="no">12</td><td class="de">L</td><td><a href="#l">Programming and toolchain</a></td><td class="fg">—</td></tr>
+      <tr><td class="no">13</td><td class="de">M</td><td><a href="#m">Step-by-step build · E0–E8</a></td><td class="fg">Fig. 6</td></tr>
+      <tr><td class="no">14</td><td class="de">N</td><td><a href="#n">Decision log · open questions</a></td><td class="fg">—</td></tr>
+    </tbody>
+  </table>
+</nav>
+<section class="hoja" id="a">
+  <div class="sechead"><span class="des">A</span><h2>Vision and philosophy</h2><span class="aim">what it is · what for · under what rules</span><span class="sheet">SHEET 01</span></div>
+  <p class="lead">Project framework: what is being built, what finishing it means, and what principles govern every decision.</p>
+  <ol class="steps">
+    <li><span class="id">A.1</span><div class="itx">What it is: an original portable personal computer built around the W65C816S, designed from scratch as a learning exercise in electronics, PCB design, gateware, computer architecture, and OS design.</div></li>
+    <li><span class="id">A.2</span><div class="itx">Inspiration and goals: two milestones define success. <b>Apple II Milestone</b> — the machine boots on its own to a prompt. <b>Amiga Milestone</b> — preemptive multitasking with a windowed GUI.</div></li>
+    <li><span class="id">A.3</span><div class="itx">Non-negotiable principles: every component hand-solderable (TQFP / PLCC / TSOP / 0.5 mm max.), everything at 3.3V, open toolchain (KiCad · Yosys · nextpnr · IceStorm · pico-sdk), incremental progress with an explicit verification criterion per stage, and unpopulated footprints to preserve future expansion.</div></li>
+    <li><span class="id">A.4</span><div class="itx">Scope of this document: an index + outline tying all the pieces together. Detail lives in the sheets: <code>hoja-1-1-alimentacion.md</code> … <code>hoja-1-6-conectores.md</code>, <code>hoja-pines-ice40.md</code>, <code>plan-implementacion-65816.md</code> and the diagram <code>placa-65816.html</code> (REV B).</div></li>
+  </ol>
+</section>
+
+<section class="hoja" id="b">
+  <div class="sechead"><span class="des">B</span><h2>Global architecture</h2><span class="aim">physical CPU + optional softcore · A = northbridge · B = video/audio</span><span class="sheet">SHEET 02</span></div>
+  <p class="lead">An Amiga-style shared bus with four inhabitants: the physical CPU, two always-present FPGAs, and an optional third one. The RP2040 stays off the bus, acting as the board controller.</p>
+  <ol class="steps">
+    <li><span class="id">B.1</span><div class="itx">CPU: W65C816S in a PLCC-44 socket, 24-bit native mode. PHI2 generated by FPGA-A (target 8 MHz at 3.3V). The BE signal lets the CPU release the bus.</div></li>
+    <li><span class="id">B.2</span><div class="itx">FPGA-A — the "northbridge": MMU + TLB + walker, cache, bus arbiter, prioritized interrupt controller, system timer, UART, SPI-SD, I2C, and CPU glue logic. <span class="note">iCE40HX4K/HX8K TQ144 · budget: ~93/107 pins used.</span></div></li>
+    <li><span class="id">B.3</span><div class="itx">FPGA-B — video and audio: taps the bus directly; the CPU writes to it through a 64 KB VRAM window in bank <code>$FE</code>, validated by the MMU's VRAM_SEL signal. Its own 8 MB PSRAM (chip RAM), RGB-TTL output to the panel, bring-up VGA, and PCM5102A over I2S.</div></li>
+    <li><span class="id">B.4</span><div class="itx">FPGA-C — optional, unpopulated at first: a 65816 softcore (P65816 reference) that takes the same bus with BE=0. Allows switching from the real CPU to a softcore without touching the rest.</div></li>
+    <li><span class="id">B.5</span><div class="itx">RP2040 — embedded controller off the bus: configures, boots, and watches over the system (→ sheet D). The board's only mandatory flash: its W25Q16.</div></li>
+    <li><span class="id">B.6</span><div class="itx">Interconnect: a single shared A/D/control bus; no dedicated links between FPGAs (removed). The microSD is shared between the RP2040 and FPGA-A via a '3257 mux (→ sheet F).</div></li>
+  </ol>
+  <figure>
+  <svg viewBox="0 0 960 700" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Global architecture block diagram">
+    <text x="40" y="26" class="eye">EC / BOOT</text>
+    <rect x="40" y="40" width="230" height="110" class="blk"/>
+    <text x="155" y="62" class="t">RP2040 — EC</text>
+    <text x="56" y="84" class="li">USB-C dev · CDC console</text>
+    <text x="56" y="100" class="li">PIO-USB host + HID hub</text>
+    <text x="56" y="116" class="li">W25Q16 · SSPI cfg · batt.</text>
+    <text x="56" y="136" class="li">rail sequencing</text>
+
+    <rect x="300" y="40" width="130" height="60" class="blk"/>
+    <text x="365" y="64" class="t">microSD</text>
+    <text x="365" y="84" class="s">FAT · BIOS / KERNEL</text>
+    <rect x="300" y="116" width="130" height="34" class="blk"/>
+    <text x="365" y="137" class="s">'3257 mux (handoff)</text>
+    <line x1="270" y1="70" x2="300" y2="70" class="dt"/>
+    <line x1="365" y1="100" x2="365" y2="116" class="dt"/>
+    <line x1="365" y1="150" x2="365" y2="210" class="dt"/>
+    <text x="334" y="200" class="lbl">SPI-SD</text>
+
+    <polyline points="270,140 280,140 280,170 460,170 460,210" class="op"/>
+    <text x="452" y="162" class="plbl">CFG SSPI ×3 · CDONE</text>
+    <line x1="140" y1="150" x2="140" y2="210" class="op"/>
+    <text x="172" y="168" class="plbl">RESB</text>
+
+    <rect x="40" y="210" width="170" height="90" class="blk"/>
+    <text x="125" y="232" class="t">W65C816S</text>
+    <text x="125" y="252" class="s">PLCC-44 · 24-bit native</text>
+    <text x="125" y="268" class="s">PHI2 8 MHz · BE</text>
+    <rect x="40" y="320" width="170" height="70" class="blk opt"/>
+    <text x="125" y="344" class="t">FPGA-C (opt.)</text>
+    <text x="125" y="364" class="s">softcore 65816 · BE=0</text>
+
+    <text x="250" y="200" class="lbl">SHARED A/D/CTRL BUS</text>
+    <line x1="250" y1="235" x2="250" y2="470" class="dtb"/>
+    <line x1="210" y1="255" x2="250" y2="255" class="dtb"/>
+    <line x1="210" y1="355" x2="250" y2="355" class="dts"/>
+    <line x1="250" y1="295" x2="290" y2="295" class="dtb"/>
+    <line x1="250" y1="470" x2="290" y2="470" class="dtb"/>
+    <text x="222" y="486" class="lbl">$FE · VRAM_SEL</text>
+
+    <rect x="290" y="210" width="300" height="170" class="blk"/>
+    <text x="440" y="234" class="t">FPGA-A — NORTHBRIDGE</text>
+    <text x="306" y="258" class="li">MMU · TLB ASID · walker HW</text>
+    <text x="306" y="276" class="li">1 MB cache (256 B lines)</text>
+    <text x="306" y="294" class="li">bus arbiter · PHI2 · timer</text>
+    <text x="306" y="312" class="li">PIC priorities · UART · SPI-SD</text>
+    <text x="306" y="330" class="li">I2C (RTC · gauge · GT911) · dbg</text>
+    <text x="440" y="366" class="s">iCE40 TQ144 · ~93/107 pins</text>
+
+    <line x1="590" y1="295" x2="615" y2="295" class="dtb"/>
+    <line x1="615" y1="260" x2="615" y2="370" class="dtb"/>
+    <line x1="615" y1="260" x2="640" y2="260" class="dtb"/>
+    <line x1="615" y1="370" x2="640" y2="370" class="dtb"/>
+
+    <text x="640" y="200" class="eye">MEMORY</text>
+    <rect x="640" y="210" width="280" height="100" class="blk"/>
+    <text x="780" y="232" class="t">SRAM 2 MB · 10 ns</text>
+    <text x="656" y="254" class="li">1 MB cache</text>
+    <text x="656" y="270" class="li">512 KB page tables</text>
+    <text x="656" y="286" class="li">512 KB pinned $00 + kernel</text>
+    <rect x="640" y="330" width="280" height="80" class="blk"/>
+    <text x="780" y="352" class="t">SDRAM 32 MB</text>
+    <text x="656" y="374" class="li">16,384 frames of 2 KB</text>
+    <text x="656" y="390" class="li">W9825G6KH · 16-bit burst</text>
+
+    <rect x="290" y="430" width="300" height="140" class="blk"/>
+    <text x="440" y="454" class="t">FPGA-B — VIDEO · AUDIO</text>
+    <text x="306" y="478" class="li">RGB-TTL 1024×600 (px-doubling)</text>
+    <text x="306" y="496" class="li">64 KB VRAM window at $FE</text>
+    <text x="306" y="514" class="li">I2S → PCM5102A · VGA R-2R</text>
+    <text x="306" y="532" class="li">IRQ VSYNC</text>
+    <text x="440" y="556" class="s">iCE40 TQ144 · ~79 pins</text>
+
+    <line x1="590" y1="462" x2="640" y2="462" class="dt"/>
+    <text x="615" y="452" class="lbl">QSPI</text>
+    <rect x="640" y="430" width="280" height="64" class="blk"/>
+    <text x="780" y="452" class="t">PSRAM 8 MB (APS6404L)</text>
+    <text x="780" y="472" class="s">chip RAM: framebuffer + audio</text>
+
+    <line x1="590" y1="540" x2="680" y2="540" class="dts"/>
+    <rect x="680" y="520" width="170" height="44" class="blk opt"/>
+    <text x="765" y="546" class="s">VGA (R-2R) — bring-up</text>
+
+    <line x1="370" y1="570" x2="370" y2="600" class="dt"/>
+    <text x="452" y="588" class="lbl">RGB-TTL · 51.2 MHz</text>
+    <rect x="270" y="600" width="210" height="70" class="blk"/>
+    <text x="375" y="622" class="t">10.1&#8221; IPS PANEL</text>
+    <text x="375" y="641" class="s">ER-TFT101-1 · HX8282 · FPC-50</text>
+    <text x="375" y="657" class="s">GT911 capacitive → I2C + INT</text>
+
+    <line x1="560" y1="570" x2="560" y2="600" class="dt"/>
+    <text x="580" y="588" class="lbl">I2S</text>
+    <rect x="500" y="600" width="170" height="52" class="blk"/>
+    <text x="585" y="622" class="t">PCM5102A</text>
+    <text x="585" y="641" class="s">I2S → audio jack</text>
+  </svg>
+  <figcaption>Fig. 1 — Global architecture. Four inhabitants of the shared bus; the RP2040 governs configuration and reset from outside.</figcaption>
+  <div class="legend">Trace legend: <span class="m">mint = data</span> · <span class="g">gold = power / EC control</span> · dashed = optional or future.</div>
+  </figure>
+</section>
+<section class="hoja" id="c">
+  <div class="sechead"><span class="des">C</span><h2>Power supply</h2><span class="aim">battery · charger · power-path · state measurement</span><span class="sheet">SHEET 03</span></div>
+  <p class="lead">1S chain with power-path: the machine runs on USB even with the battery depleted or absent, and the RP2040 governs the full sequencing. Detail in <code>hoja-1-1-alimentacion.md</code>.</p>
+  <ol class="steps">
+    <li><span class="id">C.1</span><div class="itx">Input: USB-C sink — 5.1 kΩ CC resistors + ESD protection.</div></li>
+    <li><span class="id">C.2</span><div class="itx">MCP73871: 1S Li-Ion charger <b>with power-path</b> → <b>SYS</b> node. Charging and system consumption are shared without interruption.</div></li>
+    <li><span class="id">C.3</span><div class="itx">Battery: 1S Li-Ion 3000 mAh (estimated runtime &gt;10 h). State measurement: <b>MAX17048</b> (fuel gauge, I2C) read by the EC; the RP2040 can perform an orderly shutdown on critical battery even if the OS is hung.</div></li>
+    <li><span class="id">C.4</span><div class="itx">SYS → <b>TPS63020</b> buck-boost → <b>3V3 always-on</b> rail (RP2040 and logic).</div></li>
+    <li><span class="id">C.5</span><div class="itx">Rails derived from 3V3: <b>1.2V LDO with EN</b> for the iCE40 cores · VCCPLL filtered per FPGA · <b>VPP 2.5V via BAT54</b> from 3V3 (avoids a dedicated rail) · panel load switch.</div></li>
+    <li><span class="id">C.6</span><div class="itx">Boosts hanging off <b>SYS</b> (not VBAT): <b>PT4110</b> for the LED backlight (~1.5W reserved; brightness EN/PWM from the RP2040) and <b>TPS61023</b> → 5V VBUS for the USB-A host port (500 mA, EN on demand). <span class="note">LED string current/voltage: pending the module datasheet (→ N).</span></div></li>
+    <li><span class="id">C.7</span><div class="itx">Safe bring-up: 0Ω jumpers per rail to isolate and measure each block in stage E1.</div></li>
+    <li><span class="id">C.8</span><div class="itx">Sequencing governed by the RP2040: CRESET_B held until rails are stable; panel and host VBUS off by default. PCF8563 (RTC) shares the I2C bus with the fuel gauge.</div></li>
+  </ol>
+  <figure>
+  <svg viewBox="0 0 960 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Power tree">
+    <rect x="40" y="60" width="150" height="70" class="blk"/>
+    <text x="115" y="84" class="t">USB-C</text>
+    <text x="115" y="104" class="s">sink · CC 5.1 kΩ · ESD</text>
+    <line x1="190" y1="95" x2="250" y2="95" class="pw"/>
+    <text x="220" y="86" class="plbl">5 V</text>
+
+    <rect x="250" y="50" width="200" height="90" class="blk"/>
+    <text x="350" y="74" class="t">MCP73871</text>
+    <text x="350" y="94" class="s">1S charger + power-path</text>
+    <text x="350" y="110" class="s">→ SYS node</text>
+
+    <line x1="350" y1="140" x2="350" y2="170" class="pw"/>
+    <text x="380" y="158" class="plbl">VBAT</text>
+    <rect x="250" y="170" width="200" height="70" class="blk"/>
+    <text x="350" y="194" class="t">1S Li-Ion BATTERY</text>
+    <text x="350" y="214" class="s">3000 mAh · &gt;10 h est.</text>
+
+    <line x1="350" y1="240" x2="350" y2="260" class="dts"/>
+    <rect x="250" y="260" width="200" height="48" class="blk"/>
+    <text x="350" y="280" class="s">MAX17048 · fuel gauge</text>
+    <text x="350" y="296" class="s">I2C → EC</text>
+    <rect x="250" y="326" width="200" height="44" class="blk"/>
+    <text x="350" y="352" class="s">PCF8563 · RTC (I2C)</text>
+
+    <line x1="450" y1="95" x2="520" y2="95" class="pw"/>
+    <circle cx="520" cy="95" r="4" fill="#D9A93F"/>
+    <text x="520" y="80" class="plbl">SYS</text>
+    <line x1="520" y1="88" x2="520" y2="250" class="pw"/>
+
+    <line x1="520" y1="88" x2="560" y2="88" class="pw"/>
+    <rect x="560" y="60" width="180" height="56" class="blk"/>
+    <text x="650" y="82" class="t">TPS63020</text>
+    <text x="650" y="102" class="s">buck-boost → 3V3 AO</text>
+
+    <line x1="520" y1="180" x2="560" y2="180" class="pw"/>
+    <rect x="560" y="156" width="180" height="48" class="blk"/>
+    <text x="650" y="176" class="s">PT4110 · LED backlight</text>
+    <text x="650" y="192" class="s">EN/PWM ← EC · ~1.5W</text>
+    <line x1="740" y1="180" x2="760" y2="180" class="pw"/>
+    <text x="752" y="170" class="plbl">VLED</text>
+
+    <line x1="520" y1="250" x2="560" y2="250" class="pw"/>
+    <rect x="560" y="226" width="180" height="48" class="blk"/>
+    <text x="650" y="246" class="s">TPS61023 → 5V VBUS</text>
+    <text x="650" y="262" class="s">USB host · EN ← EC</text>
+    <line x1="740" y1="250" x2="760" y2="250" class="pw"/>
+    <text x="736" y="268" class="plbl">5V VBUS</text>
+
+    <line x1="740" y1="88" x2="770" y2="88" class="pw"/>
+    <circle cx="770" cy="88" r="3.5" fill="#D9A93F"/>
+    <text x="770" y="60" class="plbl">3V3</text>
+    <line x1="770" y1="74" x2="770" y2="290" class="pw"/>
+
+    <line x1="770" y1="74" x2="800" y2="74" class="pw"/>
+    <rect x="800" y="52" width="150" height="44" class="blk"/>
+    <text x="875" y="70" class="s">3V3 logic</text>
+    <text x="875" y="86" class="s">RP2040 always-on</text>
+
+    <line x1="770" y1="128" x2="800" y2="128" class="pw"/>
+    <rect x="800" y="106" width="150" height="44" class="blk"/>
+    <text x="875" y="124" class="s">1.2V LDO (EN)</text>
+    <text x="875" y="140" class="s">iCE40 cores</text>
+
+    <line x1="770" y1="182" x2="800" y2="182" class="pw"/>
+    <rect x="800" y="160" width="150" height="44" class="blk"/>
+    <text x="875" y="178" class="s">VCCPLL filtered</text>
+    <text x="875" y="194" class="s">per FPGA</text>
+
+    <line x1="770" y1="236" x2="800" y2="236" class="pw"/>
+    <rect x="800" y="214" width="150" height="44" class="blk"/>
+    <text x="875" y="232" class="s">VPP 2.5V</text>
+    <text x="875" y="248" class="s">via BAT54</text>
+
+    <line x1="770" y1="290" x2="800" y2="290" class="pw"/>
+    <rect x="800" y="268" width="150" height="44" class="blk"/>
+    <text x="875" y="286" class="s">load switch</text>
+    <text x="875" y="302" class="s">→ panel</text>
+
+    <text x="40" y="392" class="li">Sequencing and EN lines governed by the RP2040 · CRESET_B held until rails are stable.</text>
+    <text x="40" y="410" class="li">0Ω jumpers per rail — isolated bring-up (stage E1).</text>
+    <text x="40" y="432" class="gtx">The boosts hang off SYS, not VBAT → the machine runs on USB with the battery depleted (power-path).</text>
+  </svg>
+  <figcaption>Fig. 2 — Power tree: USB-C → MCP73871 → SYS → 3V3 AO and derived rails; backlight and VBUS boosts from SYS.</figcaption>
+  </figure>
+</section>
+<section class="hoja" id="d">
+  <div class="sechead"><span class="des">D</span><h2>RP2040 — embedded controller</h2><span class="aim">boot · FPGA programming · console · EC</span><span class="sheet">SHEET 04</span></div>
+  <p class="lead">It's the laptop's "management microcontroller": it handles everything that happens before a live CPU exists, and stays on watch afterward. Detail in <code>hoja-1-2-rp2040.md</code> and <code>hoja-1-3-config-fpga.md</code>.</p>
+  <ol class="steps">
+    <li><span class="id">D.1</span><div class="itx">Triple role: <b>programmer</b> (bitstreams, BIOS, its own firmware — all over USB), <b>bootstrapper</b> (full sequence in Fig. 3), and permanent <b>embedded controller</b>. Its W25Q16 is the board's only mandatory flash.</div></li>
+    <li><span class="id">D.2</span><div class="itx">9-step boot (Fig. 3): button → rails → SSPI configuration of FPGA-A/B(/C) with CRESET_B/CDONE → SDRAM initialized by gateware → BIOS from SD to SRAM → SD handoff → RESB↑ → <code>$FFFC</code> vector.</div></li>
+    <li><span class="id">D.3</span><div class="itx">Debugging: a debug port into FPGA-A — live read/write of system memory, a free "ICE" for the kernel.</div></li>
+    <li><span class="id">D.4</span><div class="itx">Console: USB-CDC ↔ FPGA-A UART. It's the terminal for the monitor (E2) and the OS until there's a screen of its own.</div></li>
+    <li><span class="id">D.5</span><div class="itx">HID host: PIO-USB + hub — USB keyboard and mouse (PS/2 and matrix removed). Powers up the TPS61023 on demand and translates HID → events to the kernel over the EC channel.</div></li>
+    <li><span class="id">D.6</span><div class="itx">EC in operation: power button, MAX17048 readout, RTC, safe shutdown with the OS hung. <span class="chip">open</span> <span class="note">EC↔kernel protocol yet to be defined (→ N).</span></div></li>
+  </ol>
+  <figure>
+  <svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boot sequence">
+    <line x1="148" y1="44" x2="148" y2="350" class="pw"/>
+    <text transform="rotate(-90 134 200)" x="134" y="200" class="plbl">EC PHASE (PRE-CPU)</text>
+    <line x1="148" y1="368" x2="148" y2="512" class="dt"/>
+    <text transform="rotate(-90 134 440)" x="134" y="440" class="lbl">65816</text>
+
+    <circle cx="176" cy="62" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+    <text x="176" y="66" class="s">1</text>
+    <rect x="200" y="40" width="560" height="44" class="blk"/>
+    <text x="480" y="67" class="t">Power button → RP2040 (3V3 always-on)</text>
+    <line x1="480" y1="84" x2="480" y2="94" class="dt"/>
+
+    <circle cx="176" cy="116" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+    <text x="176" y="120" class="s">2</text>
+    <rect x="200" y="94" width="560" height="44" class="blk"/>
+    <text x="480" y="121" class="t">Rail sequence: 1.2V ON · VPLL · panel OFF</text>
+    <line x1="480" y1="138" x2="480" y2="148" class="dt"/>
+
+    <circle cx="176" cy="170" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+    <text x="176" y="174" class="s">3</text>
+    <rect x="200" y="148" width="560" height="44" class="blk"/>
+    <text x="480" y="175" class="t">FPGA-A·B(·C) config via SSPI — CRESET_B↓ … CDONE↑</text>
+    <line x1="480" y1="192" x2="480" y2="202" class="dt"/>
+
+    <circle cx="176" cy="224" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+    <text x="176" y="228" class="s">4</text>
+    <rect x="200" y="202" width="560" height="44" class="blk"/>
+    <text x="480" y="229" class="t">Gateware live: PHI2 running · SDRAM init</text>
+    <line x1="480" y1="246" x2="480" y2="256" class="dt"/>
+
+    <circle cx="176" cy="278" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+    <text x="176" y="282" class="s">5</text>
+    <rect x="200" y="256" width="560" height="44" class="blk"/>
+    <text x="480" y="283" class="t">RP2040 reads the microSD (FAT): BIOS.BIN → pinned SRAM</text>
+    <line x1="480" y1="300" x2="480" y2="310" class="dt"/>
+
+    <circle cx="176" cy="332" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+    <text x="176" y="336" class="s">6</text>
+    <rect x="200" y="310" width="560" height="44" class="blk"/>
+    <text x="480" y="337" class="t">SD handoff: '3257 mux → FPGA-A SPI-SD</text>
+    <line x1="480" y1="354" x2="480" y2="364" class="dt"/>
+
+    <circle cx="176" cy="386" r="11" fill="#0E3A2C" stroke="#7FD8BD" stroke-width="1.5"/>
+    <text x="176" y="390" class="s">7</text>
+    <rect x="200" y="364" width="560" height="44" class="blk"/>
+    <text x="480" y="391" class="t">RESB↑ — the 65816 boots via $FFFC (BIOS)</text>
+    <line x1="480" y1="408" x2="480" y2="418" class="dt"/>
+
+    <circle cx="176" cy="440" r="11" fill="#0E3A2C" stroke="#7FD8BD" stroke-width="1.5"/>
+    <text x="176" y="444" class="s">8</text>
+    <rect x="200" y="418" width="560" height="44" class="blk"/>
+    <text x="480" y="445" class="t">BIOS: init · console · mounts FAT · loads KERNEL.BIN + info block</text>
+    <line x1="480" y1="462" x2="480" y2="472" class="dt"/>
+
+    <circle cx="176" cy="494" r="11" fill="#0E3A2C" stroke="#7FD8BD" stroke-width="1.5"/>
+    <text x="176" y="498" class="s">9</text>
+    <rect x="200" y="472" width="560" height="44" class="blk"/>
+    <text x="480" y="499" class="t">Kernel: drivers · processes → prompt</text>
+    <text x="780" y="500" class="gtx">= APPLE II MILESTONE (E6)</text>
+  </svg>
+  <figcaption>Fig. 3 — Boot sequence. Steps 1–6 are executed by the RP2040 (gold); from step 7 onward the 65816 (mint) takes over.</figcaption>
+  </figure>
+</section>
+<section class="hoja" id="e">
+  <div class="sechead"><span class="des">E</span><h2>Physical memory structure</h2><span class="aim">how CPU · FPGA-A · SRAM · SDRAM relate</span><span class="sheet">SHEET 05</span></div>
+  <p class="lead">All system memory lives behind FPGA-A: the CPU never sees SRAM or SDRAM directly, only virtual addresses translated by the MMU and served by the cache.</p>
+  <ol class="steps">
+    <li><span class="id">E.1</span><div class="itx">Hierarchy: registers → <b>cache in SRAM</b> → <b>SDRAM</b> (physical frames) → microSD (swap, post-v1).</div></li>
+    <li><span class="id">E.2</span><div class="itx">2 MB SRAM (IS61WV102416, 10 ns), <b>unified</b>: 1 MB cache (256 B lines) + 512 KB page tables + 512 KB pinned for the per-process <code>$00</code> bank and the kernel. <span class="note">Replaces the external table SRAM, removed due to pin budget.</span></div></li>
+    <li><span class="id">E.3</span><div class="itx">32 MB SDRAM (W9825G6KH, TSOP-II 54, 3.3V): main memory — 16,384 2 KB frames. Target controller ~50 MHz; open-source candidates: lawrie/blackicemx, niklasnisbeth/ice40-litedram, ZipCPU/zipstormmx.</div></li>
+    <li><span class="id">E.4</span><div class="itx">SRAM and SDRAM share a 16-bit bus behind FPGA-A: line fill is serialized (SDRAM→FPGA burst, then FPGA→SRAM), but a cache miss stays at ~200–300 ns — well below the QSPI it replaces.</div></li>
+    <li><span class="id">E.5</span><div class="itx">8 MB APS6404L PSRAM on FPGA-B = <b>chip RAM</b> (framebuffer + audio DMA buffers), outside the CPU hierarchy; reached through the <code>$FE</code> window.</div></li>
+    <li><span class="id">E.6</span><div class="itx">Architectural ceiling: 128 MB physical (16-bit frame in the PTE) — headroom for future revisions without touching the format.</div></li>
+    <li><span class="id">E.7</span><div class="itx">Layout note: SRAM + SDRAM in a short comb, hugging FPGA-A — the bus runs at ~100 MHz and won't tolerate long stubs.</div></li>
+  </ol>
+  <figure>
+  <svg viewBox="0 0 960 450" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Physical memory hierarchy">
+    <rect x="40" y="70" width="150" height="64" class="blk"/>
+    <text x="115" y="94" class="t">CPU / softcore</text>
+    <text x="115" y="114" class="s">24-bit virtual</text>
+    <line x1="190" y1="102" x2="240" y2="102" class="dtb"/>
+
+    <rect x="240" y="40" width="220" height="140" class="blk"/>
+    <text x="350" y="64" class="t">FPGA-A</text>
+    <text x="256" y="90" class="li">MMU: VA → PA</text>
+    <text x="256" y="108" class="li">1 MB cache (256 B)</text>
+    <text x="256" y="126" class="li">walker · arbiter</text>
+    <text x="350" y="152" class="s">miss: RDY↓ until line is fetched</text>
+
+    <line x1="460" y1="102" x2="510" y2="102" class="dtb"/>
+    <line x1="485" y1="102" x2="485" y2="232" class="dtb"/>
+    <line x1="485" y1="232" x2="510" y2="232" class="dtb"/>
+
+    <rect x="510" y="40" width="400" height="120" class="blk"/>
+    <text x="710" y="62" class="t">SRAM 2 MB · 10 ns</text>
+    <line x1="710" y1="74" x2="710" y2="160" stroke="rgba(241,236,217,.4)" stroke-width="1"/>
+    <line x1="810" y1="74" x2="810" y2="160" stroke="rgba(241,236,217,.4)" stroke-width="1"/>
+    <text x="610" y="104" class="s">1 MB</text>
+    <text x="610" y="120" class="s">cache</text>
+    <text x="610" y="134" class="s">256 B lines</text>
+    <text x="760" y="104" class="s">512 KB</text>
+    <text x="760" y="120" class="s">page</text>
+    <text x="760" y="134" class="s">tables</text>
+    <text x="860" y="104" class="s">512 KB</text>
+    <text x="860" y="120" class="s">pinned</text>
+    <text x="860" y="134" class="s">$00 + kernel</text>
+
+    <rect x="510" y="190" width="400" height="84" class="blk"/>
+    <text x="710" y="214" class="t">SDRAM 32 MB — physical frames</text>
+    <text x="710" y="236" class="s">16,384 frames × 2 KB · 16-bit burst</text>
+    <text x="710" y="254" class="s">W9825G6KH · target ~50 MHz</text>
+
+    <line x1="485" y1="232" x2="485" y2="326" class="dts"/>
+    <line x1="485" y1="326" x2="510" y2="326" class="dts"/>
+    <rect x="510" y="300" width="400" height="52" class="blk opt"/>
+    <text x="710" y="322" class="s">microSD — page swap</text>
+    <text x="710" y="340" class="s">demand paging · post-v1</text>
+
+    <line x1="115" y1="134" x2="115" y2="300" class="dts"/>
+    <text x="172" y="220" class="lbl">$FE window (VRAM_SEL)</text>
+    <rect x="40" y="300" width="380" height="76" class="blk"/>
+    <text x="230" y="324" class="t">FPGA-B + PSRAM 8 MB (chip RAM)</text>
+    <text x="230" y="344" class="s">512×300 framebuffer + audio DMA buffers</text>
+    <text x="230" y="362" class="s">outside the hierarchy — CPU access via $FE</text>
+
+    <text x="40" y="420" class="li">SRAM 10 ns · HW walk ≈ 4 cycles · cache miss ≈ 200–300 ns (fill serialized over the shared bus).</text>
+  </svg>
+  <figcaption>Fig. 4 — Memory structure. The unified SRAM splits cache, tables, and pinned zone; the SDRAM provides user frames.</figcaption>
+  </figure>
+</section>
+
+<section class="hoja" id="f">
+  <div class="sechead"><span class="des">F</span><h2>Persistent storage — microSD</h2><span class="aim">where it connects · boot · normal use</span><span class="sheet">SHEET 06</span></div>
+  <p class="lead">A single slot, two owners at different times. It's also the only boot path: the dedicated BIOS flash was removed from the design.</p>
+  <ol class="steps">
+    <li><span class="id">F.1</span><div class="itx">Connection: the slot hangs off an <b>SN74CBTLV3257</b> mux between the RP2040 and FPGA-A's SPI-SD controller, with a handoff handshake.</div></li>
+    <li><span class="id">F.2</span><div class="itx">At boot: the RP2040 owns the SD — it reads <code>BIOS.BIN</code> from FAT and preloads it into the pinned SRAM zone (steps 5–6 of Fig. 3). It then switches the mux to FPGA-A before releasing reset.</div></li>
+    <li><span class="id">F.3</span><div class="itx">In normal use: the 65816 accesses it through FPGA-A's SPI-SD via the kernel's block driver. The BIOS mounts FAT read-only to load <code>KERNEL.BIN</code>; the OS adds write support and the user filesystem.</div></li>
+    <li><span class="id">F.4</span><div class="itx">Card contents: <code>/BIOS.BIN</code> · <code>/KERNEL.BIN</code> · user tree (programs, data) · future reserve for swap.</div></li>
+    <li><span class="id">F.5</span><div class="itx">Recovery: the RP2040 can reclaim the SD over USB at any time — update BIOS/kernel without removing the card.</div></li>
+  </ol>
+</section>
+<section class="hoja" id="g">
+  <div class="sechead"><span class="des">G</span><h2>Peripherals and their location</h2><span class="aim">which chip · who it hangs off · how the OS sees it</span><span class="sheet">SHEET 07</span></div>
+  <p class="lead">Every peripheral has a clear physical owner and a uniform face toward software: a <code>/dev/*</code> node served by a kernel driver. Connectors in <code>hoja-1-6-conectores.md</code>.</p>
+  <table class="simple">
+    <thead><tr><th>Peripheral</th><th>Chip / interface</th><th>Hangs off</th><th>Access from the OS</th></tr></thead>
+    <tbody>
+      <tr><td>10.1&#8221; 1024×600 panel</td><td>ER-TFT101-1 · HX8282 · RGB-TTL FPC-50 · 51.2 MHz → 60 Hz</td><td>FPGA-B</td><td><code>/dev/fb</code> — VRAM mapping via ioctl · 512×300 px-doubling</td></tr>
+      <tr><td>VGA (bring-up)</td><td>DAC R-2R · 640×480 / 800×600</td><td>FPGA-B</td><td>same framebuffer</td></tr>
+      <tr><td>Capacitive touch</td><td>GT911 · I2C + INT (module's capacitive variant)</td><td>System I2C (FPGA-A)</td><td><code>/dev/touch</code></td></tr>
+      <tr><td>Audio</td><td>PCM5102A · I2S · DMA buffers in PSRAM</td><td>FPGA-B</td><td><code>/dev/audio</code></td></tr>
+      <tr><td>Keyboard / mouse</td><td>USB HID · PIO-USB + hub · VBUS via TPS61023</td><td>RP2040 → EC channel</td><td><code>/dev/kbd</code> · <code>/dev/mouse</code></td></tr>
+      <tr><td>Serial console</td><td>UART ↔ USB-CDC</td><td>FPGA-A ↔ RP2040</td><td><code>/dev/tty</code></td></tr>
+      <tr><td>Storage</td><td>microSD · SPI · '3257 mux</td><td>FPGA-A</td><td><code>/dev/sd</code> → FS</td></tr>
+      <tr><td>Real-time clock</td><td>PCF8563 · I2C</td><td>System I2C</td><td><code>/dev/rtc</code></td></tr>
+      <tr><td>Battery</td><td>MAX17048 · I2C</td><td>I2C (read by the EC)</td><td>via EC channel</td></tr>
+      <tr><td>Timer + interrupts</td><td>100 Hz timer · prioritized PIC · IRQ/NMI/ABORT</td><td>FPGA-A</td><td>scheduler tick</td></tr>
+      <tr><td>VSync</td><td>IRQ line from video</td><td>FPGA-B → PIC</td><td>GUI sync</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="hoja" id="h">
+  <div class="sechead"><span class="des">H</span><h2>BIOS — what it provides</h2><span class="aim">residency · services · boundary with the EC</span><span class="sheet">SHEET 08</span></div>
+  <p class="lead">There's no BIOS chip: it's a binary on the SD that the RP2040 preloads into SRAM. The 65816 comes to life with the <code>$FFFC</code> vector pointing inside that zone.</p>
+  <ol class="steps">
+    <li><span class="id">H.1</span><div class="itx">Residency: <code>BIOS.BIN</code> on the SD → preloaded by the RP2040 into the pinned SRAM zone (step 5 of Fig. 3). No dedicated flash.</div></li>
+    <li><span class="id">H.2</span><div class="itx">At reset it provides: CPU init (native mode <code>CLC/XCE</code>, stack, direct page), MMU in supervisor identity mapping, cache init, quick memory test, UART console, and boot screen.</div></li>
+    <li><span class="id">H.3</span><div class="itx">Machine monitor: peek/poke, dumps, serial loading — the working tool for stages E2–E4.</div></li>
+    <li><span class="id">H.4</span><div class="itx">OS loader: mounts FAT (read-only), locates <code>KERNEL.BIN</code>, loads it, and jumps to it passing an <b>info block</b>: RAM size, device map, battery state, and RTC time (via EC). <span class="chip">open</span> <span class="note">Exact block format yet to be finalized (→ N).</span></div></li>
+    <li><span class="id">H.5</span><div class="itx">Residual services to the OS: a small <code>JSL</code> jump table (putchar, getchar, read sector) during the transition; once the kernel drivers take over, the BIOS stops being used.</div></li>
+    <li><span class="id">H.6</span><div class="itx">Boundary of responsibilities: the RP2040 is the "board BIOS" (everything pre-CPU); this binary is the "system BIOS" (everything post-reset). Together they cover what a single firmware does in a PC.</div></li>
+  </ol>
+</section>
+<section class="hoja" id="i">
+  <div class="sechead"><span class="des">I</span><h2>Operating system</h2><span class="aim">how it uses the BIOS · what it provides to processes</span><span class="sheet">SHEET 09</span></div>
+  <p class="lead">Small monolithic kernel, written in C with assembly only where it hurts. It consumes the BIOS for a few milliseconds and then provides everything else.</p>
+  <ol class="steps">
+    <li><span class="id">I.1</span><div class="itx">Model: preemptive kernel resident in virtual bank <code>$01</code> (64 KB, pinned in SRAM), mapped identically and privileged in every process's page table.</div></li>
+    <li><span class="id">I.2</span><div class="itx">How it uses the BIOS: only the info block and the <code>JSL</code> table during the transition; its drivers replace the console and SD, and from then on the BIOS goes inert.</div></li>
+    <li><span class="id">I.3</span><div class="itx">What it provides — syscalls via <code>COP</code> (the signature byte is the service number), Unix-style table: <b>proc</b> exec · exit · wait · yield · sleep · kill / <b>mem</b> sbrk · mmap · munmap · mshare / <b>unified I/O</b> open · close · read · write · seek · stat · ioctl.</div></li>
+    <li><span class="id">I.4</span><div class="itx">Internal drivers with a fixed 5-function interface — <code>init · read · write · ioctl · irq_handler</code> — exposed as <code>/dev/*</code>. Swapping a chip = reimplementing the interface without breaking the user ABI.</div></li>
+    <li><span class="id">I.5</span><div class="itx">Framebuffer: the preferred path is an ioctl that maps VRAM pages (<code>$FE</code>) into the process's address space — no per-pixel <code>write()</code>.</div></li>
+    <li><span class="id">I.6</span><div class="itx">Filesystem: FAT over the SD + minimal devfs. Per-device blocking queues and basic IPC. <span class="chip">sketch</span></div></li>
+  </ol>
+</section>
+
+<section class="hoja" id="j">
+  <div class="sechead"><span class="des">J</span><h2>Virtual memory management</h2><span class="aim">full paging · TLB · walker · ABORT</span><span class="sheet">SHEET 10</span></div>
+  <p class="lead">Every process sees a clean, contiguous 16 MB; FPGA-A's MMU does the rest. The 65816's ABORTB pin turns this into real memory protection.</p>
+  <ol class="steps">
+    <li><span class="id">J.1</span><div class="itx">Virtual space: 16 MB per process (24-bit), full paging with 2 KB pages → 8,192 pages (13-bit page + 11-bit offset). Page size is decoupled from the cache line (256 B).</div></li>
+    <li><span class="id">J.2</span><div class="itx">Flat table: 8,192 PTEs × 32 bits = <b>32 KB per process</b>. The 512 KB region in SRAM holds up to 16 resident tables; inactive ones can live in the kernel's pageable memory.</div></li>
+    <li><span class="id">J.3</span><div class="itx">32-bit PTE (finalized format): FRAME[15:0] + P · W · X · U · D · A · NC · PIN + SW[7:0]. 27-bit physical address → 128 MB ceiling.</div></li>
+    <li><span class="id">J.4</span><div class="itx">TLB: 32–64 entries in EBR (the iCE40's 128 Kbit isn't enough for full on-chip tables), tagged by <b>ASID</b> → no flush on context switch.</div></li>
+    <li><span class="id">J.5</span><div class="itx">TLB miss → <b>hardware walker</b> (~4 cycles with 10 ns SRAM). Violation or missing page → <b>ABORTB</b> with exact instruction retry; VPA validates X permission; VPB marks privilege transitions.</div></li>
+    <li><span class="id">J.6</span><div class="itx">The kernel reads the fault in bank <code>$FF</code> registers: FAULT_ADDR · FAULT_CAUSE · CONTEXT · MODE.</div></li>
+    <li><span class="id">J.7</span><div class="itx">Virtual bank map: <code>$00</code> per-process stack + DP plus a minimal privileged zone (vectors, trampolines, kernel stack — a 65816 requirement: PBR=0 on interrupt entry) · <code>$01</code> kernel · <code>$02–$FD</code> user · <code>$FE</code> VRAM window · <code>$FF</code> privileged I/O, <b>not mappable to user space</b> — the self-protecting key of the scheme.</div></li>
+    <li><span class="id">J.8</span><div class="itx">Physical allocator: frame bitmap over the SDRAM (16,384 × 2 KB). PIN marks non-evictable frames; NC marks uncached zones (I/O).</div></li>
+    <li><span class="id">J.9</span><div class="itx">ABORT handler: legitimate heap/stack growth → allocate a frame and retry; anything else → kill the process. v1 uses eager loading; demand paging and swap to SD are post-v1 (with dirty line flush before evicting a page).</div></li>
+  </ol>
+  <figure>
+  <svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Address translation and PTE format">
+    <text x="60" y="38" class="eye">24-BIT VIRTUAL ADDRESS + ASID</text>
+    <rect x="60" y="50" width="206" height="44" class="blk"/>
+    <rect x="266" y="50" width="174" height="44" class="blk"/>
+    <text x="163" y="77" class="s">PAGE · 13 b</text>
+    <text x="353" y="77" class="s">OFFSET · 11 b</text>
+    <line x1="163" y1="94" x2="163" y2="130" class="dt"/>
+
+    <rect x="60" y="130" width="260" height="70" class="blk"/>
+    <text x="190" y="154" class="t">TLB — EBR</text>
+    <text x="190" y="174" class="s">32–64 entries · ASID tag</text>
+    <text x="190" y="190" class="s">no flush on context switch</text>
+
+    <line x1="320" y1="165" x2="560" y2="165" class="dt"/>
+    <text x="440" y="157" class="lbl">HIT</text>
+    <rect x="560" y="130" width="340" height="70" class="blk"/>
+    <text x="730" y="154" class="t">PHYSICAL ADDR · 27 b</text>
+    <text x="730" y="176" class="s">FRAME·2048 + offset · ≤ 128 MB</text>
+
+    <line x1="190" y1="200" x2="190" y2="250" class="dt"/>
+    <text x="218" y="228" class="lbl">MISS</text>
+    <line x1="110" y1="250" x2="110" y2="200" class="dts"/>
+
+    <rect x="60" y="250" width="260" height="60" class="blk"/>
+    <text x="190" y="274" class="t">WALKER HW</text>
+    <text x="190" y="294" class="s">~4 cycles · reads the PTE in SRAM</text>
+    <line x1="320" y1="280" x2="400" y2="280" class="dt"/>
+    <rect x="400" y="250" width="240" height="60" class="blk"/>
+    <text x="520" y="274" class="t">FLAT TABLE</text>
+    <text x="520" y="294" class="s">8,192 PTEs × 32 b = 32 KB/proc</text>
+    <line x1="520" y1="310" x2="520" y2="370" class="dt"/>
+
+    <text x="700" y="222" class="eye">BANK MAP</text>
+    <rect x="700" y="230" width="210" height="130" class="blk"/>
+    <line x1="700" y1="256" x2="910" y2="256" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
+    <line x1="700" y1="282" x2="910" y2="282" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
+    <line x1="700" y1="308" x2="910" y2="308" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
+    <line x1="700" y1="334" x2="910" y2="334" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
+    <text x="708" y="248" class="li10">$FF · privileged I/O</text>
+    <text x="708" y="274" class="li10">$FE · 64K VRAM window</text>
+    <text x="708" y="300" class="li10">$02–$FD · user</text>
+    <text x="708" y="326" class="li10">$01 · kernel 64 K pinned</text>
+    <text x="708" y="352" class="li10">$00 · stack·DP + priv. zone</text>
+
+    <text x="60" y="358" class="eye">PTE — 32 BITS</text>
+    <rect x="60" y="370" width="400" height="44" class="blk"/>
+    <text x="260" y="397" class="s">FRAME[15:0]</text>
+    <rect x="460" y="370" width="30" height="44" class="blk"/><text x="475" y="397" class="s">P</text>
+    <rect x="490" y="370" width="30" height="44" class="blk"/><text x="505" y="397" class="s">W</text>
+    <rect x="520" y="370" width="30" height="44" class="blk"/><text x="535" y="397" class="s">X</text>
+    <rect x="550" y="370" width="30" height="44" class="blk"/><text x="565" y="397" class="s">U</text>
+    <rect x="580" y="370" width="30" height="44" class="blk"/><text x="595" y="397" class="s">D</text>
+    <rect x="610" y="370" width="30" height="44" class="blk"/><text x="625" y="397" class="s">A</text>
+    <rect x="640" y="370" width="40" height="44" class="blk"/><text x="660" y="397" class="s">NC</text>
+    <rect x="680" y="370" width="44" height="44" class="blk"/><text x="702" y="397" class="s">PIN</text>
+    <rect x="724" y="370" width="186" height="44" class="blk"/><text x="817" y="397" class="s">SW[7:0]</text>
+
+    <line x1="592" y1="414" x2="592" y2="450" class="dt"/>
+    <text x="700" y="432" class="lbl">P=0 · W/X/U violation</text>
+    <rect x="60" y="450" width="430" height="64" class="blk"/>
+    <text x="275" y="472" class="t">VIOLATION / NOT PRESENT</text>
+    <text x="275" y="490" class="s">ABORTB → exact instruction retry</text>
+    <text x="275" y="506" class="s">VPA = X permission · VPB = privilege</text>
+    <line x1="490" y1="482" x2="520" y2="482" class="dt"/>
+    <rect x="520" y="450" width="390" height="64" class="blk"/>
+    <text x="715" y="472" class="t">REGISTERS AT $FF</text>
+    <text x="715" y="490" class="s">FAULT_ADDR · FAULT_CAUSE</text>
+    <text x="715" y="506" class="s">CONTEXT · MODE → the kernel decides</text>
+  </svg>
+  <figcaption>Fig. 5 — Address translation: TLB with ASID, hardware walker over the flat table in SRAM, and the ABORTB fault path.</figcaption>
+  </figure>
+</section>
+<section class="hoja" id="k">
+  <div class="sechead"><span class="des">K</span><h2>Process management</h2><span class="aim">PCB · context switch · scheduler · binary format</span><span class="sheet">SHEET 11</span></div>
+  <p class="lead">The piece that turns the machine into "an Amiga": several isolated processes taking turns without knowing it, with the MMU eliminating relocation at the root.</p>
+  <ol class="steps">
+    <li><span class="id">K.1</span><div class="itx">PCB per process: registers (A · X · Y · S · D · DBR · PBR · P · PC), ASID, pointer to its page table, state, and queues.</div></li>
+    <li><span class="id">K.2</span><div class="itx">Context switch: save state to the PCB → write CONTEXT/ASID to the MMU → restore the next one. Tens of µs; no TLB flush thanks to ASID.</div></li>
+    <li><span class="id">K.3</span><div class="itx">Scheduler: preemptive round-robin with a 100 Hz timer tick; per-device blocked queues; 2–3 priority levels as a later option.</div></li>
+    <li><span class="id">K.4</span><div class="itx">Custom binary format: header (magic, entry point) + segments with vaddr · filesz · memsz · R/W/X permissions.</div></li>
+    <li><span class="id">K.5</span><div class="itx">Loading (<code>exec</code>): create the page table, map segments with their PTE permissions, zero BSS, map the stack, and <code>RTI</code> to the entry point. Every process sees the same addresses: the MMU makes relocation unnecessary.</div></li>
+    <li><span class="id">K.6</span><div class="itx">Lifecycle: exec → ready → running ⇄ blocked → zombie → wait. Isolation is demonstrated in E7: one process dies and the other keeps running.</div></li>
+  </ol>
+</section>
+
+<section class="hoja" id="l">
+  <div class="sechead"><span class="des">L</span><h2>Programming and toolchain</h2><span class="aim">assembly first · C where it's already possible</span><span class="sheet">SHEET 12</span></div>
+  <p class="lead">Honest assessment of the 65816 ecosystem: boot will be assembly-first, with C coming in as soon as the kernel has firm footing.</p>
+  <ol class="steps">
+    <li><span class="id">L.1</span><div class="itx">Assemblers: <b>ca65</b> (cc65 suite) and <b>64tass</b> — the base for the BIOS, monitor, and kernel boot.</div></li>
+    <li><span class="id">L.2</span><div class="itx">C compilers: <b>WDCTools</b> and <b>LCC-816</b> as the best options; <b>Calypsi</b> recommendable (C99, large model, 24-bit pointers, JSL/RTL). Ruled out: cc65 (6502/65C02 only) and llvm-mos (llvm-65816 experimental, unusable).</div></li>
+    <li><span class="id">L.3</span><div class="itx">Recommended hybrid memory model: code in large model (JSL/RTL) + data with fixed DBR — avoids paying for 24-bit pointers on every memory access.</div></li>
+    <li><span class="id">L.4</span><div class="itx">Kernel: C with assembly only in vectors, context switch, critical MMU/cache routines, and boot (~hundreds of lines of asm total).</div></li>
+    <li><span class="id">L.5</span><div class="itx">libc: three-line syscall stubs — <code>COP #SYS_n</code> + <code>RTL</code> — invoked with a normal <code>JSL</code> by the compiler.</div></li>
+    <li><span class="id">L.6</span><div class="itx">Development flow: compile on the PC (Makefile) → custom binary → transfer over USB (RP2040) or SD → run; debug via serial console + FPGA-A debug port.</div></li>
+    <li><span class="id">L.7</span><div class="itx">Gateware: Verilog or VHDL (decision pending, it constrains the P65816 reference softcore) with Yosys + nextpnr-ice40 + IceStorm; simulation always before the board.</div></li>
+  </ol>
+</section>
+<section class="hoja" id="m">
+  <div class="sechead"><span class="des">M</span><h2>Step-by-step build · E0–E8</h2><span class="aim">small steps · verifiable tests · golden milestones</span><span class="sheet">SHEET 13</span></div>
+  <p class="lead">Nine stages, each with concrete hardware/gateware/software and a verification criterion before moving on. Live status and detail in <code>plan-implementacion-65816.md</code>.</p>
+  <figure>
+  <svg viewBox="0 0 960 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="E0 to E8 stage path with both milestones">
+    <line x1="60" y1="100" x2="900" y2="100" class="dt"/>
+    <rect x="640" y="26" width="150" height="32" fill="rgba(217,169,63,.07)" stroke="#D9A93F" stroke-width="2"/>
+    <text x="715" y="46" class="htx">APPLE II MILESTONE</text>
+    <polyline points="690,58 690,91" class="pwd"/>
+    <rect x="810" y="26" width="145" height="32" fill="rgba(217,169,63,.07)" stroke="#D9A93F" stroke-width="2"/>
+    <text x="882" y="46" class="htx">AMIGA MILESTONE</text>
+    <polyline points="882,58 882,74 900,74 900,91" class="pwd"/>
+
+    <circle cx="60" cy="100" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <path d="M60 91 a9 9 0 0 0 0 18 z" fill="#F1ECD9"/>
+    <circle cx="165" cy="100" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="270" cy="100" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="375" cy="100" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="480" cy="100" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="585" cy="100" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="690" cy="100" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="795" cy="100" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="900" cy="100" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+
+    <text x="60" y="80" class="nlbl">E0</text><text x="165" y="80" class="nlbl">E1</text>
+    <text x="270" y="80" class="nlbl">E2</text><text x="375" y="80" class="nlbl">E3</text>
+    <text x="480" y="80" class="nlbl">E4</text><text x="585" y="80" class="nlbl">E5</text>
+    <text x="690" y="80" class="nlbl">E6</text><text x="795" y="80" class="nlbl">E7</text>
+    <text x="900" y="80" class="nlbl">E8</text>
+
+    <text x="60" y="130" class="s">prep</text>
+    <text x="165" y="130" class="s">free-run</text>
+    <text x="270" y="130" class="s">SRAM+monitor</text>
+    <text x="375" y="130" class="s">SDRAM</text>
+    <text x="480" y="130" class="s">MMU+prot</text>
+    <text x="585" y="130" class="s">video·audio</text>
+    <text x="690" y="130" class="s">SD+min. OS</text>
+    <text x="795" y="130" class="s">multitasking</text>
+    <text x="900" y="130" class="s">laptop+GUI</text>
+
+    <rect x="60" y="160" width="13" height="13" fill="#F1ECD9" stroke="#F1ECD9" stroke-width="1.4"/>
+    <text x="82" y="171" class="li10">done</text>
+    <rect x="150" y="160" width="13" height="13" fill="none" stroke="#F1ECD9" stroke-width="1.4"/>
+    <rect x="150" y="160" width="6.5" height="13" fill="#F1ECD9"/>
+    <text x="172" y="171" class="li10">in progress</text>
+    <rect x="250" y="160" width="13" height="13" fill="none" stroke="#F1ECD9" stroke-width="1.4"/>
+    <text x="272" y="171" class="li10">pending</text>
+    <rect x="360" y="160" width="13" height="13" fill="none" stroke="#F1ECD9" stroke-width="1.4" stroke-dasharray="3 2"/>
+    <text x="382" y="171" class="li10">optional</text>
+  </svg>
+  <figcaption>Fig. 6 — The E0–E8 path with both milestones at their exact point: Apple II on closing E6, Amiga on closing E8.</figcaption>
+  </figure>
+  <ol class="steps" style="margin-top:14px">
+    <li><span class="pad half"></span><span class="id">E0</span><div class="itx"><b>Preparation.</b> Toolchain (KiCad 8, oss-cad-suite, pico-sdk), HDL choice, project's KiCad library verified symbol by symbol, panel datasheet (blocking).<span class="test">TEST ▸ simulated iCE40 blinky · compiled RP2040 "hello" · footprints printed 1:1 against the physical component.</span></div></li>
+    <li><span class="pad"></span><span class="id">E1</span><div class="itx"><b>Minimal board / free-run.</b> RP2040 + FPGA-A + CPU socket; rails with jumpers; SSPI config; PHI2; 65816 in free-run (bus forced to NOP).<span class="test">TEST ▸ CDONE↑ on the FPGAs · address counter advancing (logic analyzer / LEDs).</span></div></li>
+    <li><span class="pad"></span><span class="id">E2</span><div class="itx"><b>SRAM + serial monitor.</b> SRAM on the bus; BIOS preload by the RP2040; UART console; peek/poke monitor.<span class="test">TEST ▸ console echo · read/write arbitrary memory · checksum of the loaded BIOS.</span></div></li>
+    <li><span class="pad"></span><span class="id">E3</span><div class="itx"><b>SDRAM.</b> Controller (adapted open-source candidate) + 16-bit bus arbitration with the SRAM.<span class="test">TEST ▸ pseudorandom pattern over the full 32 MB with no errors for hours.</span></div></li>
+    <li><span class="pad"></span><span class="id">E4</span><div class="itx"><b>MMU + cache + protection.</b> Walker, TLB with ASID, ABORTB, FAULT_* registers at <code>$FF</code>.<span class="test">TEST ▸ an illegal access triggers ABORT with correct FAULT_ADDR/CAUSE · measured cache hit rate.</span></div></li>
+    <li><span class="pad"></span><span class="id">E5</span><div class="itx"><b>Video + audio.</b> FPGA-B on the bus, <code>$FE</code> window; VGA pattern → framebuffer in PSRAM; tone over I2S.<span class="test">TEST ▸ stable VGA image · a CPU write shows up on screen · clean 440 Hz tone.</span></div></li>
+    <li><span class="pad"></span><span class="id">E6</span><div class="itx"><b>SD + minimal OS + HID.</b> SD handoff, block driver, FAT, kernel load, serial shell, basic USB keyboard.<span class="test">TEST ▸ power on → prompt, with no PC connected.</span></div></li>
+  </ol>
+  <div class="hito">■ APPLE II MILESTONE — the machine boots on its own to a prompt.</div>
+  <ol class="steps">
+    <li><span class="pad"></span><span class="id">E7</span><div class="itx"><b>Multitasking.</b> Scheduler with a 100 Hz tick, syscalls via COP, two processes with MMU isolation.<span class="test">TEST ▸ two concurrent processes; one dies from a violation and the other stays intact.</span></div></li>
+    <li><span class="pad"></span><span class="id">E8</span><div class="itx"><b>Laptop + GUI.</b> 10.1&#8221; panel + GT911 + backlight, battery + charging, chassis; window compositor over <code>/dev/fb</code>.<span class="test">TEST ▸ touch GUI session running on battery.</span></div></li>
+  </ol>
+  <div class="hito">■ AMIGA MILESTONE — preemptive multitasking with a windowed GUI.</div>
+  <ol class="steps" style="margin-top:10px">
+    <li><span class="pad optl"></span><span class="id">+</span><div class="itx">Optional extensions outside the critical path: populating FPGA-C with the softcore · demand paging + swap to SD · eDP panel variant (ANX6345) as a future revision.</div></li>
+  </ol>
+</section>
+<section class="hoja" id="n">
+  <div class="sechead"><span class="des">N</span><h2>Decision log · open questions</h2><span class="aim">what was decided, why · what's left to close</span><span class="sheet">SHEET 14</span></div>
+  <p class="lead">The decisions shaping the current design, with their reasoning in one line — and the honest list of what's still open.</p>
+  <ol class="steps">
+    <li><span class="id">D01</span><div class="itx">ECP5 → <b>3× iCE40 TQ144</b> — BGA isn't hand-solderable; 0.5mm TQFP is. Accepted consequence: 128 Kbit EBR → HW walker + small TLB instead of on-chip tables.</div></li>
+    <li><span class="id">D02</span><div class="itx">Main PSRAM <b>removed</b>; the 32 MB SDRAM is <i>the</i> memory — the QSPI gateware (the trickiest part) disappears, and a cache miss drops from ~µs to ~200–300 ns.</div></li>
+    <li><span class="id">D03</span><div class="itx">External table SRAM <b>removed</b>; a single 2 MB SRAM (cache + tables + pinned) — ~35 pins that didn't fit in the TQ144.</div></li>
+    <li><span class="id">D04</span><div class="itx">Amiga-style shared bus; out goes the dedicated FPGA-to-FPGA link and the eDP bridge — FPGA-B taps the bus with the <code>$FE</code> window.</div></li>
+    <li><span class="id">D05</span><div class="itx">Direct RGB-TTL 10.1&#8221; panel (ER-TFT101-1) — no bridge chip, no NDA (RTD2556 ruled out due to Realtek firmware). eDP/ANX6345 remains a future variant.</div></li>
+    <li><span class="id">D06</span><div class="itx">512×300 → 1024×600 px-doubling — the framebuffer fits within the video PSRAM's budget and its QSPI bandwidth.</div></li>
+    <li><span class="id">D07</span><div class="itx">USB-only HID (RP2040's PIO-USB) — out go PS/2 and keyboard matrix. Capacitive GT911 touch: the resistive option needed 4 ADCs the RP2040 doesn't have free.</div></li>
+    <li><span class="id">D08</span><div class="itx">SD as the only boot path; dedicated BIOS flash <b>removed</b> — incompatible with the pin budget after adding the SDRAM.</div></li>
+    <li><span class="id">D09</span><div class="itx">Boosts (backlight, host VBUS) hanging off SYS, not VBAT — the machine runs on USB with the battery depleted. VPP 2.5V via BAT54: out goes the dedicated rail.</div></li>
+    <li><span class="id">D10</span><div class="itx">Full 2 KB paging per process (out goes the "one bank per process" model) — a tractable 32 KB flat table, decoupled from the 256 B cache line (which sets tCEM, not the page).</div></li>
+    <li><span class="id">D11</span><div class="itx">Hardware walker instead of a software trap on TLB miss — with 10 ns SRAM it costs ~4 cycles and simplifies the kernel.</div></li>
+    <li><span class="id">D12</span><div class="itx">32-bit PTE with a 16-bit frame from day one — 128 MB ceiling with no format migrations.</div></li>
+  </ol>
+  <p class="lead" style="margin-top:16px"><b>Open questions</b></p>
+  <ol class="steps">
+    <li><span class="id">Q1</span><div class="itx"><span class="chip g">blocking</span> ER-TFT101-1 module datasheet: backlight current/voltage, strap exposure on the FPC, GT911 connector. Order the panel in the <b>capacitive variant</b>. Blocks the KiCad schematic for sheets 1.5/1.6.</div></li>
+    <li><span class="id">Q2</span><div class="itx">HDL choice (Verilog vs VHDL) — constrains the reference softcore (P65816 is VHDL).</div></li>
+    <li><span class="id">Q3</span><div class="itx">Specific SDRAM controller among the three open-source candidates (adaptation and verification in E3).</div></li>
+    <li><span class="id">Q4</span><div class="itx">EC↔kernel protocol: transport and event format for HID, battery, RTC, and shutdown.</div></li>
+    <li><span class="id">Q5</span><div class="itx">Exact format of the BIOS → kernel info block.</div></li>
+    <li><span class="id">Q6</span><div class="itx">Backlight brightness control: PWM from the RP2040 (simpler) or from FPGA-B.</div></li>
+  </ol>
+</section>
+
+<footer class="cajetin" aria-label="Title block">
+  <div class="cj">
+    <div class="big">DANI-65816</div>
+    <div>SYNTHESIS DOCUMENT — INDEX AND CONTENT OUTLINE</div>
+  </div>
+  <div class="cj">
+    <div>Sheets A–N · Figs. 1–6</div>
+    <div>Detail: hoja-1-1 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · placa-65816.html (REV B)</div>
+  </div>
+  <div class="cj">
+    <div>All 3.3V · hand-solderable · open toolchain</div>
+    <div class="gold">OUTLINE 1 · AUG 2026</div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
