@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noVa64 · G — Persistent storage — microSD</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="side" aria-label="Sheets">
+    <div class="cap">noVa64 · SHEETS</div>
+    <ol>
+      <li><a href="index.html"><span class="de">·</span>Sheet index</a></li>
+      <li><a href="sec_a.html"><span class="de">A</span>Vision and philosophy<span class="fg">01</span></a></li>
+      <li><a href="sec_b.html"><span class="de">B</span>Global architecture<span class="fg">02</span></a></li>
+      <li><a href="sec_c.html"><span class="de">C</span>Power supply<span class="fg">03</span></a></li>
+      <li><a href="sec_d.html"><span class="de">D</span>RP2040 — embedded controller<span class="fg">04</span></a></li>
+      <li><a href="sec_e.html"><span class="de">E</span>CPU — W65C816S and the softcore option<span class="fg">05</span></a></li>
+      <li><a href="sec_f.html"><span class="de">F</span>Physical memory structure<span class="fg">06</span></a></li>
+      <li><a href="sec_g.html" class="here"><span class="de">G</span>Persistent storage — microSD<span class="fg">07</span></a></li>
+      <li><a href="sec_h.html"><span class="de">H</span>Peripherals and their location<span class="fg">08</span></a></li>
+      <li><a href="sec_i.html"><span class="de">I</span>BIOS — what it provides<span class="fg">09</span></a></li>
+      <li><a href="sec_j.html"><span class="de">J</span>Operating system<span class="fg">10</span></a></li>
+      <li><a href="sec_k.html"><span class="de">K</span>Virtual memory — concepts and glossary<span class="fg">11</span></a></li>
+      <li><a href="sec_l.html"><span class="de">L</span>Virtual memory management<span class="fg">12</span></a></li>
+      <li><a href="sec_m.html"><span class="de">M</span>Kernel–hardware interface<span class="fg">13</span></a></li>
+      <li><a href="sec_n.html"><span class="de">N</span>Process management<span class="fg">14</span></a></li>
+      <li><a href="sec_o.html"><span class="de">O</span>Programming and toolchain<span class="fg">15</span></a></li>
+      <li><a href="sec_p.html"><span class="de">P</span>Step-by-step build · E0–E8<span class="fg">16</span></a></li>
+      <li><a href="sec_q.html"><span class="de">Q</span>Decision log · open questions<span class="fg">17</span></a></li>
+      <li><a href="sec_r.html"><span class="de">R</span>Glossary<span class="fg">18</span></a></li>
+    </ol>
+  </nav>
+  <div class="main">
+<header class="masthead">
+  <h1><a href="index.html">noVa64</a></h1>
+  <div class="sub">Sheet 07 · G — Persistent storage — microSD</div>
+</header>
+<section class="hoja" id="g">
+  <div class="sechead"><span class="des">G</span><h2>Persistent storage — microSD</h2><span class="aim">where it connects · boot · normal use</span><span class="sheet">SHEET 07</span></div>
+  <p class="lead">A single slot, two owners at different times. It's also the only boot path: the dedicated BIOS flash was removed from the design.</p>
+  <ol class="steps">
+    <li id="g1"><span class="id">G.1</span><div class="itx">Connection: the slot hangs off an <b>SN74CBTLV3257</b> mux between the RP2040 and Helium's SPI-SD controller, with a handoff handshake.</div></li>
+    <li id="g2"><span class="id">G.2</span><div class="itx">At boot: the RP2040 owns the SD — it reads <code>BIOS.BIN</code> from FAT and preloads it into the pinned SRAM zone (steps 5–6 of Fig. 3). It then switches the mux to Helium before releasing reset.</div></li>
+    <li id="g3"><span class="id">G.3</span><div class="itx">In normal use: the 65816 accesses it through Helium's SPI-SD via the kernel's block driver. The BIOS mounts FAT read-only to load <code>KERNEL.BIN</code>; the OS adds write support and the user filesystem.</div></li>
+    <li id="g4"><span class="id">G.4</span><div class="itx">Card contents: <code>/BIOS.BIN</code> · <code>/KERNEL.BIN</code> · user tree (programs, data) · future reserve for swap.</div></li>
+    <li id="g5"><span class="id">G.5</span><div class="itx">Recovery: the RP2040 can reclaim the SD over USB at any time — update BIOS/kernel without removing the card.</div></li>
+  </ol>
+</section>
+  <nav class="pager">
+    <div class="pv"><b>Previous</b><a href="sec_f.html">← F · Physical memory structure</a></div>
+    <div class="nx"><b>Next</b><a href="sec_h.html">H · Peripherals and their location →</a></div>
+  </nav>
+<footer class="cajetin" aria-label="Title block">
+  <div class="cj">
+    <div class="big">noVa64</div>
+    <div>SHEET 07 · G — PERSISTENT STORAGE — MICROSD</div>
+  </div>
+  <div class="cj">
+    <div>Synthesis document · sheets A–R · index at index.html</div>
+    <div>Detail: hoja-1-1 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · placa-65816.html (REV B)</div>
+  </div>
+  <div class="cj">
+    <div>All 3.3V · hand-solderable · open toolchain</div>
+    <div class="gold">OUTLINE 1 · AUG 2026</div>
+  </div>
+</footer>
+  </div>
+</div>
+</body>
+</html>

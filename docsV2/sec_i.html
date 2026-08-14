@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noVa64 · I — BIOS — what it provides</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="side" aria-label="Sheets">
+    <div class="cap">noVa64 · SHEETS</div>
+    <ol>
+      <li><a href="index.html"><span class="de">·</span>Sheet index</a></li>
+      <li><a href="sec_a.html"><span class="de">A</span>Vision and philosophy<span class="fg">01</span></a></li>
+      <li><a href="sec_b.html"><span class="de">B</span>Global architecture<span class="fg">02</span></a></li>
+      <li><a href="sec_c.html"><span class="de">C</span>Power supply<span class="fg">03</span></a></li>
+      <li><a href="sec_d.html"><span class="de">D</span>RP2040 — embedded controller<span class="fg">04</span></a></li>
+      <li><a href="sec_e.html"><span class="de">E</span>CPU — W65C816S and the softcore option<span class="fg">05</span></a></li>
+      <li><a href="sec_f.html"><span class="de">F</span>Physical memory structure<span class="fg">06</span></a></li>
+      <li><a href="sec_g.html"><span class="de">G</span>Persistent storage — microSD<span class="fg">07</span></a></li>
+      <li><a href="sec_h.html"><span class="de">H</span>Peripherals and their location<span class="fg">08</span></a></li>
+      <li><a href="sec_i.html" class="here"><span class="de">I</span>BIOS — what it provides<span class="fg">09</span></a></li>
+      <li><a href="sec_j.html"><span class="de">J</span>Operating system<span class="fg">10</span></a></li>
+      <li><a href="sec_k.html"><span class="de">K</span>Virtual memory — concepts and glossary<span class="fg">11</span></a></li>
+      <li><a href="sec_l.html"><span class="de">L</span>Virtual memory management<span class="fg">12</span></a></li>
+      <li><a href="sec_m.html"><span class="de">M</span>Kernel–hardware interface<span class="fg">13</span></a></li>
+      <li><a href="sec_n.html"><span class="de">N</span>Process management<span class="fg">14</span></a></li>
+      <li><a href="sec_o.html"><span class="de">O</span>Programming and toolchain<span class="fg">15</span></a></li>
+      <li><a href="sec_p.html"><span class="de">P</span>Step-by-step build · E0–E8<span class="fg">16</span></a></li>
+      <li><a href="sec_q.html"><span class="de">Q</span>Decision log · open questions<span class="fg">17</span></a></li>
+      <li><a href="sec_r.html"><span class="de">R</span>Glossary<span class="fg">18</span></a></li>
+    </ol>
+  </nav>
+  <div class="main">
+<header class="masthead">
+  <h1><a href="index.html">noVa64</a></h1>
+  <div class="sub">Sheet 09 · I — BIOS — what it provides</div>
+</header>
+<section class="hoja" id="i">
+  <div class="sechead"><span class="des">I</span><h2>BIOS — what it provides</h2><span class="aim">residency · services · boundary with the EC</span><span class="sheet">SHEET 09</span></div>
+  <p class="lead">There's no BIOS chip: it's a binary on the SD that the RP2040 preloads into SRAM. The 65816 comes to life with the <code>$FFFC</code> vector pointing inside that zone.</p>
+  <ol class="steps">
+    <li id="i1"><span class="id">I.1</span><div class="itx">Residency: <code>BIOS.BIN</code> on the SD → preloaded by the RP2040 into the pinned SRAM zone (step 5 of Fig. 3). No dedicated flash.</div></li>
+    <li id="i2"><span class="id">I.2</span><div class="itx">At reset it provides: CPU init (native mode <code>CLC/XCE</code>, stack, direct page), MMU in supervisor identity mapping, cache init, quick memory test, UART console, and boot screen.</div></li>
+    <li id="i3"><span class="id">I.3</span><div class="itx">Machine monitor: peek/poke, dumps, serial loading — the working tool for stages E2–E4. <span class="note">A user button wired to Helium raises NMI, which is how you drop into the monitor on a machine that is already running rather than resetting it to get there.</span></div></li>
+    <li id="i4"><span class="id">I.4</span><div class="itx">OS loader: mounts FAT (read-only), locates <code>KERNEL.BIN</code>, loads it, and jumps to it passing an <b>info block</b>: RAM size, device map, battery state, and RTC time (via EC). <span class="chip">open</span> <span class="note">Exact block format yet to be finalized (→ N).</span></div></li>
+    <li id="i5"><span class="id">I.5</span><div class="itx">Residual services to the OS: a small <code>JSL</code> jump table (putchar, getchar, read sector) during the transition; once the kernel drivers take over, the BIOS stops being used.</div></li>
+    <li id="i6"><span class="id">I.6</span><div class="itx">Boundary of responsibilities: the RP2040 is the "board BIOS" (everything pre-CPU); this binary is the "system BIOS" (everything post-reset). Together they cover what a single firmware does in a PC.</div></li>
+  </ol>
+</section>
+  <nav class="pager">
+    <div class="pv"><b>Previous</b><a href="sec_h.html">← H · Peripherals and their location</a></div>
+    <div class="nx"><b>Next</b><a href="sec_j.html">J · Operating system →</a></div>
+  </nav>
+<footer class="cajetin" aria-label="Title block">
+  <div class="cj">
+    <div class="big">noVa64</div>
+    <div>SHEET 09 · I — BIOS — WHAT IT PROVIDES</div>
+  </div>
+  <div class="cj">
+    <div>Synthesis document · sheets A–R · index at index.html</div>
+    <div>Detail: hoja-1-1 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · placa-65816.html (REV B)</div>
+  </div>
+  <div class="cj">
+    <div>All 3.3V · hand-solderable · open toolchain</div>
+    <div class="gold">OUTLINE 1 · AUG 2026</div>
+  </div>
+</footer>
+  </div>
+</div>
+</body>
+</html>

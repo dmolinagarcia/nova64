@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noVa64 · N — Process management</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="side" aria-label="Sheets">
+    <div class="cap">noVa64 · SHEETS</div>
+    <ol>
+      <li><a href="index.html"><span class="de">·</span>Sheet index</a></li>
+      <li><a href="sec_a.html"><span class="de">A</span>Vision and philosophy<span class="fg">01</span></a></li>
+      <li><a href="sec_b.html"><span class="de">B</span>Global architecture<span class="fg">02</span></a></li>
+      <li><a href="sec_c.html"><span class="de">C</span>Power supply<span class="fg">03</span></a></li>
+      <li><a href="sec_d.html"><span class="de">D</span>RP2040 — embedded controller<span class="fg">04</span></a></li>
+      <li><a href="sec_e.html"><span class="de">E</span>CPU — W65C816S and the softcore option<span class="fg">05</span></a></li>
+      <li><a href="sec_f.html"><span class="de">F</span>Physical memory structure<span class="fg">06</span></a></li>
+      <li><a href="sec_g.html"><span class="de">G</span>Persistent storage — microSD<span class="fg">07</span></a></li>
+      <li><a href="sec_h.html"><span class="de">H</span>Peripherals and their location<span class="fg">08</span></a></li>
+      <li><a href="sec_i.html"><span class="de">I</span>BIOS — what it provides<span class="fg">09</span></a></li>
+      <li><a href="sec_j.html"><span class="de">J</span>Operating system<span class="fg">10</span></a></li>
+      <li><a href="sec_k.html"><span class="de">K</span>Virtual memory — concepts and glossary<span class="fg">11</span></a></li>
+      <li><a href="sec_l.html"><span class="de">L</span>Virtual memory management<span class="fg">12</span></a></li>
+      <li><a href="sec_m.html"><span class="de">M</span>Kernel–hardware interface<span class="fg">13</span></a></li>
+      <li><a href="sec_n.html" class="here"><span class="de">N</span>Process management<span class="fg">14</span></a></li>
+      <li><a href="sec_o.html"><span class="de">O</span>Programming and toolchain<span class="fg">15</span></a></li>
+      <li><a href="sec_p.html"><span class="de">P</span>Step-by-step build · E0–E8<span class="fg">16</span></a></li>
+      <li><a href="sec_q.html"><span class="de">Q</span>Decision log · open questions<span class="fg">17</span></a></li>
+      <li><a href="sec_r.html"><span class="de">R</span>Glossary<span class="fg">18</span></a></li>
+    </ol>
+  </nav>
+  <div class="main">
+<header class="masthead">
+  <h1><a href="index.html">noVa64</a></h1>
+  <div class="sub">Sheet 14 · N — Process management</div>
+</header>
+<section class="hoja" id="n">
+  <div class="sechead"><span class="des">N</span><h2>Process management</h2><span class="aim">PCB · context switch · scheduler · binary format</span><span class="sheet">SHEET 14</span></div>
+  <p class="lead">The piece that turns the machine into "an Amiga": several isolated processes taking turns without knowing it, with the MMU eliminating relocation at the root.</p>
+  <ol class="steps">
+    <li id="n1"><span class="id">N.1</span><div class="itx">PCB per process: registers (A · X · Y · S · D · DBR · PBR · P · PC), ASID, pointer to its page table, state, and queues. <span class="chip">open</span> <span class="note">The save set is not ours to choose: it must cover exactly what the C compiler treats as live state, direct-page pseudo-registers included. That audit has not been done (→ <a href="sec_q.html#q19">Q19</a>).</span></div></li>
+    <li id="n2"><span class="id">N.2</span><div class="itx">Context switch: save state to the PCB → write CONTEXT/ASID to the MMU → restore the next one. Tens of µs; no TLB flush thanks to ASID. <span class="note">Order matters and is not optional: write <code>CTX_SET_PTBASE</code> before <code>CTX_SET_ASID</code>, or an interrupt landing between the two leaves the new ASID live while the walker still reads the old table (→ <a href="sec_m.html#m8">M.8</a>). The bank <code>$00</code> question that used to block this is settled in <a href="sec_l.html#l11">L.11</a>; only sizing remains (→ <a href="sec_q.html#q18">Q18</a>).</span></div></li>
+    <li id="n3"><span class="id">N.3</span><div class="itx">Scheduler: preemptive round-robin with a 100 Hz timer tick; per-device blocked queues; 2–3 priority levels as a later option. <code>sleep()</code> is backed by Helium's free-running counter, never by cycle counting (→ <a href="sec_l.html#l15">L.15</a>).</div></li>
+    <li id="n4"><span class="id">N.4</span><div class="itx">One canonical virtual layout, identical for every process: stack and direct page in virtual bank <code>$00</code> (a hardware requirement of the 65816), then crt0 and <code>.text</code> from <code>$02:0000</code>, then <code>.data</code>, then <code>.bss</code>, then a heap growing upward — <code>sbrk</code> merely moves a pointer and the frames arrive lazily by ABORT. <span class="note">User code starts at <code>$02</code>, not <code>$01</code>: the bank map of <a href="sec_l.html#l10">L.10</a> is architecture and does not move for the loader. Region addresses within <code>$02–$FD</code>, stack size and heap start are still to be frozen (→ <a href="sec_q.html#q17">Q17</a>).</span></div></li>
+    <li id="n5"><span class="id">N.5</span><div class="itx">Custom binary format: header (magic, entry point) + segments with vaddr · filesz · memsz · R/W/X permissions matching the PTE bits. <code>.bss</code> occupies no bytes on disk, only a size in the header. <span class="note">Field layout, magic value and versioning still to be specified (→ <a href="sec_q.html#q20">Q20</a>).</span></div></li>
+    <li id="n6"><span class="id">N.6</span><div class="itx">Loading (<code>exec</code>): create the page table, copy segments from the card into frames and map them with their permissions, zero <code>.bss</code>, map the stack, place the arguments where crt0 expects them, and <code>RTI</code> into the entry point <b>in user mode</b>. From there crt0 finishes initialisation, calls <code>main()</code>, and issues <code>exit()</code> when it returns. Every process sees the same addresses: the MMU makes relocation unnecessary.</div></li>
+    <li id="n7"><span class="id">N.7</span><div class="itx">Lifecycle: exec → ready → running ⇄ blocked → zombie → wait. Isolation is demonstrated in E7: one process dies and the other keeps running.</div></li>
+  </ol>
+</section>
+  <nav class="pager">
+    <div class="pv"><b>Previous</b><a href="sec_m.html">← M · Kernel–hardware interface</a></div>
+    <div class="nx"><b>Next</b><a href="sec_o.html">O · Programming and toolchain →</a></div>
+  </nav>
+<footer class="cajetin" aria-label="Title block">
+  <div class="cj">
+    <div class="big">noVa64</div>
+    <div>SHEET 14 · N — PROCESS MANAGEMENT</div>
+  </div>
+  <div class="cj">
+    <div>Synthesis document · sheets A–R · index at index.html</div>
+    <div>Detail: hoja-1-1 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · placa-65816.html (REV B)</div>
+  </div>
+  <div class="cj">
+    <div>All 3.3V · hand-solderable · open toolchain</div>
+    <div class="gold">OUTLINE 1 · AUG 2026</div>
+  </div>
+</footer>
+  </div>
+</div>
+</body>
+</html>

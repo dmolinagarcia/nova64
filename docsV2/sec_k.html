@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noVa64 · K — Virtual memory — concepts and glossary</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="side" aria-label="Sheets">
+    <div class="cap">noVa64 · SHEETS</div>
+    <ol>
+      <li><a href="index.html"><span class="de">·</span>Sheet index</a></li>
+      <li><a href="sec_a.html"><span class="de">A</span>Vision and philosophy<span class="fg">01</span></a></li>
+      <li><a href="sec_b.html"><span class="de">B</span>Global architecture<span class="fg">02</span></a></li>
+      <li><a href="sec_c.html"><span class="de">C</span>Power supply<span class="fg">03</span></a></li>
+      <li><a href="sec_d.html"><span class="de">D</span>RP2040 — embedded controller<span class="fg">04</span></a></li>
+      <li><a href="sec_e.html"><span class="de">E</span>CPU — W65C816S and the softcore option<span class="fg">05</span></a></li>
+      <li><a href="sec_f.html"><span class="de">F</span>Physical memory structure<span class="fg">06</span></a></li>
+      <li><a href="sec_g.html"><span class="de">G</span>Persistent storage — microSD<span class="fg">07</span></a></li>
+      <li><a href="sec_h.html"><span class="de">H</span>Peripherals and their location<span class="fg">08</span></a></li>
+      <li><a href="sec_i.html"><span class="de">I</span>BIOS — what it provides<span class="fg">09</span></a></li>
+      <li><a href="sec_j.html"><span class="de">J</span>Operating system<span class="fg">10</span></a></li>
+      <li><a href="sec_k.html" class="here"><span class="de">K</span>Virtual memory — concepts and glossary<span class="fg">11</span></a></li>
+      <li><a href="sec_l.html"><span class="de">L</span>Virtual memory management<span class="fg">12</span></a></li>
+      <li><a href="sec_m.html"><span class="de">M</span>Kernel–hardware interface<span class="fg">13</span></a></li>
+      <li><a href="sec_n.html"><span class="de">N</span>Process management<span class="fg">14</span></a></li>
+      <li><a href="sec_o.html"><span class="de">O</span>Programming and toolchain<span class="fg">15</span></a></li>
+      <li><a href="sec_p.html"><span class="de">P</span>Step-by-step build · E0–E8<span class="fg">16</span></a></li>
+      <li><a href="sec_q.html"><span class="de">Q</span>Decision log · open questions<span class="fg">17</span></a></li>
+      <li><a href="sec_r.html"><span class="de">R</span>Glossary<span class="fg">18</span></a></li>
+    </ol>
+  </nav>
+  <div class="main">
+<header class="masthead">
+  <h1><a href="index.html">noVa64</a></h1>
+  <div class="sub">Sheet 11 · K — Virtual memory — concepts and glossary</div>
+</header>
+<section class="hoja" id="k">
+  <div class="sechead"><span class="des">K</span><h2>Virtual memory — concepts and glossary</h2><span class="aim">first principles · why the field widths · reference figures</span><span class="sheet">SHEET 11</span></div>
+  <p class="lead">Explanatory groundwork, not normative: it explains paging from first principles and gives the reasoning behind the field widths, so that the machinery in <a href="sec_l.html">sheet L</a> can be read without stopping to decode acronyms. Term-by-term definitions live in the <a href="sec_r.html">glossary, sheet R</a>. It introduces no design decision — where it disagrees with an architecture sheet, the architecture sheet wins. Source: <code>virtual-memory-concepts.md</code> (REV A).</p>
+  <ol class="steps">
+    <li id="k1"><span class="id">K.1</span><div class="itx">Why it exists — three problems it solves at once: <b>relocation</b> (the program no longer needs to know what address it will be loaded at), <b>protection</b> (no process can touch another's memory or the kernel's) and <b>fragmentation</b> (free memory no longer breaks into holes nothing fits into). The process lives in a fiction: it believes it owns the full 16 MB, starting at zero.</div></li>
+    <li id="k2"><span class="id">K.2</span><div class="itx">The core idea: the address space is cut into fixed-size chunks — <b>pages</b> on the virtual side, <b>frames</b> on the physical side, both 2 KB. Translation answers a single question: which physical frame holds virtual page N? The offset within the page is never translated; the low bits pass straight through.</div></li>
+    <li id="k3"><span class="id">K.3</span><div class="itx">The translation path in one line: virtual address → <b>TLB</b> lookup (ASID + VPN together, so another process's entry can never produce a false hit) → on a hit the frame is available immediately, on a miss the <b>hardware walker</b> reads the PTE from SRAM in ≈100 ns. <span class="note">A TLB miss is not an error — it costs one table walk. Detail and figure in <a href="sec_l.html">sheet L</a> / Fig. 6.</span></div></li>
+    <li id="k4"><span class="id">K.4</span><div class="itx">Why a TLB is not optional: translation is itself a memory lookup, so without a cache of translations every access would cost two — read the PTE, then do the access it was for. The TLB settles the common case in a cycle and only a miss pays the walk. What the page size buys is its <b>reach</b>, the working set one TLB-full of entries covers: 32 entries × 2 KB = <b>64 KB</b>, against 8 KB had pages stayed at 256 B.</div></li>
+    <li id="k5"><span class="id">K.5</span><div class="itx">Only two situations are genuine failures: <b>P=0</b>, the page is not in physical memory — recoverable, the kernel allocates a frame, fills it, writes the PTE and retries (this is the <i>page fault</i>, deferred while v1 loads eagerly); and a <b>permission violation</b> — a write with W=0, a fetch with X=0, a user access with U=0 — which is a program error with no retry. Both ride the ABORTB pin.</div></li>
+    <li id="k6"><span class="id">K.6</span><div class="itx">Why FRAME is 16 bits against VPN's 13 — the two fields measure different things: <b>VPN measures how much memory one process sees</b> (set by the CPU), <b>FRAME measures how much memory the machine has</b> (set by the MMU design). There is no reason for them to match, and here they deliberately do not.</div></li>
+    <li id="k7"><span class="id">K.7</span><div class="itx">The virtual side is not a choice: the 65816 emits 24-bit addresses, so 24 − 11 of offset = 13 bits of VPN. The number falls out of a subtraction. The physical side <i>is</i> a choice: Helium assembles the physical address after translation and drives the memory bus itself, so only the FRAME width sets the ceiling. <b>The MMU breaks the 65816's architectural barrier at system level without breaking it at process level.</b></div></li>
+    <li id="k8"><span class="id">K.8</span><div class="itx">The 3-bit margin is what makes the multitasking real: 128 MB ÷ 16 MB = up to <b>8 complete virtual address spaces resident simultaneously</b> in physical memory — exactly what preemptive multitasking with resident processes needs.</div></li>
+  </ol>
+  <figure>
+  <svg viewBox="0 0 960 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Virtual page number versus physical frame field widths">
+    <text x="60" y="50" class="eye">VIRTUAL ADDRESS · 24 b — EMITTED BY THE W65C816S</text>
+    <rect x="60" y="66" width="325" height="46" class="blk"/>
+    <rect x="385" y="66" width="275" height="46" class="blk"/>
+    <text x="222" y="94" class="s">VPN · 13 b</text>
+    <text x="522" y="94" class="s">OFFSET · 11 b</text>
+    <text x="680" y="84" class="li10">24 b − 11 b of offset = 13 b of VPN</text>
+    <text x="680" y="102" class="li10">8,192 pages · 16 MB per process</text>
+    <text x="680" y="120" class="li10">not a choice — a silicon limit</text>
+
+    <line x1="222" y1="112" x2="222" y2="150" class="dt"/>
+    <text x="278" y="136" class="lbl">translated</text>
+    <rect x="110" y="150" width="260" height="56" class="blk"/>
+    <text x="240" y="172" class="t">MMU — Helium</text>
+    <text x="240" y="192" class="s">TLB (ASID tag) · hardware walker</text>
+    <line x1="222" y1="206" x2="222" y2="244" class="dt"/>
+
+    <line x1="385" y1="112" x2="460" y2="244" class="dts"/>
+    <line x1="660" y1="112" x2="735" y2="244" class="dts"/>
+    <text x="566" y="186" class="lbl">offset passes through unchanged</text>
+
+    <text x="60" y="234" class="eye">PHYSICAL ADDRESS · 27 b — ASSEMBLED BY HELIUM</text>
+    <rect x="60" y="244" width="400" height="46" class="blk"/>
+    <rect x="460" y="244" width="275" height="46" class="blk"/>
+    <text x="260" y="272" class="s">FRAME · 16 b</text>
+    <text x="597" y="272" class="s">OFFSET · 11 b</text>
+    <text x="755" y="264" class="li10">65,536 frames</text>
+    <text x="755" y="282" class="li10">128 MB ceiling</text>
+
+    <text x="60" y="328" class="li">FRAME 16 b × 2 KB = 65,536 frames = 128 MB ceiling — a design choice, not a CPU limit.</text>
+    <text x="60" y="350" class="li">Page table: 8,192 PTEs × 32 b = 32 KB per process · physical pool fitted today: 64 MB = 32,768 frames.</text>
+    <text x="60" y="380" class="gtx">128 MB ÷ 16 MB = up to 8 complete virtual address spaces resident at once — the headroom preemptive multitasking needs.</text>
+  </svg>
+  <figcaption>Fig. 5 — Field-width asymmetry. The virtual split falls out of the CPU's 24 bits; the physical one is chosen by the MMU, and the offset crosses untranslated.</figcaption>
+  </figure>
+
+
+  <p class="lead" style="margin-top:18px"><b>Summary of figures</b></p>
+  <table class="simple">
+    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Page size</td><td>2 KB</td></tr>
+      <tr><td>Virtual address</td><td>24 bits — 16 MB per process</td></tr>
+      <tr><td>VPN</td><td>13 bits — 8,192 pages</td></tr>
+      <tr><td>Offset</td><td>11 bits</td></tr>
+      <tr><td>PTE</td><td>32 bits</td></tr>
+      <tr><td>FRAME field</td><td>16 bits</td></tr>
+      <tr><td>Physical address</td><td>27 bits — 128 MB ceiling</td></tr>
+      <tr><td>Page table</td><td>32 KB per process (8,192 × 4 B)</td></tr>
+      <tr><td>Physical pool fitted</td><td>64 MB SDRAM = 32,768 frames</td></tr>
+      <tr><td>TLB entries</td><td>32–64, in Helium's EBR</td></tr>
+      <tr><td>TLB reach</td><td>64 KB with 32 entries · 128 KB with 64</td></tr>
+      <tr><td>Page walk cost</td><td>≈ 100 ns — 4 SRAM accesses at 8-bit width</td></tr>
+    </tbody>
+  </table>
+</section>
+  <nav class="pager">
+    <div class="pv"><b>Previous</b><a href="sec_j.html">← J · Operating system</a></div>
+    <div class="nx"><b>Next</b><a href="sec_l.html">L · Virtual memory management →</a></div>
+  </nav>
+<footer class="cajetin" aria-label="Title block">
+  <div class="cj">
+    <div class="big">noVa64</div>
+    <div>SHEET 11 · K — VIRTUAL MEMORY — CONCEPTS AND GLOSSARY</div>
+  </div>
+  <div class="cj">
+    <div>Synthesis document · sheets A–R · index at index.html</div>
+    <div>Detail: hoja-1-1 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · placa-65816.html (REV B)</div>
+  </div>
+  <div class="cj">
+    <div>All 3.3V · hand-solderable · open toolchain</div>
+    <div class="gold">OUTLINE 1 · AUG 2026</div>
+  </div>
+</footer>
+  </div>
+</div>
+</body>
+</html>

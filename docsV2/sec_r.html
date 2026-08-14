@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noVa64 · R — Glossary</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="side" aria-label="Sheets">
+    <div class="cap">noVa64 · SHEETS</div>
+    <ol>
+      <li><a href="index.html"><span class="de">·</span>Sheet index</a></li>
+      <li><a href="sec_a.html"><span class="de">A</span>Vision and philosophy<span class="fg">01</span></a></li>
+      <li><a href="sec_b.html"><span class="de">B</span>Global architecture<span class="fg">02</span></a></li>
+      <li><a href="sec_c.html"><span class="de">C</span>Power supply<span class="fg">03</span></a></li>
+      <li><a href="sec_d.html"><span class="de">D</span>RP2040 — embedded controller<span class="fg">04</span></a></li>
+      <li><a href="sec_e.html"><span class="de">E</span>CPU — W65C816S and the softcore option<span class="fg">05</span></a></li>
+      <li><a href="sec_f.html"><span class="de">F</span>Physical memory structure<span class="fg">06</span></a></li>
+      <li><a href="sec_g.html"><span class="de">G</span>Persistent storage — microSD<span class="fg">07</span></a></li>
+      <li><a href="sec_h.html"><span class="de">H</span>Peripherals and their location<span class="fg">08</span></a></li>
+      <li><a href="sec_i.html"><span class="de">I</span>BIOS — what it provides<span class="fg">09</span></a></li>
+      <li><a href="sec_j.html"><span class="de">J</span>Operating system<span class="fg">10</span></a></li>
+      <li><a href="sec_k.html"><span class="de">K</span>Virtual memory — concepts and glossary<span class="fg">11</span></a></li>
+      <li><a href="sec_l.html"><span class="de">L</span>Virtual memory management<span class="fg">12</span></a></li>
+      <li><a href="sec_m.html"><span class="de">M</span>Kernel–hardware interface<span class="fg">13</span></a></li>
+      <li><a href="sec_n.html"><span class="de">N</span>Process management<span class="fg">14</span></a></li>
+      <li><a href="sec_o.html"><span class="de">O</span>Programming and toolchain<span class="fg">15</span></a></li>
+      <li><a href="sec_p.html"><span class="de">P</span>Step-by-step build · E0–E8<span class="fg">16</span></a></li>
+      <li><a href="sec_q.html"><span class="de">Q</span>Decision log · open questions<span class="fg">17</span></a></li>
+      <li><a href="sec_r.html" class="here"><span class="de">R</span>Glossary<span class="fg">18</span></a></li>
+    </ol>
+  </nav>
+  <div class="main">
+<header class="masthead">
+  <h1><a href="index.html">noVa64</a></h1>
+  <div class="sub">Sheet 18 · R — Glossary</div>
+</header>
+<section class="hoja" id="r">
+  <div class="sechead"><span class="des">R</span><h2>Glossary</h2><span class="aim">every acronym and term used across sheets A–O</span><span class="sheet">SHEET 18</span></div>
+  <p class="lead">Document-wide reference. Every acronym is also expanded on first use in place, so this sheet is deliberately redundant — it exists to be jumped to, not read through. Grouped by domain; within each group, roughly in the order the concepts appear.</p>
+
+  <p class="lead" style="margin-top:16px"><b>Virtual memory and the MMU</b> <span class="note">→ <a href="sec_k.html">sheet K</a> · <a href="sec_l.html">sheet L</a></span></p>
+  <table class="simple">
+    <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>Virtual memory</td><td>A layer of indirection between the addresses the CPU generates and those that reach the RAM.</td></tr>
+      <tr><td>Virtual address</td><td>The address the CPU emits — what the program "believes". 24 bits here.</td></tr>
+      <tr><td>Physical address</td><td>The address that reaches the SRAM/SDRAM chips. 27 bits here.</td></tr>
+      <tr><td>Page</td><td>A fixed-size block of the virtual space. 2 KB.</td></tr>
+      <tr><td>Frame</td><td>A block of the same size in physical memory. To translate is to pair a page with a frame.</td></tr>
+      <tr><td>VPN</td><td>Virtual Page Number — high bits of the virtual address; identifies the page. 13 bits.</td></tr>
+      <tr><td>Offset</td><td>Low bits; the byte within the page. Never translated. 11 bits.</td></tr>
+      <tr><td>MMU</td><td>Memory Management Unit — the hardware that translates. Not in the CPU here: Helium implements it.</td></tr>
+      <tr><td>Page table</td><td>An array indexed by VPN holding the PTEs. One per process, 32 KB.</td></tr>
+      <tr><td>PTE</td><td>Page Table Entry — one entry of that table. 32 bits: frame number plus flags.</td></tr>
+      <tr><td>PTE flags</td><td><code>P</code> present in RAM · <code>W</code> writable · <code>X</code> executable · <code>U</code> reachable from user mode · <code>D</code> dirty (modified since load) · <code>A</code> accessed recently · <code>NC</code> non-cacheable · <code>PIN</code> non-evictable · <code>SW</code> free for the kernel's own use.</td></tr>
+      <tr><td>TLB</td><td>Translation Lookaside Buffer — cache of VPN→frame translations inside the MMU. Avoids re-reading the table on every access.</td></tr>
+      <tr><td>TLB hit / miss</td><td>Success or failure in that cache. A miss costs one table walk; it is not an error.</td></tr>
+      <tr><td>TLB reach</td><td>Entries × page size — the working set the TLB can cover before it starts thrashing. 64 KB here with 32 entries; the main thing a larger page buys.</td></tr>
+      <tr><td>Page walk / walker</td><td>The traversal of the page table that resolves a miss. Hardware here (≈100 ns, four 8-bit SRAM accesses); a software exception in other architectures.</td></tr>
+      <tr><td>ASID</td><td>Address Space IDentifier — tag marking which process each TLB entry belongs to. Without it the whole TLB would be flushed on every context switch.</td></tr>
+      <tr><td>Page fault</td><td>Exception raised on access to a page with <code>P=0</code>. Recoverable.</td></tr>
+      <tr><td>Demand paging</td><td>Loading pages only when touched rather than all up front. Deferred to post-v1.</td></tr>
+      <tr><td>Eager loading</td><td>Mapping and filling every segment at <code>exec</code> time. What v1 does, in place of demand paging.</td></tr>
+      <tr><td>Swapping</td><td>Evicting rarely used pages to storage in order to free frames.</td></tr>
+      <tr><td>Pinning</td><td>Marking a page as non-evictable. Required for the kernel, the interrupt vectors and the bank <code>$00</code> stack.</td></tr>
+      <tr><td>Memory protection</td><td>Preventing a process from reading or writing outside its own space. Achieved through the PTE flags, not through translation itself.</td></tr>
+      <tr><td>Cache line</td><td>The tagged unit of Helium's cache — 2 KB, one tag per line, but filled and written back in 256 B sub-blocks.</td></tr>
+      <tr><td>Sub-block</td><td>The 256 B unit a fill actually moves, with its own valid and dirty bits. Keeps a miss at ~6 µs instead of ~41 µs and bounds interrupt latency.</td></tr>
+      <tr><td>Set associative</td><td>Cache organization where a given address may sit in any of N positions ("ways") within one set. Four ways here; direct mapping would put 32,768 physical lines in competition for 384 slots.</td></tr>
+      <tr><td>Tag</td><td>The bits stored alongside a cache line saying which physical line it currently holds. Kept in EBR, ~1.5 KB, beside the TLB.</td></tr>
+      <tr><td>Dirty victim</td><td>The line a fill has to evict when it has been written to — it must go back to SDRAM first, which is why a miss can cost double.</td></tr>
+      <tr><td>Write-back</td><td>Cache policy where writes stay in the cache and reach memory only on eviction. Implied by the dirty bits.</td></tr>
+      <tr><td>Backing store</td><td>The memory a cache is a cache <i>of</i>. Here the SDRAM, which the PTEs always name.</td></tr>
+      <tr><td>Copy-on-write</td><td>Sharing a page read-only between processes and duplicating it only when one writes. An ABORT case (<a href="sec_l.html#l4">L.4</a>).</td></tr>
+      <tr><td>Static core</td><td>A CPU whose state survives an arbitrarily slow or stopped clock. The W65C816S is one, which is what makes the PHI2 stall legal.</td></tr>
+      <tr><td>Clock gating</td><td>Stopping and restarting PHI2 in gateware. Must be glitch-free, and the first pulse on resume must meet the minimum high width.</td></tr>
+      <tr><td>Trampoline</td><td>The short privileged stubs in bank <code>$00</code> that receive every vector — the CPU forces PBR=0 on entry — and <code>JSL</code> straight into the real kernel in <code>$01</code> (→ <a href="sec_l.html#l11">L.11</a>).</td></tr>
+      <tr><td>ASID recycling</td><td>Reassigning a used ASID to a new process. Legal only after flushing that ASID's TLB entries; skipping the flush leaks the old address space into the new one, silently (→ <a href="sec_m.html#m8">M.8</a>).</td></tr>
+      <tr><td>Address as opcode</td><td>Command convention where each operation has its own address and the value written is its argument, not a command code (→ <a href="sec_m.html#m2">M.2</a>).</td></tr>
+      <tr><td>WDM</td><td>Opcode <code>$42</code>, reserved by WDC and executed as a two-byte, two-cycle no-op. Considered as a command channel and rejected; it stays a no-op, and a softcore must implement it as one.</td></tr>
+      <tr><td>Memory barrier</td><td>An instruction forcing memory ordering. Not needed here and not provided: the 65816 has no prefetch queue and no store buffer, so every bus cycle is already in program order.</td></tr>
+      <tr><td>Watchdog</td><td>Timer that resumes PHI2 and raises NMI or ABORT if a fill overruns — without it a hung fill freezes the machine with no clock and no diagnostic path.</td></tr>
+      <tr><td>Refresh</td><td>The periodic recharge SDRAM needs to keep its contents. Must be interleaved into the fill state machine, not deferred until it finishes.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="lead" style="margin-top:18px"><b>CPU, bus and gateware</b> <span class="note">→ <a href="sec_b.html">sheet B</a> · <a href="sec_f.html">sheet F</a></span></p>
+  <table class="simple">
+    <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>Bank</td><td>A 64 KB slice of the 65816's 24-bit space, selected by DBR/PBR. The virtual bank map is in <a href="sec_l.html#l10">L.10</a>.</td></tr>
+      <tr><td>DBR · PBR · DP</td><td>Data Bank, Program Bank and Direct Page registers — the 65816 state that decides which bank an access lands in.</td></tr>
+      <tr><td>Native mode</td><td>The 65816's 16-bit, 24-bit-address mode, entered with <code>CLC/XCE</code>. The opposite is 6502 emulation mode.</td></tr>
+      <tr><td>PHI2</td><td>The CPU's master clock, generated by Helium. Target 8 MHz.</td></tr>
+      <tr><td>BE</td><td>Bus Enable — the pin that makes the physical CPU release the bus, so Argon's softcore can drive it instead.</td></tr>
+      <tr><td>RESB</td><td>The 65816's active-low reset. Released by the RP2040 as the last step before the CPU runs.</td></tr>
+      <tr><td>ABORTB</td><td>W65C816S pin that cancels the instruction in progress without side effects. The system's fault mechanism.</td></tr>
+      <tr><td>VPA / VDA</td><td>Pins indicating whether the cycle is an instruction fetch or a data access. They make checking the <code>X</code> flag possible.</td></tr>
+      <tr><td>RDY</td><td>The pin Helium pulls low to stall the CPU while a cache miss is being filled.</td></tr>
+      <tr><td>Northbridge</td><td>Borrowed PC term for the chip sitting between CPU and memory. Here it is Helium: MMU, cache, arbiter, timer and I/O.</td></tr>
+      <tr><td>Gateware</td><td>The logic loaded into an FPGA — the FPGA equivalent of firmware. Written in HDL, not compiled to instructions.</td></tr>
+      <tr><td>Softcore</td><td>A CPU implemented as gateware rather than as a chip. Argon's optional 65816 is one (→ <a href="sec_e.html">sheet E</a>).</td></tr>
+      <tr><td>Fmax</td><td>The highest clock a placed-and-routed design will meet timing at. A property of the design <i>on a given part</i> — quoting one across FPGA families is meaningless.</td></tr>
+      <tr><td>CPI</td><td>Cycles Per Instruction. The 65816 spends 2–7, many wasted on bus protocol. Lowering it buys throughput without touching the critical path, which is why it beats chasing clock.</td></tr>
+      <tr><td>Microcode</td><td>The internal table that sequences each instruction. On a soft core it sits in block RAM, and registering its output is the standard first move against the critical path.</td></tr>
+      <tr><td>Cycle-exact</td><td>A core reproducing the original's timing cycle for cycle. Needed to emulate a specific machine; unnecessary here, where only programmer-visible behaviour must match (→ <a href="sec_e.html#e6">E.6</a>).</td></tr>
+      <tr><td>ILP</td><td>Instruction-Level Parallelism — independent work a core can overlap. An accumulator architecture offers little, which bounds what any 65816 core can gain from pipelining.</td></tr>
+      <tr><td>Accumulator architecture</td><td>A design where most operations route through one register. Compact to encode, heavy on memory traffic, and inherently serial.</td></tr>
+      <tr><td>Bus arbiter</td><td>The logic deciding who drives the shared bus in each cycle: CPU, cache fill, video, or refresh.</td></tr>
+      <tr><td>PIC</td><td>Programmable Interrupt Controller — collects device IRQs, applies priorities, and raises IRQ/NMI to the CPU.</td></tr>
+      <tr><td>EBR</td><td>Embedded Block RAM — RAM blocks inside the iCE40. Its 128 Kbit are the reason only the TLB fits on-chip while the page table lives in external SRAM.</td></tr>
+      <tr><td>HDL</td><td>Hardware Description Language — Verilog or VHDL. The choice is still open (<a href="sec_q.html#q2">Q2</a>).</td></tr>
+      <tr><td>Stub</td><td>In layout, a track branching off a bus. Long stubs ruin signal integrity at ~100 MHz, hence the short comb of <a href="sec_f.html#f13">F.13</a>.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="lead" style="margin-top:18px"><b>Board, power and configuration</b> <span class="note">→ <a href="sec_c.html">sheet C</a> · <a href="sec_d.html">sheet D</a></span></p>
+  <table class="simple">
+    <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>EC</td><td>Embedded Controller — the always-on microcontroller handling power, boot and housekeeping. Here, the RP2040.</td></tr>
+      <tr><td>Rail</td><td>A supply voltage distributed across the board (3V3, 1.2V, VPP…). "Sequencing" is the order they come up in.</td></tr>
+      <tr><td>SYS</td><td>The node after the charger, fed by USB or battery indifferently. Everything hangs off it rather than off the battery.</td></tr>
+      <tr><td>Power-path</td><td>Charger topology that powers the system and charges the cell at once, so the machine runs on USB with a flat or absent battery.</td></tr>
+      <tr><td>1S</td><td>One lithium cell in series — a nominal ~3.7V pack.</td></tr>
+      <tr><td>Fuel gauge</td><td>Chip that estimates remaining charge from voltage and current history. Here the MAX17048, read by the EC over I2C.</td></tr>
+      <tr><td>Buck-boost</td><td>Converter holding its output steady whether the input is above or below it — needed because a cell crosses 3.3V as it drains.</td></tr>
+      <tr><td>Boost</td><td>Converter that only steps voltage up. Used for the backlight and the 5V host VBUS.</td></tr>
+      <tr><td>LDO</td><td>Low-DropOut regulator — simple linear regulator, used for the 1.2V FPGA cores.</td></tr>
+      <tr><td>Load switch</td><td>A controlled switch cutting power to a whole block — here the panel, off by default.</td></tr>
+      <tr><td>Always-on</td><td>A rail that stays up whenever the machine has any power, so the EC can run before anything else exists.</td></tr>
+      <tr><td>SSPI</td><td>Slave SPI — the iCE40 configuration mode in which an external master (the RP2040) clocks the bitstream in.</td></tr>
+      <tr><td>Bitstream</td><td>The compiled gateware file loaded into an FPGA at every power-up. iCE40s are SRAM-based: they forget on power-off.</td></tr>
+      <tr><td>CRESET_B / CDONE</td><td>The iCE40's configuration handshake: held low to start loading, raised by the FPGA when configuration succeeded.</td></tr>
+      <tr><td>Bring-up</td><td>First powering of a new board, block by block, verifying each before enabling the next.</td></tr>
+      <tr><td>Free-run</td><td>Diagnostic where the CPU is fed a constant NOP so it just counts through addresses — proves clock, reset and address bus without any memory.</td></tr>
+      <tr><td>Handoff</td><td>Transfer of a shared resource between two owners — here the microSD passing from the RP2040 to Helium through the '3257 mux.</td></tr>
+      <tr><td>TQFP · PLCC · TSOP · BGA</td><td>Chip packages. The first three have accessible leads and can be hand-soldered; BGA hides its balls underneath and cannot, which is why it is excluded (<a href="sec_q.html#d01">D01</a>).</td></tr>
+    </tbody>
+  </table>
+
+  <p class="lead" style="margin-top:18px"><b>Video, audio and peripherals</b> <span class="note">→ <a href="sec_h.html">sheet H</a></span></p>
+  <table class="simple">
+    <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>Chip RAM</td><td>Amiga term reused here: Neon's own 64 MB SDRAM (framebuffer + audio DMA), outside the CPU hierarchy and reached through the <code>$FE</code> window.</td></tr>
+      <tr><td>Framebuffer</td><td>The region of memory holding the pixels currently on screen. Exposed to processes as <code>/dev/fb</code>.</td></tr>
+      <tr><td>VRAM window</td><td>The 64 KB opening in bank <code>$FE</code> through which the CPU reaches video memory, gated by the MMU's VRAM_SEL.</td></tr>
+      <tr><td>Px-doubling</td><td>Drawing at 512×300 and emitting each pixel twice in both axes to fill 1024×600 — quarters the framebuffer and its bandwidth.</td></tr>
+      <tr><td>RGB-TTL</td><td>Parallel video interface: one wire per colour bit plus sync and clock. No bridge chip needed, at the cost of many pins.</td></tr>
+      <tr><td>VSYNC</td><td>The pulse marking the end of a frame. Raised as an IRQ so the GUI can redraw without tearing.</td></tr>
+      <tr><td>FPC</td><td>Flexible Printed Circuit — the flat ribbon connecting the panel. "FPC-50" is its 50-contact connector.</td></tr>
+      <tr><td>eDP</td><td>Embedded DisplayPort — serial panel interface. Rejected for v1 as it needs a bridge chip (<a href="sec_q.html#d05">D05</a>).</td></tr>
+      <tr><td>R-2R</td><td>A resistor-ladder DAC — the cheapest way to get analogue VGA levels out of FPGA pins. Bring-up only.</td></tr>
+      <tr><td>I2S</td><td>Serial audio bus between the FPGA and the DAC. Unrelated to I2C despite the name.</td></tr>
+      <tr><td>QSPI</td><td>Quad SPI — 4-bit-wide serial bus. Historical here: it went with the PSRAM (<a href="sec_q.html#d13">D13</a>) and no longer appears on the board.</td></tr>
+      <tr><td>HID</td><td>Human Interface Device — the USB class covering keyboards and mice.</td></tr>
+      <tr><td>PIO-USB</td><td>USB host implemented on the RP2040's programmable I/O blocks, since the chip has no hardware host controller.</td></tr>
+      <tr><td>USB-CDC</td><td>Communications Device Class — makes the RP2040 appear as a serial port on the development PC. Carries the console.</td></tr>
+      <tr><td>Mux</td><td>Multiplexer — switch routing one set of signals to one of several destinations. The '3257 gives the microSD two possible owners.</td></tr>
+      <tr><td>DMA</td><td>Direct Memory Access — a device reading or writing memory itself, without the CPU moving each byte.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="lead" style="margin-top:18px"><b>Operating system and toolchain</b> <span class="note">→ <a href="sec_i.html">sheet I</a> · <a href="sec_j.html">sheet J</a> · <a href="sec_n.html">sheet N</a> · <a href="sec_o.html">sheet O</a></span></p>
+  <table class="simple">
+    <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>BIOS</td><td>Here it means two things kept distinct: the RP2040 is the "board BIOS" (everything pre-CPU), and <code>BIOS.BIN</code> is the "system BIOS" (everything post-reset).</td></tr>
+      <tr><td>Info block</td><td>The structure the BIOS hands the kernel at load time: RAM size, device map, battery state, RTC time. Format still open (<a href="sec_q.html#q5">Q5</a>).</td></tr>
+      <tr><td>Monitor</td><td>Minimal interactive debugger in the BIOS: examine and alter memory, load over serial. The working tool of stages E2–E4.</td></tr>
+      <tr><td>Kernel</td><td>The resident, privileged core of the OS. Lives in virtual bank <code>$01</code>, pinned in SRAM.</td></tr>
+      <tr><td>Syscall</td><td>A service request from a process to the kernel. Invoked here through the <code>COP</code> instruction, with the service number in the accumulator.</td></tr>
+      <tr><td>PCB</td><td>Process Control Block — the per-process record holding saved registers, ASID and page-table pointer. <span class="note">Not the printed circuit board, which this document always spells out.</span></td></tr>
+      <tr><td>Context switch</td><td>Switching process; entails saving state to the PCB and pointing the MMU at a different page table.</td></tr>
+      <tr><td>Preemptive</td><td>The kernel takes the CPU back on its own (on the timer tick) rather than waiting for the process to yield it.</td></tr>
+      <tr><td>Round-robin</td><td>Scheduling that simply cycles through ready processes in turn, each getting one quantum.</td></tr>
+      <tr><td>Tick</td><td>The periodic timer interrupt driving scheduling. 100 Hz here.</td></tr>
+      <tr><td>Zombie</td><td>A finished process whose exit status is still held for its parent to collect with <code>wait</code>.</td></tr>
+      <tr><td>Driver</td><td>Kernel module handling one device behind a fixed 5-function interface, exposed as a <code>/dev/*</code> node.</td></tr>
+      <tr><td>devfs</td><td>The synthetic filesystem where those <code>/dev/*</code> nodes live — no bytes on the SD card.</td></tr>
+      <tr><td>ioctl</td><td>The escape hatch of the unified I/O interface: device-specific operations that are neither read nor write, such as mapping the framebuffer.</td></tr>
+      <tr><td>FAT</td><td>The filesystem on the microSD. Chosen so any PC can write the boot card.</td></tr>
+      <tr><td>BSS</td><td>The zero-initialised data of a binary. Carries no bytes in the file: the loader just maps it and clears it.</td></tr>
+      <tr><td>Relocation</td><td>Patching a binary's addresses to match where it was actually loaded. The MMU removes the need: every process sees the same addresses.</td></tr>
+      <tr><td>ABI</td><td>Application Binary Interface — the contract user binaries rely on. Drivers may be rewritten as long as it holds.</td></tr>
+      <tr><td>JSL / RTL</td><td>The 65816's long call and return, crossing banks. The basis of the large memory model and of syscall stubs.</td></tr>
+      <tr><td>Large model</td><td>Compiler model where code is addressed across all banks with JSL/RTL. Paired here with a fixed DBR so data access stays cheap.</td></tr>
+      <tr><td>Toolchain</td><td>The full chain from source to loadable artefact. Open end to end here: KiCad · Yosys · nextpnr · IceStorm · pico-sdk · ca65/64tass.</td></tr>
+    </tbody>
+  </table>
+</section>
+  <nav class="pager">
+    <div class="pv"><b>Previous</b><a href="sec_q.html">← Q · Decision log · open questions</a></div>
+  </nav>
+<footer class="cajetin" aria-label="Title block">
+  <div class="cj">
+    <div class="big">noVa64</div>
+    <div>SHEET 18 · R — GLOSSARY</div>
+  </div>
+  <div class="cj">
+    <div>Synthesis document · sheets A–R · index at index.html</div>
+    <div>Detail: hoja-1-1 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · placa-65816.html (REV B)</div>
+  </div>
+  <div class="cj">
+    <div>All 3.3V · hand-solderable · open toolchain</div>
+    <div class="gold">OUTLINE 1 · AUG 2026</div>
+  </div>
+</footer>
+  </div>
+</div>
+</body>
+</html>

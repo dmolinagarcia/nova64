@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noVa64 · J — Operating system</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="side" aria-label="Sheets">
+    <div class="cap">noVa64 · SHEETS</div>
+    <ol>
+      <li><a href="index.html"><span class="de">·</span>Sheet index</a></li>
+      <li><a href="sec_a.html"><span class="de">A</span>Vision and philosophy<span class="fg">01</span></a></li>
+      <li><a href="sec_b.html"><span class="de">B</span>Global architecture<span class="fg">02</span></a></li>
+      <li><a href="sec_c.html"><span class="de">C</span>Power supply<span class="fg">03</span></a></li>
+      <li><a href="sec_d.html"><span class="de">D</span>RP2040 — embedded controller<span class="fg">04</span></a></li>
+      <li><a href="sec_e.html"><span class="de">E</span>CPU — W65C816S and the softcore option<span class="fg">05</span></a></li>
+      <li><a href="sec_f.html"><span class="de">F</span>Physical memory structure<span class="fg">06</span></a></li>
+      <li><a href="sec_g.html"><span class="de">G</span>Persistent storage — microSD<span class="fg">07</span></a></li>
+      <li><a href="sec_h.html"><span class="de">H</span>Peripherals and their location<span class="fg">08</span></a></li>
+      <li><a href="sec_i.html"><span class="de">I</span>BIOS — what it provides<span class="fg">09</span></a></li>
+      <li><a href="sec_j.html" class="here"><span class="de">J</span>Operating system<span class="fg">10</span></a></li>
+      <li><a href="sec_k.html"><span class="de">K</span>Virtual memory — concepts and glossary<span class="fg">11</span></a></li>
+      <li><a href="sec_l.html"><span class="de">L</span>Virtual memory management<span class="fg">12</span></a></li>
+      <li><a href="sec_m.html"><span class="de">M</span>Kernel–hardware interface<span class="fg">13</span></a></li>
+      <li><a href="sec_n.html"><span class="de">N</span>Process management<span class="fg">14</span></a></li>
+      <li><a href="sec_o.html"><span class="de">O</span>Programming and toolchain<span class="fg">15</span></a></li>
+      <li><a href="sec_p.html"><span class="de">P</span>Step-by-step build · E0–E8<span class="fg">16</span></a></li>
+      <li><a href="sec_q.html"><span class="de">Q</span>Decision log · open questions<span class="fg">17</span></a></li>
+      <li><a href="sec_r.html"><span class="de">R</span>Glossary<span class="fg">18</span></a></li>
+    </ol>
+  </nav>
+  <div class="main">
+<header class="masthead">
+  <h1><a href="index.html">noVa64</a></h1>
+  <div class="sub">Sheet 10 · J — Operating system</div>
+</header>
+<section class="hoja" id="j">
+  <div class="sechead"><span class="des">J</span><h2>Operating system</h2><span class="aim">how it uses the BIOS · what it provides to processes</span><span class="sheet">SHEET 10</span></div>
+  <p class="lead">Small monolithic kernel, written in C with assembly only where it hurts. It consumes the BIOS for a few milliseconds and then provides everything else.</p>
+  <ol class="steps">
+    <li id="j1"><span class="id">J.1</span><div class="itx">Model: preemptive kernel resident in virtual bank <code>$01</code> (64 KB, pinned in SRAM), mapped identically and privileged in every process's page table.</div></li>
+    <li id="j2"><span class="id">J.2</span><div class="itx">How it uses the BIOS: only the info block and the <code>JSL</code> table during the transition; its drivers replace the console and SD, and from then on the BIOS goes inert.</div></li>
+    <li id="j3"><span class="id">J.3</span><div class="itx">Syscall mechanism: <code>COP</code>, with the service number <b>in the accumulator</b>, loaded by the libc stub immediately before the instruction. The handler indexes its dispatch table straight from A; arguments stay wherever the C compiler's calling convention left them. So the stable ABI is exactly "<b>calling convention + a number in A</b>" — nothing is marshalled, and the stubs that carry it are three lines each (→ <a href="sec_o.html#o7">O.7</a>). <span class="note">The inline signature byte is still emitted, but no longer read: it survives for disassembly, tracing and static verification of a binary. Taking the number from A instead of walking the stack for it saves 20–30 cycles on every single call.</span> <span class="note">The 65816's other software interrupt, <code>BRK</code>, is reserved for the debugger and must stay that way — two software traps with separate vectors is exactly enough to keep breakpoints from colliding with system calls.</span></div></li>
+    <li id="j4"><span class="id">J.4</span><div class="itx">Internal drivers with a fixed 5-function interface — <code>init · read · write · ioctl · irq_handler</code> — reached through a device table indexed by device number, and exposed as <code>/dev/*</code>. A minimal VFS decides only whether an <code>open</code> routes to the filesystem or to that table. <span class="note">Drivers expose <b>no syscalls of their own</b>, and that is the point: per-driver calls would break the ABI every time a chip changed. Swapping hardware means rewriting one driver against the same internal interface, while libc and the syscall numbering stay put.</span></div></li>
+    <li id="j5"><span class="id">J.5</span><div class="itx">Framebuffer: the preferred path is an ioctl that maps VRAM pages (<code>$FE</code>) into the process's address space — no per-pixel <code>write()</code>. Battery and power are the mirror case: the logic lives on the RP2040 and the kernel sees an ordinary I2C-translating driver, with no special case in the ABI.</div></li>
+    <li id="j6"><span class="id">J.6</span><div class="itx">Filesystem: FAT over the SD + minimal devfs. Per-device blocking queues and basic IPC. <span class="chip">sketch</span></div></li>
+  </ol>
+  <p class="lead" style="margin-top:16px"><b>v1 dispatch table</b> — Unix-shaped, deliberately small. Numbering the <code>SYS_*</code> constants is still pending.</p>
+  <table class="simple">
+    <thead><tr><th>Group</th><th>Calls</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Processes</td><td><code>exec(path)</code> · <code>exit(code)</code> · <code>wait(pid)</code> · <code>getpid()</code> · <code>yield()</code> · <code>sleep(ms)</code> · <code>kill(pid,sig)</code></td><td><code>exec</code> loads the binary from the card (→ <a href="sec_n.html#n6">N.6</a>). <code>sleep</code> is backed by Helium's free-running counter, never by cycle counting. Signals stay minimal: KILL, TERM, perhaps one user-defined.</td></tr>
+      <tr><td>Memory</td><td><code>sbrk(n)</code> · <code>mmap(addr,n,prot)</code> · <code>munmap</code> · <code>mshare(pid,addr)</code></td><td><code>sbrk</code> only moves the heap end; the frames arrive later by ABORT. <code>prot</code> maps straight onto the PTE R/W/X bits. <code>mshare</code> is optional — shared-memory IPC, and the reason the cache may never migrate a frame (→ <a href="sec_l.html#l3">L.3</a>).</td></tr>
+      <tr><td>Files and devices</td><td><code>open(path,flags)</code> · <code>close(fd)</code> · <code>read</code> · <code>write</code> · <code>seek</code> · <code>stat</code> · <code>unlink</code> · <code>rename</code> · <code>mkdir</code> · <code>readdir</code> · <code>ioctl(fd,op,arg)</code></td><td>One unified surface: a path resolves either to the filesystem or to the device table, and everything past that point is the same seven calls. <code>ioctl</code> is the escape valve for whatever does not fit.</td></tr>
+      <tr><td>Time and IPC</td><td><code>time()</code> · <code>pipe()</code></td><td>Little more than this in v1.</td></tr>
+    </tbody>
+  </table>
+</section>
+  <nav class="pager">
+    <div class="pv"><b>Previous</b><a href="sec_i.html">← I · BIOS — what it provides</a></div>
+    <div class="nx"><b>Next</b><a href="sec_k.html">K · Virtual memory — concepts and glossary →</a></div>
+  </nav>
+<footer class="cajetin" aria-label="Title block">
+  <div class="cj">
+    <div class="big">noVa64</div>
+    <div>SHEET 10 · J — OPERATING SYSTEM</div>
+  </div>
+  <div class="cj">
+    <div>Synthesis document · sheets A–R · index at index.html</div>
+    <div>Detail: hoja-1-1 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · placa-65816.html (REV B)</div>
+  </div>
+  <div class="cj">
+    <div>All 3.3V · hand-solderable · open toolchain</div>
+    <div class="gold">OUTLINE 1 · AUG 2026</div>
+  </div>
+</footer>
+  </div>
+</div>
+</body>
+</html>

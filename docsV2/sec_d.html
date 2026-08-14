@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noVa64 · D — RP2040 — embedded controller</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="side" aria-label="Sheets">
+    <div class="cap">noVa64 · SHEETS</div>
+    <ol>
+      <li><a href="index.html"><span class="de">·</span>Sheet index</a></li>
+      <li><a href="sec_a.html"><span class="de">A</span>Vision and philosophy<span class="fg">01</span></a></li>
+      <li><a href="sec_b.html"><span class="de">B</span>Global architecture<span class="fg">02</span></a></li>
+      <li><a href="sec_c.html"><span class="de">C</span>Power supply<span class="fg">03</span></a></li>
+      <li><a href="sec_d.html" class="here"><span class="de">D</span>RP2040 — embedded controller<span class="fg">04</span></a></li>
+      <li><a href="sec_e.html"><span class="de">E</span>CPU — W65C816S and the softcore option<span class="fg">05</span></a></li>
+      <li><a href="sec_f.html"><span class="de">F</span>Physical memory structure<span class="fg">06</span></a></li>
+      <li><a href="sec_g.html"><span class="de">G</span>Persistent storage — microSD<span class="fg">07</span></a></li>
+      <li><a href="sec_h.html"><span class="de">H</span>Peripherals and their location<span class="fg">08</span></a></li>
+      <li><a href="sec_i.html"><span class="de">I</span>BIOS — what it provides<span class="fg">09</span></a></li>
+      <li><a href="sec_j.html"><span class="de">J</span>Operating system<span class="fg">10</span></a></li>
+      <li><a href="sec_k.html"><span class="de">K</span>Virtual memory — concepts and glossary<span class="fg">11</span></a></li>
+      <li><a href="sec_l.html"><span class="de">L</span>Virtual memory management<span class="fg">12</span></a></li>
+      <li><a href="sec_m.html"><span class="de">M</span>Kernel–hardware interface<span class="fg">13</span></a></li>
+      <li><a href="sec_n.html"><span class="de">N</span>Process management<span class="fg">14</span></a></li>
+      <li><a href="sec_o.html"><span class="de">O</span>Programming and toolchain<span class="fg">15</span></a></li>
+      <li><a href="sec_p.html"><span class="de">P</span>Step-by-step build · E0–E8<span class="fg">16</span></a></li>
+      <li><a href="sec_q.html"><span class="de">Q</span>Decision log · open questions<span class="fg">17</span></a></li>
+      <li><a href="sec_r.html"><span class="de">R</span>Glossary<span class="fg">18</span></a></li>
+    </ol>
+  </nav>
+  <div class="main">
+<header class="masthead">
+  <h1><a href="index.html">noVa64</a></h1>
+  <div class="sub">Sheet 04 · D — RP2040 — embedded controller</div>
+</header>
+<section class="hoja" id="d">
+  <div class="sechead"><span class="des">D</span><h2>RP2040 — embedded controller</h2><span class="aim">boot · FPGA programming · console · EC</span><span class="sheet">SHEET 04</span></div>
+  <p class="lead">It's the laptop's "management microcontroller": it handles everything that happens before a live CPU exists, and stays on watch afterward. Detail in <code>hoja-1-2-rp2040.md</code> and <code>hoja-1-3-config-fpga.md</code>.</p>
+  <ol class="steps">
+    <li id="d1"><span class="id">D.1</span><div class="itx">Triple role: <b>programmer</b> (bitstreams, BIOS, its own firmware — all over USB), <b>bootstrapper</b> (full sequence in Fig. 3), and permanent <b>embedded controller</b>. Its W25Q16 is the board's only mandatory flash.</div></li>
+    <li id="d2"><span class="id">D.2</span><div class="itx">9-step boot (Fig. 3): button → rails → SSPI configuration of Helium/Neon(/Argon) with CRESET_B/CDONE → SDRAM initialized by gateware → BIOS from SD to SRAM → SD handoff → RESB↑ → <code>$FFFC</code> vector.</div></li>
+    <li id="d3"><span class="id">D.3</span><div class="itx">Debugging: a debug port into FPGA-A (Helium) — live read/write of system memory, a free "ICE" for the kernel.</div></li>
+    <li id="d4"><span class="id">D.4</span><div class="itx">Console: USB-CDC ↔ FPGA-A (Helium) UART. It's the terminal for the monitor (E2) and the OS until there's a screen of its own.</div></li>
+    <li id="d5"><span class="id">D.5</span><div class="itx">HID host: PIO-USB + hub — USB keyboard and mouse (PS/2 and matrix removed). Powers up the TPS61023 on demand and translates HID → events to the kernel over the EC channel.</div></li>
+    <li id="d6"><span class="id">D.6</span><div class="itx">Its own pin budget nearly failed too, and was rescued the same way the FPGA's was. Straight onto GPIO the EC needed roughly 38 pins against 30 available; an <b>MCP23017 I2C expander</b> absorbs everything with no timing requirement — the three CDONE lines, the charger's STAT and PG, the fuel gauge's alert, and the enables for the 1.2V rail, the panel and the host boost — bringing it to 28 of 30. <span class="note">The pattern has now appeared twice: both Helium and the RP2040 ran out of pins, and both were saved by moving slow signals onto a cheaper transport — the keyboard matrix onto USB HID, the enables and status lines onto I2C. Expect it a third time.</span></div></li>
+    <li id="d7"><span class="id">D.7</span><div class="itx">EC in operation: power button, MAX17048 readout, RTC, safe shutdown with the OS hung. <span class="chip">open</span> <span class="note">EC↔kernel protocol yet to be defined (→ N).</span></div></li>
+  </ol>
+  <figure>
+  <svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boot sequence">
+    <line x1="148" y1="44" x2="148" y2="350" class="pw"/>
+    <text transform="rotate(-90 134 200)" x="134" y="200" class="plbl">EC PHASE (PRE-CPU)</text>
+    <line x1="148" y1="368" x2="148" y2="512" class="dt"/>
+    <text transform="rotate(-90 134 440)" x="134" y="440" class="lbl">65816</text>
+
+    <circle cx="176" cy="62" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+    <text x="176" y="66" class="s">1</text>
+    <rect x="200" y="40" width="560" height="44" class="blk"/>
+    <text x="480" y="67" class="t">Power button → RP2040 (3V3 always-on)</text>
+    <line x1="480" y1="84" x2="480" y2="94" class="dt"/>
+
+    <circle cx="176" cy="116" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+    <text x="176" y="120" class="s">2</text>
+    <rect x="200" y="94" width="560" height="44" class="blk"/>
+    <text x="480" y="121" class="t">Rail sequence: 1.2V ON · VPLL · panel OFF</text>
+    <line x1="480" y1="138" x2="480" y2="148" class="dt"/>
+
+    <circle cx="176" cy="170" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+    <text x="176" y="174" class="s">3</text>
+    <rect x="200" y="148" width="560" height="44" class="blk"/>
+    <text x="480" y="175" class="t">Helium·Neon(·Argon) config via SSPI — CRESET_B↓ … CDONE↑</text>
+    <line x1="480" y1="192" x2="480" y2="202" class="dt"/>
+
+    <circle cx="176" cy="224" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+    <text x="176" y="228" class="s">4</text>
+    <rect x="200" y="202" width="560" height="44" class="blk"/>
+    <text x="480" y="229" class="t">Gateware live: PHI2 running · SDRAM init</text>
+    <line x1="480" y1="246" x2="480" y2="256" class="dt"/>
+
+    <circle cx="176" cy="278" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+    <text x="176" y="282" class="s">5</text>
+    <rect x="200" y="256" width="560" height="44" class="blk"/>
+    <text x="480" y="283" class="t">RP2040 reads the microSD (FAT): BIOS.BIN → pinned SRAM</text>
+    <line x1="480" y1="300" x2="480" y2="310" class="dt"/>
+
+    <circle cx="176" cy="332" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+    <text x="176" y="336" class="s">6</text>
+    <rect x="200" y="310" width="560" height="44" class="blk"/>
+    <text x="480" y="337" class="t">SD handoff: '3257 mux → FPGA-A (Helium) SPI-SD</text>
+    <line x1="480" y1="354" x2="480" y2="364" class="dt"/>
+
+    <circle cx="176" cy="386" r="11" fill="#0E3A2C" stroke="#7FD8BD" stroke-width="1.5"/>
+    <text x="176" y="390" class="s">7</text>
+    <rect x="200" y="364" width="560" height="44" class="blk"/>
+    <text x="480" y="391" class="t">RESB↑ — the 65816 boots via $FFFC (BIOS)</text>
+    <line x1="480" y1="408" x2="480" y2="418" class="dt"/>
+
+    <circle cx="176" cy="440" r="11" fill="#0E3A2C" stroke="#7FD8BD" stroke-width="1.5"/>
+    <text x="176" y="444" class="s">8</text>
+    <rect x="200" y="418" width="560" height="44" class="blk"/>
+    <text x="480" y="445" class="t">BIOS: init · console · mounts FAT · loads KERNEL.BIN + info block</text>
+    <line x1="480" y1="462" x2="480" y2="472" class="dt"/>
+
+    <circle cx="176" cy="494" r="11" fill="#0E3A2C" stroke="#7FD8BD" stroke-width="1.5"/>
+    <text x="176" y="498" class="s">9</text>
+    <rect x="200" y="472" width="560" height="44" class="blk"/>
+    <text x="480" y="499" class="t">Kernel: drivers · processes → prompt</text>
+    <text x="780" y="500" class="gtx">= APPLE II MILESTONE (E6)</text>
+  </svg>
+  <figcaption>Fig. 3 — Boot sequence. Steps 1–6 are executed by the RP2040 (gold); from step 7 onward the 65816 (mint) takes over.</figcaption>
+  </figure>
+</section>
+  <nav class="pager">
+    <div class="pv"><b>Previous</b><a href="sec_c.html">← C · Power supply</a></div>
+    <div class="nx"><b>Next</b><a href="sec_e.html">E · CPU — W65C816S and the softcore option →</a></div>
+  </nav>
+<footer class="cajetin" aria-label="Title block">
+  <div class="cj">
+    <div class="big">noVa64</div>
+    <div>SHEET 04 · D — RP2040 — EMBEDDED CONTROLLER</div>
+  </div>
+  <div class="cj">
+    <div>Synthesis document · sheets A–R · index at index.html</div>
+    <div>Detail: hoja-1-1 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · placa-65816.html (REV B)</div>
+  </div>
+  <div class="cj">
+    <div>All 3.3V · hand-solderable · open toolchain</div>
+    <div class="gold">OUTLINE 1 · AUG 2026</div>
+  </div>
+</footer>
+  </div>
+</div>
+</body>
+</html>

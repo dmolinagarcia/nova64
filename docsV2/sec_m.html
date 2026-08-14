@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noVa64 · M — Kernel–hardware interface</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+  <nav class="side" aria-label="Sheets">
+    <div class="cap">noVa64 · SHEETS</div>
+    <ol>
+      <li><a href="index.html"><span class="de">·</span>Sheet index</a></li>
+      <li><a href="sec_a.html"><span class="de">A</span>Vision and philosophy<span class="fg">01</span></a></li>
+      <li><a href="sec_b.html"><span class="de">B</span>Global architecture<span class="fg">02</span></a></li>
+      <li><a href="sec_c.html"><span class="de">C</span>Power supply<span class="fg">03</span></a></li>
+      <li><a href="sec_d.html"><span class="de">D</span>RP2040 — embedded controller<span class="fg">04</span></a></li>
+      <li><a href="sec_e.html"><span class="de">E</span>CPU — W65C816S and the softcore option<span class="fg">05</span></a></li>
+      <li><a href="sec_f.html"><span class="de">F</span>Physical memory structure<span class="fg">06</span></a></li>
+      <li><a href="sec_g.html"><span class="de">G</span>Persistent storage — microSD<span class="fg">07</span></a></li>
+      <li><a href="sec_h.html"><span class="de">H</span>Peripherals and their location<span class="fg">08</span></a></li>
+      <li><a href="sec_i.html"><span class="de">I</span>BIOS — what it provides<span class="fg">09</span></a></li>
+      <li><a href="sec_j.html"><span class="de">J</span>Operating system<span class="fg">10</span></a></li>
+      <li><a href="sec_k.html"><span class="de">K</span>Virtual memory — concepts and glossary<span class="fg">11</span></a></li>
+      <li><a href="sec_l.html"><span class="de">L</span>Virtual memory management<span class="fg">12</span></a></li>
+      <li><a href="sec_m.html" class="here"><span class="de">M</span>Kernel–hardware interface<span class="fg">13</span></a></li>
+      <li><a href="sec_n.html"><span class="de">N</span>Process management<span class="fg">14</span></a></li>
+      <li><a href="sec_o.html"><span class="de">O</span>Programming and toolchain<span class="fg">15</span></a></li>
+      <li><a href="sec_p.html"><span class="de">P</span>Step-by-step build · E0–E8<span class="fg">16</span></a></li>
+      <li><a href="sec_q.html"><span class="de">Q</span>Decision log · open questions<span class="fg">17</span></a></li>
+      <li><a href="sec_r.html"><span class="de">R</span>Glossary<span class="fg">18</span></a></li>
+    </ol>
+  </nav>
+  <div class="main">
+<header class="masthead">
+  <h1><a href="index.html">noVa64</a></h1>
+  <div class="sub">Sheet 13 · M — Kernel–hardware interface</div>
+</header>
+<section class="hoja" id="m">
+  <div class="sechead"><span class="des">M</span><h2>Kernel–hardware interface</h2><span class="aim">Helium's control registers · command model · invariants</span><span class="sheet">SHEET 13</span></div>
+  <p class="lead">Helium owns three pieces of state ordinary memory accesses cannot reach: the TLB, the active context, and the write-back cache. This sheet is the interface the kernel drives them through — and it sits <b>strictly below the syscall layer</b>. Source: <code>fpga-a-control-registers.md</code>.</p>
+  <ol class="steps">
+    <li id="m1"><span class="id">M.1</span><div class="itx">Three layers, kept deliberately apart: the <b>syscall ABI</b> (<code>COP</code>, visible to processes) · the <b>kernel's MMU and cache logic</b> (C and assembly in bank <code>$01</code>, kernel only) · <b>hardware control</b> (stores to bank <code>$FF</code>, this sheet, kernel only). <span class="note">"Flush the TLB" and "flush a frame" must never become system calls: any process could then flush in a loop and degrade the whole machine — a trivial denial of service. They are steps <i>inside</i> <code>munmap</code>, inside the context switch, inside the page evictor. The command encodings therefore live in a numbering space entirely independent of the syscall numbers, and the two must never be aligned.</span></div></li>
+    <li id="m2"><span class="id">M.2</span><div class="itx"><b>Address as opcode.</b> Each command has its own address; the value written is the command's <i>argument</i>, not a command code — <code>sta f:$FF0010</code> with an ASID in A flushes that ASID's TLB entries. Against the alternative of one command register plus a separate argument register, this removes the value decoder inside Helium (leaving the address comparator that already exists), removes the argument register, reduces every command to a single bus cycle, and kills a whole bug class: there is no intermediate "argument written, command not yet triggered" state for an interrupt to split.</div></li>
+    <li id="m3"><span class="id">M.3</span><div class="itx">Why memory-mapped and not <code>WDM</code>. An earlier proposal captured <code>WDM</code> (<code>$42</code>, reserved by WDC, executed as a two-byte two-cycle no-op) and had Helium decode its signature byte. Rejected on four counts: memory mapping <b>widens a comparator that already exists</b> for the fault registers, where a WDM snooper needs a new state machine tracking VPA/VDA to tell an opcode fetch from an operand; it <b>inherits the protection keystone</b> free, since <code>$FF</code> is already unmappable to user space, where WDM would need its own privilege gate; it is <b>testable before a kernel exists</b>, with the RP2040 driving the bus in E1–E3; and it <b>keeps Argon honest</b> — a softcore need only implement the documented instruction set, not replicate a private decode table. <span class="note"><code>WDM</code> stays a reserved no-op and Argon must implement it as one, decoding nothing. The single use it seemed to serve uniquely — a breakpoint insertable into user code, which cannot touch <code>$FF</code> — is already covered by <code>BRK</code> and its own vector.</span></div></li>
+    <li id="m4"><span class="id">M.4</span><div class="itx">The block lives at <code>$FF:0000–$FF:00FF</code>. All registers are 16 bits and are accessed with <code>M=0</code>; byte-granular access to one is undefined in this revision. Addresses not listed decode as no-ops on write and <code>$00</code> on read.</div></li>
+    <li id="m5"><span class="id">M.5</span><div class="itx">Two completion classes, split by whether the command touches SDRAM. <b>Synchronous</b> — every TLB and context operation finishes within the bus cycle of the write (a flush is clearing validity bits in EBR, a context update is a register load), so there is nothing to poll and the effect is visible to the very next cycle. <b>Asynchronous</b> — the cache flushes, which may run for microseconds.</div></li>
+    <li id="m6"><span class="id">M.6</span><div class="itx">Asynchronous commands <b>must not be implemented by stalling PHI2</b>, even though a bounded hardware operation nominally qualifies (→ <a href="sec_q.html#d16">D16</a>). Holding PHI2 low blocks interrupt service, which would inject microseconds of scheduler jitter on every page eviction. The kernel polls <code>BUSY</code> instead — the page evictor is already slow kernel code and the spin costs nothing there. <span class="note">Gateware rules: <code>BUSY</code> must read 1 on the <i>first</i> read after the triggering write, never lag — a kernel sampling a stale 0 would proceed against a half-flushed frame. A write to an async register while <code>BUSY</code> is set is ignored: it neither queues nor aborts. Ordinary CPU traffic keeps being served throughout, slowed but never stalled, and the timer and interrupts keep running.</span></div></li>
+    <li id="m7"><span class="id">M.7</span><div class="itx">Ordering comes free. The W65C816S has <b>no prefetch queue and no store buffer</b>: every bus cycle is architectural and appears in program order, so a store to a command register takes effect strictly after everything before it and strictly before everything after. <b>No memory barrier is required, and none is provided.</b> A PTE written to SRAM before a <code>TLB_INVAL_PAGE</code> is guaranteed visible to the walker at the moment of invalidation.</div></li>
+    <li id="m8"><span class="id">M.8</span><div class="itx">Two invariants the kernel must uphold, both of which fail silently. <b>Write <code>CTX_SET_PTBASE</code> before <code>CTX_SET_ASID</code></b>: an interrupt taken between them then still sees the old ASID, whose TLB entries remain consistent with the old table. Reversed, the new ASID is live while the walker still reads the old table — filling the TLB with wrong entries tagged as correct. <b>Flush an ASID before recycling it</b>: skip that and the previous process's translations leak into a fresh address space, a total protection failure with no symptom until something is corrupted.</div></li>
+    <li id="m9"><span class="id">M.9</span><div class="itx">One requirement on the gateware, not an optimisation: <b>the pinned region must be non-cacheable or write-through</b>. Page tables live there and the walker reads SRAM directly, so if CPU writes to table memory went through the write-back cache the walker could read a stale PTE. The <code>NC</code> flag exists in the PTE format for exactly this (→ <a href="sec_f.html#f5">F.5</a>).</div></li>
+  </ol>
+  <p class="lead" style="margin-top:16px"><b>Register map</b> — base block <code>$FF:0000</code>, reserved for Helium.</p>
+  <table class="simple">
+    <thead><tr><th>Address</th><th>Name</th><th>Access</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>$FF:0000</code></td><td>FAULT_ADDR_L</td><td>read</td><td>Faulting virtual address, bits [15:0]</td></tr>
+      <tr><td><code>$FF:0002</code></td><td>FAULT_ADDR_H</td><td>read</td><td>Bits [23:16] in the low byte; upper byte reserved</td></tr>
+      <tr><td><code>$FF:0004</code></td><td>FAULT_CAUSE</td><td>read</td><td>Bit 0 not present · 1 write to read-only · 2 execute from non-executable · 3 user access to supervisor page · 4 user access to bank <code>$FF</code> · 5 malformed PTE / walker error</td></tr>
+      <tr><td><code>$FF:0006</code></td><td>CONTEXT</td><td>read</td><td>ASID active at the time of the fault</td></tr>
+      <tr><td><code>$FF:0008</code></td><td>MODE</td><td>read</td><td>Bit 0 set if the fault occurred in user mode</td></tr>
+      <tr><td><code>$FF:0010</code></td><td>TLB_FLUSH_ASID</td><td>write</td><td>Invalidate every entry tagged with the ASID written. Other ASIDs untouched. Synchronous.</td></tr>
+      <tr><td><code>$FF:0012</code></td><td>TLB_FLUSH_ALL</td><td>write</td><td>Invalidate everything regardless of tag. For global kernel-mapping changes and bring-up — on a hot path it is a design smell. Synchronous.</td></tr>
+      <tr><td><code>$FF:0014</code></td><td>CTX_SET_ASID</td><td>write</td><td>Set the tag attached to new entries and matched on lookup. Does <i>not</i> flush. Synchronous.</td></tr>
+      <tr><td><code>$FF:0016</code></td><td>CTX_SET_PTBASE</td><td>write</td><td>SDRAM frame number the walker reads PTEs from. Write this <b>before</b> CTX_SET_ASID. Synchronous.</td></tr>
+      <tr><td><code>$FF:0018</code></td><td>CACHE_FLUSH_FRAME</td><td>write</td><td>Write back every dirty sub-block of the given 2 KB frame, then mark clean. Required before evicting a page to the card. <b>Asynchronous.</b></td></tr>
+      <tr><td><code>$FF:001A</code></td><td>TLB_INVAL_PAGE</td><td>write</td><td>Invalidate one translation for the active ASID — the cheap path for single-page <code>munmap</code> and for permission downgrades such as marking a page read-only for copy-on-write. Synchronous.</td></tr>
+      <tr><td><code>$FF:001C</code></td><td>CACHE_FLUSH_ALL</td><td>write</td><td>Write back all dirty lines. Shutdown, suspend, bring-up. <b>Asynchronous.</b></td></tr>
+      <tr><td><code>$FF:001E</code></td><td>MMU_STATUS</td><td>read</td><td>Bit 0 <code>BUSY</code> — an asynchronous command is running · bit 1 <code>WALK_ERR</code> — the walker met a malformed PTE · 15:2 reserved</td></tr>
+    </tbody>
+  </table>
+</section>
+  <nav class="pager">
+    <div class="pv"><b>Previous</b><a href="sec_l.html">← L · Virtual memory management</a></div>
+    <div class="nx"><b>Next</b><a href="sec_n.html">N · Process management →</a></div>
+  </nav>
+<footer class="cajetin" aria-label="Title block">
+  <div class="cj">
+    <div class="big">noVa64</div>
+    <div>SHEET 13 · M — KERNEL–HARDWARE INTERFACE</div>
+  </div>
+  <div class="cj">
+    <div>Synthesis document · sheets A–R · index at index.html</div>
+    <div>Detail: hoja-1-1 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · placa-65816.html (REV B)</div>
+  </div>
+  <div class="cj">
+    <div>All 3.3V · hand-solderable · open toolchain</div>
+    <div class="gold">OUTLINE 1 · AUG 2026</div>
+  </div>
+</footer>
+  </div>
+</div>
+</body>
+</html>
