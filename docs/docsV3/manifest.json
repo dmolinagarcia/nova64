@@ -1,0 +1,157 @@
+{
+  "title": "noVa64",
+  "documentName": "Synthesis document — index and content outline",
+  "footer": {
+    "referenceIndex": "Sheets A–R · Figs. 1–7 · glossary in R",
+    "referenceSheet": "Synthesis document · sheets A–R · index at index.html",
+    "detail": "Detail: hoja-1-1 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · placa-65816.html (REV B)",
+    "rules": "All 3.3V · hand-solderable · open toolchain",
+    "rev": "OUTLINE 1 · AUG 2026"
+  },
+  "sheets": [
+    {
+      "file": "sec_a",
+      "letter": "A",
+      "num": "01",
+      "nav": "Vision and philosophy",
+      "index": "Project vision and philosophy",
+      "fig": "—"
+    },
+    {
+      "file": "sec_b",
+      "letter": "B",
+      "num": "02",
+      "nav": "Global architecture",
+      "index": "Global architecture",
+      "fig": "Fig. 1"
+    },
+    {
+      "file": "sec_c",
+      "letter": "C",
+      "num": "03",
+      "nav": "Power supply",
+      "index": "Power supply",
+      "fig": "Fig. 2"
+    },
+    {
+      "file": "sec_d",
+      "letter": "D",
+      "num": "04",
+      "nav": "RP2040 — embedded controller",
+      "index": "RP2040 — embedded controller",
+      "fig": "Fig. 3"
+    },
+    {
+      "file": "sec_e",
+      "letter": "E",
+      "num": "05",
+      "nav": "CPU — W65C816S and the softcore option",
+      "index": "CPU — W65C816S and the softcore option",
+      "fig": "table"
+    },
+    {
+      "file": "sec_f",
+      "letter": "F",
+      "num": "06",
+      "nav": "Physical memory structure",
+      "index": "Physical memory structure",
+      "fig": "Fig. 4"
+    },
+    {
+      "file": "sec_g",
+      "letter": "G",
+      "num": "07",
+      "nav": "Persistent storage — microSD",
+      "index": "Persistent storage — microSD",
+      "fig": "—"
+    },
+    {
+      "file": "sec_h",
+      "letter": "H",
+      "num": "08",
+      "nav": "Peripherals and their location",
+      "index": "Peripherals and their location",
+      "fig": "table"
+    },
+    {
+      "file": "sec_i",
+      "letter": "I",
+      "num": "09",
+      "nav": "BIOS — what it provides",
+      "index": "BIOS — what it provides",
+      "fig": "—"
+    },
+    {
+      "file": "sec_j",
+      "letter": "J",
+      "num": "10",
+      "nav": "Operating system",
+      "index": "Operating system",
+      "fig": "—"
+    },
+    {
+      "file": "sec_k",
+      "letter": "K",
+      "num": "11",
+      "nav": "Virtual memory — concepts and glossary",
+      "index": "Virtual memory — concepts and glossary",
+      "fig": "Fig. 5"
+    },
+    {
+      "file": "sec_l",
+      "letter": "L",
+      "num": "12",
+      "nav": "Virtual memory management",
+      "index": "Virtual memory management",
+      "fig": "Fig. 6"
+    },
+    {
+      "file": "sec_m",
+      "letter": "M",
+      "num": "13",
+      "nav": "Kernel–hardware interface",
+      "index": "Kernel–hardware interface · Helium control registers",
+      "fig": "tables"
+    },
+    {
+      "file": "sec_n",
+      "letter": "N",
+      "num": "14",
+      "nav": "Process management",
+      "index": "Process management",
+      "fig": "—"
+    },
+    {
+      "file": "sec_o",
+      "letter": "O",
+      "num": "15",
+      "nav": "Programming and toolchain",
+      "index": "Programming and toolchain",
+      "fig": "—"
+    },
+    {
+      "file": "sec_p",
+      "letter": "P",
+      "num": "16",
+      "nav": "Step-by-step build · E0–E8",
+      "index": "Step-by-step build · E0–E8",
+      "fig": "Fig. 7"
+    },
+    {
+      "file": "sec_q",
+      "letter": "Q",
+      "num": "17",
+      "nav": "Decision log · open questions",
+      "index": "Decision log · open questions",
+      "fig": "—"
+    },
+    {
+      "file": "sec_r",
+      "letter": "R",
+      "num": "18",
+      "nav": "Glossary",
+      "index": "Glossary",
+      "fig": "tables"
+    }
+  ]
+}

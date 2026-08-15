@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Power tree">
+  <rect x="40" y="60" width="150" height="70" class="blk"/>
+  <text x="115" y="84" class="t">USB-C</text>
+  <text x="115" y="104" class="s">sink · CC 5.1 kΩ · ESD</text>
+  <line x1="190" y1="95" x2="250" y2="95" class="pw"/>
+  <text x="220" y="86" class="plbl">5 V</text>
+
+  <rect x="250" y="50" width="200" height="90" class="blk"/>
+  <text x="350" y="74" class="t">MCP73871</text>
+  <text x="350" y="94" class="s">1S charger + power-path</text>
+  <text x="350" y="110" class="s">→ SYS node</text>
+
+  <line x1="350" y1="140" x2="350" y2="170" class="pw"/>
+  <text x="380" y="158" class="plbl">VBAT</text>
+  <rect x="250" y="170" width="200" height="70" class="blk"/>
+  <text x="350" y="194" class="t">1S Li-Ion BATTERY</text>
+  <text x="350" y="214" class="s">3000 mAh · &gt;10 h est.</text>
+
+  <line x1="350" y1="240" x2="350" y2="260" class="dts"/>
+  <rect x="250" y="260" width="200" height="48" class="blk"/>
+  <text x="350" y="280" class="s">MAX17048 · fuel gauge</text>
+  <text x="350" y="296" class="s">I2C → EC</text>
+  <rect x="250" y="326" width="200" height="44" class="blk"/>
+  <text x="350" y="352" class="s">PCF8563 · RTC (I2C)</text>
+
+  <line x1="450" y1="95" x2="520" y2="95" class="pw"/>
+  <circle cx="520" cy="95" r="4" fill="#D9A93F"/>
+  <text x="520" y="80" class="plbl">SYS</text>
+  <line x1="520" y1="88" x2="520" y2="250" class="pw"/>
+
+  <line x1="520" y1="88" x2="560" y2="88" class="pw"/>
+  <rect x="560" y="60" width="180" height="56" class="blk"/>
+  <text x="650" y="82" class="t">TPS63020</text>
+  <text x="650" y="102" class="s">buck-boost → 3V3 AO</text>
+
+  <line x1="520" y1="180" x2="560" y2="180" class="pw"/>
+  <rect x="560" y="156" width="180" height="48" class="blk"/>
+  <text x="650" y="176" class="s">PT4110 · LED backlight</text>
+  <text x="650" y="192" class="s">EN/PWM ← EC · ~1.5W</text>
+  <line x1="740" y1="180" x2="760" y2="180" class="pw"/>
+  <text x="752" y="170" class="plbl">VLED</text>
+
+  <line x1="520" y1="250" x2="560" y2="250" class="pw"/>
+  <rect x="560" y="226" width="180" height="48" class="blk"/>
+  <text x="650" y="246" class="s">TPS61023 → 5V VBUS</text>
+  <text x="650" y="262" class="s">USB host · EN ← EC</text>
+  <line x1="740" y1="250" x2="760" y2="250" class="pw"/>
+  <text x="736" y="268" class="plbl">5V VBUS</text>
+
+  <line x1="740" y1="88" x2="770" y2="88" class="pw"/>
+  <circle cx="770" cy="88" r="3.5" fill="#D9A93F"/>
+  <text x="770" y="60" class="plbl">3V3</text>
+  <line x1="770" y1="74" x2="770" y2="290" class="pw"/>
+
+  <line x1="770" y1="74" x2="800" y2="74" class="pw"/>
+  <rect x="800" y="52" width="150" height="44" class="blk"/>
+  <text x="875" y="70" class="s">3V3 logic</text>
+  <text x="875" y="86" class="s">RP2040 always-on</text>
+
+  <line x1="770" y1="128" x2="800" y2="128" class="pw"/>
+  <rect x="800" y="106" width="150" height="44" class="blk"/>
+  <text x="875" y="124" class="s">1.2V LDO (EN)</text>
+  <text x="875" y="140" class="s">iCE40 cores</text>
+
+  <line x1="770" y1="182" x2="800" y2="182" class="pw"/>
+  <rect x="800" y="160" width="150" height="44" class="blk"/>
+  <text x="875" y="178" class="s">VCCPLL filtered</text>
+  <text x="875" y="194" class="s">per FPGA</text>
+
+  <line x1="770" y1="236" x2="800" y2="236" class="pw"/>
+  <rect x="800" y="214" width="150" height="44" class="blk"/>
+  <text x="875" y="232" class="s">VPP 2.5V</text>
+  <text x="875" y="248" class="s">via BAT54</text>
+
+  <line x1="770" y1="290" x2="800" y2="290" class="pw"/>
+  <rect x="800" y="268" width="150" height="44" class="blk"/>
+  <text x="875" y="286" class="s">load switch</text>
+  <text x="875" y="302" class="s">→ panel</text>
+
+  <text x="40" y="392" class="li">Sequencing and EN lines governed by the RP2040 · CRESET_B held until rails are stable.</text>
+  <text x="40" y="410" class="li">0Ω jumpers per rail — isolated bring-up (stage E1).</text>
+  <text x="40" y="432" class="gtx">The boosts hang off SYS, not VBAT → the machine runs on USB with the battery depleted (power-path).</text>
+</svg>

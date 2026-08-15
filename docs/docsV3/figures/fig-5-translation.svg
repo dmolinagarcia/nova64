@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Virtual page number versus physical frame field widths">
+  <text x="60" y="50" class="eye">VIRTUAL ADDRESS · 24 b — EMITTED BY THE W65C816S</text>
+  <rect x="60" y="66" width="325" height="46" class="blk"/>
+  <rect x="385" y="66" width="275" height="46" class="blk"/>
+  <text x="222" y="94" class="s">VPN · 13 b</text>
+  <text x="522" y="94" class="s">OFFSET · 11 b</text>
+  <text x="680" y="84" class="li10">24 b − 11 b of offset = 13 b of VPN</text>
+  <text x="680" y="102" class="li10">8,192 pages · 16 MB per process</text>
+  <text x="680" y="120" class="li10">not a choice — a silicon limit</text>
+
+  <line x1="222" y1="112" x2="222" y2="150" class="dt"/>
+  <text x="278" y="136" class="lbl">translated</text>
+  <rect x="110" y="150" width="260" height="56" class="blk"/>
+  <text x="240" y="172" class="t">MMU — Helium</text>
+  <text x="240" y="192" class="s">TLB (ASID tag) · hardware walker</text>
+  <line x1="222" y1="206" x2="222" y2="244" class="dt"/>
+
+  <line x1="385" y1="112" x2="460" y2="244" class="dts"/>
+  <line x1="660" y1="112" x2="735" y2="244" class="dts"/>
+  <text x="566" y="186" class="lbl">offset passes through unchanged</text>
+
+  <text x="60" y="234" class="eye">PHYSICAL ADDRESS · 27 b — ASSEMBLED BY HELIUM</text>
+  <rect x="60" y="244" width="400" height="46" class="blk"/>
+  <rect x="460" y="244" width="275" height="46" class="blk"/>
+  <text x="260" y="272" class="s">FRAME · 16 b</text>
+  <text x="597" y="272" class="s">OFFSET · 11 b</text>
+  <text x="755" y="264" class="li10">65,536 frames</text>
+  <text x="755" y="282" class="li10">128 MB ceiling</text>
+
+  <text x="60" y="328" class="li">FRAME 16 b × 2 KB = 65,536 frames = 128 MB ceiling — a design choice, not a CPU limit.</text>
+  <text x="60" y="350" class="li">Page table: 8,192 PTEs × 32 b = 32 KB per process · physical pool fitted today: 64 MB = 32,768 frames.</text>
+  <text x="60" y="380" class="gtx">128 MB ÷ 16 MB = up to 8 complete virtual address spaces resident at once — the headroom preemptive multitasking needs.</text>
+</svg>

@@ -1,0 +1,16 @@
+# Programming and toolchain
+> assembly first · C where it's already possible
+
+Boot is assembly-first, but the compiler question is settled: C arrives as soon as the kernel has firm footing. The useful framing is that **the compiler is a solved problem and the runtime around it is not** — what this project has to build is the board support, not a code generator.
+
+- O.1 — Assemblers: **ca65** (cc65 suite) and **64tass** — the base for the BIOS, monitor, and kernel boot.
+- O.2 — C compiler: **Calypsi C**, WDC65816 target — selected, not merely shortlisted. C99, fully re-entrant code model, integers to 64 bits, IEEE-754 floats, large code and data models with 24-bit pointers and JSL/RTL cross-bank calls; actively maintained and in real use by the Foenix community, on new-build 65816 machines comparable to this one.
+  NOTE: Supersedes the earlier WDCTools / LCC-816 shortlist; WDC's own C survives as a dated fallback. Ruled out: cc65 and vbcc (6502 only, no 65816 codegen) and llvm-mos — it accepts `-mcpu=mosw65816`, but native 16-bit codegen is immature and the target was still at the RFC stage. Worth re-checking later.
+- O.3 — Memory model: **large code** (24-bit, JSL/RTL) + **small data** pinned to one bank with a fixed DBR, reaching for far pointers only where genuinely needed — dereferencing a 24-bit pointer is expensive on the 65816, whether through long addressing or DBR reloads.
+- O.4 — The BSP — five things nobody else will write for us. **crt0**: set up stack, direct page and DBR, initialise `.data` and `.bss`, call `main()`, and turn its return into `exit()`. **A user linker script**, one canonical copy for every user binary. **A kernel linker script**, separate, linking against the privileged space rather than the user 16 MB map. **The syscall stubs**. And **an audit of the compiler's calling convention**, including how much direct page it claims as pseudo-registers — that audit defines the context-switch save set (→ [N.1](sec_n#n1)).
+- O.5 — A consequence of full paging that lands squarely on the toolchain: because every process sees an identical virtual layout, **all user binaries link at fixed virtual addresses**. Zero relocation, no load-time fixups, no relocation records in the format — one linker script serves every program (→ [N.4](sec_n#n4)).
+- O.6 — Kernel: C with assembly only in vectors, context switch, critical MMU/cache routines, and boot (~hundreds of lines of asm total).
+- O.7 — libc: about twenty three-line syscall stubs — `COP #SYS_n` + `RTL` — with Calypsi's low-level libc hooks (`open`, `read`, `write`, `sbrk` …) pointed at them. Each stub loads the service number into A, then `COP`; the compiler emits an ordinary `JSL` and the `COP` never leaves the stub.
+  NOTE: Which makes the stable ABI literally "the compiler's calling convention plus a number in A": arguments sit wherever Calypsi put them. Numbering the `SYS_*` constants is a prerequisite for writing any of it.
+- O.8 — Development flow: compile on the PC (Makefile) → custom binary → transfer over USB (RP2040) or SD → run; debug via serial console + Helium debug port.
+- O.9 — Gateware: Verilog or VHDL (decision pending, it constrains the P65816 reference softcore) with Yosys + nextpnr-ice40 + IceStorm; simulation always before the board.

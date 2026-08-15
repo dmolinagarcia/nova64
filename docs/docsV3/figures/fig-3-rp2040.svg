@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boot sequence">
+  <line x1="148" y1="44" x2="148" y2="350" class="pw"/>
+  <text transform="rotate(-90 134 200)" x="134" y="200" class="plbl">EC PHASE (PRE-CPU)</text>
+  <line x1="148" y1="368" x2="148" y2="512" class="dt"/>
+  <text transform="rotate(-90 134 440)" x="134" y="440" class="lbl">65816</text>
+
+  <circle cx="176" cy="62" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+  <text x="176" y="66" class="s">1</text>
+  <rect x="200" y="40" width="560" height="44" class="blk"/>
+  <text x="480" y="67" class="t">Power button → RP2040 (3V3 always-on)</text>
+  <line x1="480" y1="84" x2="480" y2="94" class="dt"/>
+
+  <circle cx="176" cy="116" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+  <text x="176" y="120" class="s">2</text>
+  <rect x="200" y="94" width="560" height="44" class="blk"/>
+  <text x="480" y="121" class="t">Rail sequence: 1.2V ON · VPLL · panel OFF</text>
+  <line x1="480" y1="138" x2="480" y2="148" class="dt"/>
+
+  <circle cx="176" cy="170" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+  <text x="176" y="174" class="s">3</text>
+  <rect x="200" y="148" width="560" height="44" class="blk"/>
+  <text x="480" y="175" class="t">Helium·Neon(·Argon) config via SSPI — CRESET_B↓ … CDONE↑</text>
+  <line x1="480" y1="192" x2="480" y2="202" class="dt"/>
+
+  <circle cx="176" cy="224" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+  <text x="176" y="228" class="s">4</text>
+  <rect x="200" y="202" width="560" height="44" class="blk"/>
+  <text x="480" y="229" class="t">Gateware live: PHI2 running · SDRAM init</text>
+  <line x1="480" y1="246" x2="480" y2="256" class="dt"/>
+
+  <circle cx="176" cy="278" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+  <text x="176" y="282" class="s">5</text>
+  <rect x="200" y="256" width="560" height="44" class="blk"/>
+  <text x="480" y="283" class="t">RP2040 reads the microSD (FAT): BIOS.BIN → pinned SRAM</text>
+  <line x1="480" y1="300" x2="480" y2="310" class="dt"/>
+
+  <circle cx="176" cy="332" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
+  <text x="176" y="336" class="s">6</text>
+  <rect x="200" y="310" width="560" height="44" class="blk"/>
+  <text x="480" y="337" class="t">SD handoff: '3257 mux → FPGA-A (Helium) SPI-SD</text>
+  <line x1="480" y1="354" x2="480" y2="364" class="dt"/>
+
+  <circle cx="176" cy="386" r="11" fill="#0E3A2C" stroke="#7FD8BD" stroke-width="1.5"/>
+  <text x="176" y="390" class="s">7</text>
+  <rect x="200" y="364" width="560" height="44" class="blk"/>
+  <text x="480" y="391" class="t">RESB↑ — the 65816 boots via $FFFC (BIOS)</text>
+  <line x1="480" y1="408" x2="480" y2="418" class="dt"/>
+
+  <circle cx="176" cy="440" r="11" fill="#0E3A2C" stroke="#7FD8BD" stroke-width="1.5"/>
+  <text x="176" y="444" class="s">8</text>
+  <rect x="200" y="418" width="560" height="44" class="blk"/>
+  <text x="480" y="445" class="t">BIOS: init · console · mounts FAT · loads KERNEL.BIN + info block</text>
+  <line x1="480" y1="462" x2="480" y2="472" class="dt"/>
+
+  <circle cx="176" cy="494" r="11" fill="#0E3A2C" stroke="#7FD8BD" stroke-width="1.5"/>
+  <text x="176" y="498" class="s">9</text>
+  <rect x="200" y="472" width="560" height="44" class="blk"/>
+  <text x="480" y="499" class="t">Kernel: drivers · processes → prompt</text>
+  <text x="780" y="500" class="gtx">= APPLE II MILESTONE (E6)</text>
+</svg>
