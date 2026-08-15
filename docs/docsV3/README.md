@@ -12,7 +12,7 @@ app.js              sidebar, masthead, sheet index, pager, title block, routing
 manifest.json       the sheet list: letter, number, nav title, index title, figure
 style.css           docsV2's stylesheet, plus three rules docsV2 carried inline
 content/*.md        the prose — one file per sheet
-figures/*.svg       the seven diagrams, one file each
+figures/*.svg       the diagrams, one file each
 ```
 
 ## Running it
