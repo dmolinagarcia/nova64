@@ -1,7 +1,7 @@
 # Virtual memory — concepts and glossary
 > first principles · why the field widths · reference figures
 
-Explanatory groundwork, not normative: it explains paging from first principles and gives the reasoning behind the field widths, so that the machinery in [sheet L](sec_l) can be read without stopping to decode acronyms. Term-by-term definitions live in the [glossary, sheet R](sec_r). It introduces no design decision — where it disagrees with an architecture sheet, the architecture sheet wins. Source: `virtual-memory-concepts.md` (REV A).
+Explanatory groundwork, not normative: it explains paging from first principles and gives the reasoning behind the field widths, so that the machinery in [sheet L](sec_l) can be read without stopping to decode acronyms. Term-by-term definitions live in the [glossary, sheet Z](sec_z). It introduces no design decision — where it disagrees with an architecture sheet, the architecture sheet wins. Source: `virtual-memory-concepts.md` (REV A).
 
 - K.1 — Why it exists — three problems it solves at once: **relocation** (the program no longer needs to know what address it will be loaded at), **protection** (no process can touch another's memory or the kernel's) and **fragmentation** (free memory no longer breaks into holes nothing fits into). The process lives in a fiction: it believes it owns the full 16 MB, starting at zero.
 - K.2 — The core idea: the address space is cut into fixed-size chunks — **pages** on the virtual side, **frames** on the physical side, both 2 KB. Translation answers a single question: which physical frame holds virtual page N? The offset within the page is never translated; the low bits pass straight through.

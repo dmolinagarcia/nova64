@@ -2,9 +2,9 @@
   "title": "noVa64",
   "documentName": "Synthesis document — index and content outline",
   "footer": {
-    "referenceIndex": "Sheets A–R · Figs. 1–7 · glossary in R",
-    "referenceSheet": "Synthesis document · sheets A–R · index at index.html",
-    "detail": "Detail: hoja-1-1 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · placa-65816.html (REV B)",
+    "referenceIndex": "Sheets A–R · Figs. 1–8 · glossary in Z",
+    "referenceSheet": "Synthesis document · sheets A–R + glossary Z · index at index.html",
+    "detail": "Detail: hoja-1-1 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · fpga-a-control-registers · helium-debug-agent · placa-65816.html (REV B)",
     "rules": "All 3.3V · hand-solderable · open toolchain",
     "rev": "OUTLINE 1 · AUG 2026"
   },
@@ -149,6 +149,14 @@
       "file": "sec_r",
       "letter": "R",
       "num": "18",
+      "nav": "Debug agent and console",
+      "index": "Debug agent and console · SPI register map",
+      "fig": "Fig. 8"
+    },
+    {
+      "file": "sec_z",
+      "letter": "Z",
+      "num": "19",
       "nav": "Glossary",
       "index": "Glossary",
       "fig": "tables"

@@ -97,3 +97,10 @@ Write `content/sec_s.md`, add its row to `manifest.json` (`file`, `letter`,
 `num`, `nav` for the sidebar, `index` for the index table, `fig` for the index's
 right-hand column). Sidebar, index, pager and title block follow from that; no
 HTML to edit.
+
+The glossary is deliberately the **last** sheet and deliberately lettered **Z**,
+in `content/sec_z.md`: content sheets run A, B, C… and a new one is appended at
+the end of that run, taking the next free letter, without the glossary having to
+move or anything having to be renumbered. Letters and file names are kept in
+step — sheet R lives in `sec_r.md` — because every cross-reference in the prose
+points at the file name.

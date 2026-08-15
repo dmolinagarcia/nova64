@@ -27,14 +27,17 @@ Nine stages, each with concrete hardware/gateware/software and a verification cr
   TEST: enumerates as USB-CDC and answers on the console · mounts the microSD and lists files · reports I2C telemetry · generates a measurable backlight PWM, with no FPGA populated.
 - [ ] E1.7 — **The three FPGAs.**
   TEST: the EC configures each one separately with a blinky · CDONE high on all three · reconfiguring Neon without disturbing Helium demonstrated.
+  NOTE: The debug agent's `DBG_ID` reading `$6516` belongs to this stage too — one SPI frame that proves link, bitstream and Helium clock at once (→ [R.8](sec_r#r8)).
 - [ ] E1.8 — **CPU alive — free-run.** Bus forced to NOP, PHI2 from Helium.
   TEST: the address counter advances consistently on the analyser · an LED blinks from a decoded address.
 - [ ] E2 — **SRAM + serial monitor.** SRAM on the bus; BIOS preload by the RP2040; UART console; peek/poke monitor.
   TEST: console echo · read/write arbitrary memory · checksum of the loaded BIOS.
+  NOTE: The peek/poke does not have to wait for a BIOS: the debug agent gives physical read/write and a march test with the CPU still in reset, which is where most of its value is (→ [R.22](sec_r#r22)).
 - [ ] E3 — **SDRAM.** Controller (adapted open-source candidate) as a DMA/paging engine behind Helium, with auto-refresh interleaved into the fill state machine.
   TEST: pseudorandom pattern over the full 64 MB with no errors for hours · refresh holds during sustained fills.
 - [ ] E4 — **MMU + cache + protection.** Walker, TLB with ASID, 4-way cache with tags in EBR, PHI2 stall with BE=0 and its watchdog, ABORTB, FAULT_* registers at `$FF`.
   TEST: an illegal access triggers ABORT with correct FAULT_ADDR/CAUSE · a cache miss stalls and resumes cleanly · a deliberately hung fill trips the watchdog instead of freezing the board · measured cache hit rate.
+  NOTE: The debug agent reaches its full extent here — halt, step and trace over the `BE` handoff, virtual-mode access, and `TLB_PROBE` against `PTWALK` to catch a stale entry. The same stage owes it one negative test: the fill watchdog must be suppressed while the CPU is halted, or every session ends in a spurious abort (→ [R.17](sec_r#r17)).
 - [ ] E5 — **Video + audio.** Neon on the bus with its own SDRAM, `$FE` window; VGA pattern → framebuffer; tone over I2S. ((Start below the gateware: the panel's own **BIST** mode generates test patterns with no external clock and no bitstream, validating panel, FPC and backlight in isolation before anything can be blamed on logic.))
   TEST: BIST patterns on the panel · stable VGA image · a CPU write shows up on screen · clean 440 Hz tone.
 - [ ] E6 — **SD + minimal OS + HID.** SD handoff, block driver, FAT, kernel load, serial shell, basic USB keyboard.

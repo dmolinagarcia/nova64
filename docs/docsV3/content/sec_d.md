@@ -5,7 +5,7 @@ It's the laptop's "management microcontroller": it handles everything that happe
 
 - D.1 — Triple role: **programmer** (bitstreams, BIOS, its own firmware — all over USB), **bootstrapper** (full sequence in Fig. 3), and permanent **embedded controller**. Its W25Q16 is the board's only mandatory flash.
 - D.2 — 9-step boot (Fig. 3): button → rails → SSPI configuration of Helium/Neon(/Argon) with CRESET_B/CDONE → SDRAM initialized by gateware → BIOS from SD to SRAM → SD handoff → RESB↑ → `$FFFC` vector.
-- D.3 — Debugging: a debug port into FPGA-A (Helium) — live read/write of system memory, a free "ICE" for the kernel.
+- D.3 — Debugging: a debug port into FPGA-A (Helium) — live read/write of system memory, a free "ICE" for the kernel. The EC does not master the bus to do it: it drives a **debug agent inside Helium** over a dedicated SPI chip select, and that block issues the accesses as a peer of the CPU port. Specified in [sheet R](sec_r).
 - D.4 — Console: USB-CDC ↔ FPGA-A (Helium) UART. It's the terminal for the monitor (E2) and the OS until there's a screen of its own.
 - D.5 — HID host: PIO-USB + hub — USB keyboard and mouse (PS/2 and matrix removed). Powers up the TPS61023 on demand and translates HID → events to the kernel over the EC channel.
 - D.6 — Its own pin budget nearly failed too, and was rescued the same way the FPGA's was. Straight onto GPIO the EC needed roughly 38 pins against 30 available; an **MCP23017 I2C expander** absorbs everything with no timing requirement — the three CDONE lines, the charger's STAT and PG, the fuel gauge's alert, and the enables for the 1.2V rail, the panel and the host boost — bringing it to 28 of 30.

@@ -1,151 +1,117 @@
-# Glossary
-> every acronym and term used across sheets A–O
+# Debug agent and console
+> a requester inside Helium · SPI-only control · the console that drives it
 
-Document-wide reference. Every acronym is also expanded on first use in place, so this sheet is deliberately redundant — it exists to be jumped to, not read through. Grouped by domain; within each group, roughly in the order the concepts appear.
+Instrumentation, not a product feature. A hardware block inside Helium performs memory and bus accesses on command, and a text monitor on the RP2040 drives it — so the board is observable from the first stage at which anything can be powered, long before a BIOS or a kernel exists. It is expected to stay in the design permanently, gated off rather than removed. Source: `helium-debug-agent.md`.
 
-## Virtual memory and the MMU
-  NOTE: → [sheet K](sec_k) · [sheet L](sec_l)
+- R.1 — Five capabilities define it, and everything else on this sheet is their cost: read and write **any physical location** (SRAM and SDRAM), read and write **through the MMU** once translation exists, generate **real bus cycles** other devices can see, **halt · single-step · trace** the W65C816S, and do all of it from a terminal over USB-CDC or a physical UART.
+- R.2 — **The RP2040 is not a bus master.** It sends commands; the debug agent performs the access. Three reasons, none of them stylistic. **Pins**: mastering directly needs ~24 address plus 8 data lines plus control, well beyond what the EC has left after its committed functions — and its budget already had to be rescued once (→ [D.6](sec_d#d6)). **Reuse**: Helium already owns the SRAM controller, the SDRAM controller with refresh, the cache and the arbiter; a second path to memory would duplicate all of it and become a second source of truth about memory state. **Coherence**: an external master bypassing the cache reads stale data whenever a dirty sub-block is resident in SRAM.
+  NOTE: The consequence is the whole design in one line — the debug agent is **a peer of the CPU port in Helium's arbiter**, not a special case bolted to the side of it.
+- R.3 — **Helium drives `BE`**, not an RP2040 GPIO. Taking the bus requires two things in a defined order: the CPU releases its drivers, then Helium begins driving. Across the SPI link that ordering is a race across a clock-domain crossing with millisecond latency; inside Helium it is a synchronous state transition. Schematic consequence: `BE` routes Helium → CPU socket, and Helium's CPU-side address and data pins must be **bidirectional**, which lands on the I/O bank plan (→ [Q27](sec_q#q27)).
+- R.4 — **The register file is SPI-only and is not in bank `$FF`.** The agent is unconditionally privileged — it writes `$FF`, bypasses permission checks and halts the CPU — so exposing it to software would make the entire protection model depend on kernel correctness. Keeping the control path physically separate means no software failure can reach it, and the console stays usable precisely when software has failed, which is when it is needed (→ [M.1](sec_m#m1), [Q22](sec_q#q22)).
+- R.5 — Two orthogonal axes characterise every transaction: **which address space** and **how far the cycle reaches**. They compose freely, and the console shows both in the prompt because getting them wrong is the commonest source of confusing results.
 
-| Term | Meaning |
-|---|---|
-| Virtual memory | A layer of indirection between the addresses the CPU generates and those that reach the RAM. |
-| Virtual address | The address the CPU emits — what the program "believes". 24 bits here. |
-| Physical address | The address that reaches the SRAM/SDRAM chips. 27 bits here. |
-| Page | A fixed-size block of the virtual space. 2 KB. |
-| Frame | A block of the same size in physical memory. To translate is to pair a page with a frame. |
-| VPN | Virtual Page Number — high bits of the virtual address; identifies the page. 13 bits. |
-| Offset | Low bits; the byte within the page. Never translated. 11 bits. |
-| MMU | Memory Management Unit — the hardware that translates. Not in the CPU here: Helium implements it. |
-| Page table | An array indexed by VPN holding the PTEs. One per process, 32 KB. |
-| PTE | Page Table Entry — one entry of that table. 32 bits: frame number plus flags. |
-| PTE flags | `P` present in RAM · `W` writable · `X` executable · `U` reachable from user mode · `D` dirty (modified since load) · `A` accessed recently · `NC` non-cacheable · `PIN` non-evictable · `SW` free for the kernel's own use. |
-| TLB | Translation Lookaside Buffer — cache of VPN→frame translations inside the MMU. Avoids re-reading the table on every access. |
-| TLB hit / miss | Success or failure in that cache. A miss costs one table walk; it is not an error. |
-| TLB reach | Entries × page size — the working set the TLB can cover before it starts thrashing. 64 KB here with 32 entries; the main thing a larger page buys. |
-| Page walk / walker | The traversal of the page table that resolves a miss. Hardware here (≈100 ns, four 8-bit SRAM accesses); a software exception in other architectures. |
-| ASID | Address Space IDentifier — tag marking which process each TLB entry belongs to. Without it the whole TLB would be flushed on every context switch. |
-| Page fault | Exception raised on access to a page with `P=0`. Recoverable. |
-| Demand paging | Loading pages only when touched rather than all up front. Deferred to post-v1. |
-| Eager loading | Mapping and filling every segment at `exec` time. What v1 does, in place of demand paging. |
-| Swapping | Evicting rarely used pages to storage in order to free frames. |
-| Pinning | Marking a page as non-evictable. Required for the kernel, the interrupt vectors and the bank `$00` stack. |
-| Memory protection | Preventing a process from reading or writing outside its own space. Achieved through the PTE flags, not through translation itself. |
-| Cache line | The tagged unit of Helium's cache — 2 KB, one tag per line, but filled and written back in 256 B sub-blocks. |
-| Sub-block | The 256 B unit a fill actually moves, with its own valid and dirty bits. Keeps a miss at ~6 µs instead of ~41 µs and bounds interrupt latency. |
-| Set associative | Cache organization where a given address may sit in any of N positions ("ways") within one set. Four ways here; direct mapping would put 32,768 physical lines in competition for 384 slots. |
-| Tag | The bits stored alongside a cache line saying which physical line it currently holds. Kept in EBR, ~1.5 KB, beside the TLB. |
-| Dirty victim | The line a fill has to evict when it has been written to — it must go back to SDRAM first, which is why a miss can cost double. |
-| Write-back | Cache policy where writes stay in the cache and reach memory only on eviction. Implied by the dirty bits. |
-| Backing store | The memory a cache is a cache *of*. Here the SDRAM, which the PTEs always name. |
-| Copy-on-write | Sharing a page read-only between processes and duplicating it only when one writes. An ABORT case ([L.4](sec_l#l4)). |
-| Static core | A CPU whose state survives an arbitrarily slow or stopped clock. The W65C816S is one, which is what makes the PHI2 stall legal. |
-| Clock gating | Stopping and restarting PHI2 in gateware. Must be glitch-free, and the first pulse on resume must meet the minimum high width. |
-| Trampoline | The short privileged stubs in bank `$00` that receive every vector — the CPU forces PBR=0 on entry — and `JSL` straight into the real kernel in `$01` (→ [L.11](sec_l#l11)). |
-| ASID recycling | Reassigning a used ASID to a new process. Legal only after flushing that ASID's TLB entries; skipping the flush leaks the old address space into the new one, silently (→ [M.8](sec_m#m8)). |
-| Address as opcode | Command convention where each operation has its own address and the value written is its argument, not a command code (→ [M.2](sec_m#m2)). |
-| WDM | Opcode `$42`, reserved by WDC and executed as a two-byte, two-cycle no-op. Considered as a command channel and rejected; it stays a no-op, and a softcore must implement it as one. |
-| Memory barrier | An instruction forcing memory ordering. Not needed here and not provided: the 65816 has no prefetch queue and no store buffer, so every bus cycle is already in program order. |
-| Watchdog | Timer that resumes PHI2 and raises NMI or ABORT if a fill overruns — without it a hung fill freezes the machine with no clock and no diagnostic path. |
-| Refresh | The periodic recharge SDRAM needs to keep its contents. Must be interleaved into the fill state machine, not deferred until it finishes. |
+## The two axes — address space and transaction scope, chosen independently.
 
-## CPU, bus and gateware
-  NOTE: → [sheet B](sec_b) · [sheet F](sec_f)
+| Axis | Mode | What it means | Available from |
+|---|---|---|---|
+| Address space | Physical | 27-bit raw address, straight to cache and memory controllers. What is needed while the MMU is itself under test | E2 |
+| Address space | Virtual | 24-bit address + ASID, through translation and, on a miss, the walker. Shows what the kernel believes it is looking at | E4 |
+| Scope | Internal | SRAM, SDRAM and Helium's own registers. Nothing appears on the CPU bus | E2 |
+| Scope | External cycle | Everything the CPU can reach — the `$FE` VRAM aperture and the rest of `$FF` included. Indistinguishable, from outside, from a cycle issued by the 65816 | E5 |
 
-| Term | Meaning |
-|---|---|
-| Bank | A 64 KB slice of the 65816's 24-bit space, selected by DBR/PBR. The virtual bank map is in [L.10](sec_l#l10). |
-| DBR · PBR · DP | Data Bank, Program Bank and Direct Page registers — the 65816 state that decides which bank an access lands in. |
-| Native mode | The 65816's 16-bit, 24-bit-address mode, entered with `CLC/XCE`. The opposite is 6502 emulation mode. |
-| PHI2 | The CPU's master clock, generated by Helium. Target 8 MHz. |
-| BE | Bus Enable — the pin that makes the physical CPU release the bus, so Argon's softcore can drive it instead. |
-| RESB | The 65816's active-low reset. Released by the RP2040 as the last step before the CPU runs. |
-| ABORTB | W65C816S pin that cancels the instruction in progress without side effects. The system's fault mechanism. |
-| VPA / VDA | Pins indicating whether the cycle is an instruction fetch or a data access. They make checking the `X` flag possible. |
-| RDY | The pin Helium pulls low to stall the CPU while a cache miss is being filled. |
-| Northbridge | Borrowed PC term for the chip sitting between CPU and memory. Here it is Helium: MMU, cache, arbiter, timer and I/O. |
-| Gateware | The logic loaded into an FPGA — the FPGA equivalent of firmware. Written in HDL, not compiled to instructions. |
-| Softcore | A CPU implemented as gateware rather than as a chip. Argon's optional 65816 is one (→ [sheet E](sec_e)). |
-| Fmax | The highest clock a placed-and-routed design will meet timing at. A property of the design *on a given part* — quoting one across FPGA families is meaningless. |
-| CPI | Cycles Per Instruction. The 65816 spends 2–7, many wasted on bus protocol. Lowering it buys throughput without touching the critical path, which is why it beats chasing clock. |
-| Microcode | The internal table that sequences each instruction. On a soft core it sits in block RAM, and registering its output is the standard first move against the critical path. |
-| Cycle-exact | A core reproducing the original's timing cycle for cycle. Needed to emulate a specific machine; unnecessary here, where only programmer-visible behaviour must match (→ [E.6](sec_e#e6)). |
-| ILP | Instruction-Level Parallelism — independent work a core can overlap. An accumulator architecture offers little, which bounds what any 65816 core can gain from pipelining. |
-| Accumulator architecture | A design where most operations route through one register. Compact to encode, heavy on memory traffic, and inherently serial. |
-| Bus arbiter | The logic deciding who drives the shared bus in each cycle: CPU, cache fill, video, or refresh. |
-| PIC | Programmable Interrupt Controller — collects device IRQs, applies priorities, and raises IRQ/NMI to the CPU. |
-| EBR | Embedded Block RAM — RAM blocks inside the iCE40. Its 128 Kbit are the reason only the TLB fits on-chip while the page table lives in external SRAM. |
-| HDL | Hardware Description Language — Verilog or VHDL. The choice is still open ([Q2](sec_q#q2)). |
-| Stub | In layout, a track branching off a bus. Long stubs ruin signal integrity at ~100 MHz, hence the short comb of [F.13](sec_f#f13). |
+- R.6 — Link: **SPI mode 0, RP2040 controller, Helium peripheral, 16 MHz initially** — the limit is the synchroniser depth on Helium's side, not the wire. It shares `SCK`/`MOSI`/`MISO` with the configuration SPI but takes a **dedicated `DBG_CSN`**: sharing data lines is acceptable, sharing the chip select is not, because the configuration path has to keep working when the agent is in an unknown state.
+- R.7 — Frame: one header byte — bit 7 is `0` write / `1` read, bits 6:0 the register address — then data, **least-significant byte first**. `DBG_CSN` deasserts between frames; a frame commits on its rising edge, and a truncated one is discarded and sets `ERR_FRAME`. Two registers, `DBG_FIFO` and `TRC_FIFO`, stream for as long as `DBG_CSN` stays low, so dumping a kilobyte of memory does not cost a frame per byte.
+- R.8 — `DBG_ID` reads `$6516`, and the console reads it first: a correct value proves the SPI link, Helium's configuration and the clock all at once, before anything else is attempted. `$0000` or `$FFFF` means the bitstream did not load. A second read in the same frame returns the gateware build revision, which is bumped on every synthesis.
+- R.9 — Two disciplines the console must observe. **Never assume a command completes inside the frame that issued it** — an SDRAM access with a page miss and an intervening refresh takes far longer than an SRAM hit, so poll `BUSY`. And **the agent latches the first error and refuses further commands until `DBG_ERR` is cleared**, which is what stops a scripted burst from quietly producing a page of garbage after its first failure.
+- R.10 — Access width, corrected against the memory the board actually has. The system SRAM is **1 MB ×8 with D0–D7 shared with the CPU nets** (→ [D15](sec_q#d15)), so it has no upper/lower byte enables and a 16-bit access is simply two consecutive byte cycles. Byte granularity does bite on the SDRAM side, which is ×16 and masks with `DQM`. `DBG_WIDTH` therefore selects **8-bit low · 8-bit high · 16-bit**, and the E2 memory test must still exercise byte writes explicitly: a byte write that corrupts its neighbour is a very specific and very confusing failure, and it is cheaper to find it with `mt` than through a kernel bug.
+  NOTE: The source document specified an IS61WV102416 ×16 SRAM with `UB#`/`LB#`. That part predates [D15](sec_q#d15) and is not on this board; the register keeps its encoding, its justification changes.
 
-## Board, power and configuration
-  NOTE: → [sheet C](sec_c) · [sheet D](sec_d)
+## Register map — SPI address space, 7 bits, entirely separate from the `$FF` block of [sheet M](sec_m).
 
-| Term | Meaning |
-|---|---|
-| EC | Embedded Controller — the always-on microcontroller handling power, boot and housekeeping. Here, the RP2040. |
-| Rail | A supply voltage distributed across the board (3V3, 1.2V, VPP…). "Sequencing" is the order they come up in. |
-| SYS | The node after the charger, fed by USB or battery indifferently. Everything hangs off it rather than off the battery. |
-| Power-path | Charger topology that powers the system and charges the cell at once, so the machine runs on USB with a flat or absent battery. |
-| 1S | One lithium cell in series — a nominal ~3.7V pack. |
-| Fuel gauge | Chip that estimates remaining charge from voltage and current history. Here the MAX17048, read by the EC over I2C. |
-| Buck-boost | Converter holding its output steady whether the input is above or below it — needed because a cell crosses 3.3V as it drains. |
-| Boost | Converter that only steps voltage up. Used for the backlight and the 5V host VBUS. |
-| LDO | Low-DropOut regulator — simple linear regulator, used for the 1.2V FPGA cores. |
-| Load switch | A controlled switch cutting power to a whole block — here the panel, off by default. |
-| Always-on | A rail that stays up whenever the machine has any power, so the EC can run before anything else exists. |
-| SSPI | Slave SPI — the iCE40 configuration mode in which an external master (the RP2040) clocks the bitstream in. |
-| Bitstream | The compiled gateware file loaded into an FPGA at every power-up. iCE40s are SRAM-based: they forget on power-off. |
-| CRESET_B / CDONE | The iCE40's configuration handshake: held low to start loading, raised by the FPGA when configuration succeeded. |
-| Bring-up | First powering of a new board, block by block, verifying each before enabling the next. |
-| Free-run | Diagnostic where the CPU is fed a constant NOP so it just counts through addresses — proves clock, reset and address bus without any memory. |
-| Handoff | Transfer of a shared resource between two owners — here the microSD passing from the RP2040 to Helium through the '3257 mux. |
-| TQFP · PLCC · TSOP · BGA | Chip packages. The first three have accessible leads and can be hand-soldered; BGA hides its balls underneath and cannot, which is why it is excluded ([D01](sec_q#d01)). |
+| Addr | Name | Access | Width | Meaning |
+|---|---|---|---|---|
+| `0x00` | `DBG_ID` | RO | 16 | Magic `$6516`; second read returns the build revision |
+| `0x01` | `DBG_CTRL` | RW | 8 | `ENABLE` · `VIRT` · `EXTCYC` · `AUTOINC` · `NOCACHE` · `STALL` |
+| `0x02` | `DBG_STATUS` | RO | 8 | `BUSY` · `DONE` · `ERROR` · `FIFO_EMPTY` · `FIFO_FULL` · `CPU_HALTED` · `TRC_TRIGD` · `DBG_READY` |
+| `0x03` | `DBG_ERR` | RO/W1C | 8 | `TIMEOUT` · `UNMAPPED` · `PERM` · `ARB` · `CMD` · `STATE` · `FRAME` · `ALIGN` |
+| `0x04` | `DBG_ADDR` | RW | 32 | 27-bit physical, or 24-bit virtual; unused high bits must be zero |
+| `0x08` | `DBG_DATA` | RW | 16 | Data port for single accesses |
+| `0x0A` | `DBG_WIDTH` | RW | 8 | `1` low byte · `2` high byte · `3` 16-bit (→ [R.10](sec_r#r10)) |
+| `0x0B` | `DBG_ASID` | RW | 16 | ASID for virtual accesses. Narrows when [Q24](sec_q#q24) lands |
+| `0x0C` | `DBG_CMD` | WO | 8 | Command trigger; rejected with `ERR_STATE` while `BUSY` |
+| `0x0D` | `DBG_COUNT` | RW | 16 | Burst length in elements |
+| `0x10` | `CPU_CTRL` | RW | 8 | `RESET` · `HALT` · `STEP` · `STEP_INSN` · `IRQ_MASK` · `NMI_MASK` |
+| `0x11` | `CPU_STATUS` | RO | 8 | CPU state |
+| `0x12` | `CPU_CYCLES` | RO | 32 | Free-running bus-cycle counter |
+| `0x18` | `TRC_CTRL` | RW | 8 | `EN` · `ARM` · `ONESHOT` · `POS` · `HALT_ON_TRIG` · `FILTER_OPFETCH` |
+| `0x19` | `TRC_STATUS` | RO | 8 | Trace state and fill level |
+| `0x1A` | `TRC_TRIG_ADDR` | RW | 32 | Trigger address, with `RWB`/`VPA`/`VDA` qualifiers in the upper bits |
+| `0x1E` | `TRC_TRIG_MASK` | RW | 32 | Trigger don't-care mask |
+| `0x1F` | `TRC_FIFO` | RO | burst | Trace record readout |
+| `0x20` | `DBG_FIFO` | RW | burst | 512-byte bulk data port, sized to stay ahead of the link across an SDRAM page miss |
+| `0x30` | `TLB_INDEX` | RW | 16 | TLB entry selector |
+| `0x31` | `TLB_ENTRY` | RO | 64 | TLB entry readout |
+| `0x38` | `MMU_MIRROR` | RO | 8 | Read-only view of `MMU_STATUS` (→ [sheet M](sec_m)) |
 
-## Video, audio and peripherals
-  NOTE: → [sheet H](sec_h)
+## Commands — written to `DBG_CMD`, one at a time.
 
-| Term | Meaning |
-|---|---|
-| Chip RAM | Amiga term reused here: Neon's own 64 MB SDRAM (framebuffer + audio DMA), outside the CPU hierarchy and reached through the `$FE` window. |
-| Framebuffer | The region of memory holding the pixels currently on screen. Exposed to processes as `/dev/fb`. |
-| VRAM window | The 64 KB opening in bank `$FE` through which the CPU reaches video memory, gated by the MMU's VRAM_SEL. |
-| Px-doubling | Drawing at 512×300 and emitting each pixel twice in both axes to fill 1024×600 — quarters the framebuffer and its bandwidth. |
-| RGB-TTL | Parallel video interface: one wire per colour bit plus sync and clock. No bridge chip needed, at the cost of many pins. |
-| VSYNC | The pulse marking the end of a frame. Raised as an IRQ so the GUI can redraw without tearing. |
-| FPC | Flexible Printed Circuit — the flat ribbon connecting the panel. "FPC-50" is its 50-contact connector. |
-| eDP | Embedded DisplayPort — serial panel interface. Rejected for v1 as it needs a bridge chip ([D05](sec_q#d05)). |
-| R-2R | A resistor-ladder DAC — the cheapest way to get analogue VGA levels out of FPGA pins. Bring-up only. |
-| I2S | Serial audio bus between the FPGA and the DAC. Unrelated to I2C despite the name. |
-| QSPI | Quad SPI — 4-bit-wide serial bus. Historical here: it went with the PSRAM ([D13](sec_q#d13)) and no longer appears on the board. |
-| HID | Human Interface Device — the USB class covering keyboards and mice. |
-| PIO-USB | USB host implemented on the RP2040's programmable I/O blocks, since the chip has no hardware host controller. |
-| USB-CDC | Communications Device Class — makes the RP2040 appear as a serial port on the development PC. Carries the console. |
-| Mux | Multiplexer — switch routing one set of signals to one of several destinations. The '3257 gives the microSD two possible owners. |
-| DMA | Direct Memory Access — a device reading or writing memory itself, without the CPU moving each byte. |
+| Code | Name | Action |
+|---|---|---|
+| `0x00` | `CMD_NOP` | No operation; clears `DONE` |
+| `0x01` · `0x02` | `CMD_READ` · `CMD_WRITE` | One element through `DBG_DATA` |
+| `0x03` · `0x04` | `CMD_READ_BURST` · `CMD_WRITE_BURST` | `DBG_COUNT` elements through the FIFO |
+| `0x05` | `CMD_FILL` | Write `DBG_DATA` to `DBG_COUNT` consecutive elements |
+| `0x10` · `0x11` | `CMD_CACHE_FLUSH` · `CMD_CACHE_INVAL` | Flush the whole cache to SDRAM · invalidate it without writeback. **`INVAL` discards dirty data** and exists only to recover a wedged cache during gateware bring-up |
+| `0x12` | `CMD_CACHE_FLUSH_LINE` | Flush the line holding `DBG_ADDR` — the same operation the kernel needs before paging a frame out (→ [F.7](sec_f#f7)) |
+| `0x20` · `0x21` | `CMD_TLB_PROBE` · `CMD_TLB_FLUSH` | Translate `DBG_ADDR` into `TLB_ENTRY` · invalidate the whole TLB |
+| `0x22` | `CMD_PTWALK` | Full page-table walk, bypassing the TLB |
+| `0x30` | `CMD_ABORT` | Cancel the in-flight command |
 
-## Operating system and toolchain
-  NOTE: → [sheet I](sec_i) · [sheet J](sec_j) · [sheet N](sec_n) · [sheet O](sec_o)
+- R.11 — `CMD_PTWALK` earns its place by differing from `CMD_TLB_PROBE` in exactly one way: it always reads the table from memory. **Comparing the two is the direct test for a stale TLB entry** — which is the precise failure the `CTX_SET_PTBASE` before `CTX_SET_ASID` ordering invariant exists to prevent, and which otherwise has no symptom until something is corrupted (→ [M.8](sec_m#m8)).
+- R.12 — The access path: `IDLE` → decode → translate if `VIRT` → arbitrate → then either an internal access through the cache, or `BUS_TAKE` · `BUS_CYCLE` · `BUS_RELEASE` for an external one → complete. Only the external branch touches the CPU, and its sequence is fixed: request the bus, stall PHI2 at a clean cycle boundary, assert `BE` low, wait the CPU's tristate turnaround, drive the cycle, release the drivers, wait turnaround, deassert `BE`, release PHI2 and the arbiter.
+  NOTE: The restart must meet the minimum PHI2 pulse width. The existing glitch-free gating logic is reused unchanged — the agent is one more client of it, not a second implementation (→ [D16](sec_q#d16)).
 
-| Term | Meaning |
-|---|---|
-| BIOS | Here it means two things kept distinct: the RP2040 is the "board BIOS" (everything pre-CPU), and `BIOS.BIN` is the "system BIOS" (everything post-reset). |
-| Info block | The structure the BIOS hands the kernel at load time: RAM size, device map, battery state, RTC time. Format still open ([Q5](sec_q#q5)). |
-| Monitor | Minimal interactive debugger in the BIOS: examine and alter memory, load over serial. The working tool of stages E2–E4. |
-| Kernel | The resident, privileged core of the OS. Lives in virtual bank `$01`, pinned in SRAM. |
-| Syscall | A service request from a process to the kernel. Invoked here through the `COP` instruction, with the service number in the accumulator. |
-| PCB | Process Control Block — the per-process record holding saved registers, ASID and page-table pointer. ((Not the printed circuit board, which this document always spells out.)) |
-| Context switch | Switching process; entails saving state to the PCB and pointing the MMU at a different page table. |
-| Preemptive | The kernel takes the CPU back on its own (on the timer tick) rather than waiting for the process to yield it. |
-| Round-robin | Scheduling that simply cycles through ready processes in turn, each getting one quantum. |
-| Tick | The periodic timer interrupt driving scheduling. 100 Hz here. |
-| Zombie | A finished process whose exit status is still held for its parent to collect with `wait`. |
-| Driver | Kernel module handling one device behind a fixed 5-function interface, exposed as a `/dev/*` node. |
-| devfs | The synthetic filesystem where those `/dev/*` nodes live — no bytes on the SD card. |
-| ioctl | The escape hatch of the unified I/O interface: device-specific operations that are neither read nor write, such as mapping the framebuffer. |
-| FAT | The filesystem on the microSD. Chosen so any PC can write the boot card. |
-| BSS | The zero-initialised data of a binary. Carries no bytes in the file: the loader just maps it and clears it. |
-| Relocation | Patching a binary's addresses to match where it was actually loaded. The MMU removes the need: every process sees the same addresses. |
-| ABI | Application Binary Interface — the contract user binaries rely on. Drivers may be rewritten as long as it holds. |
-| JSL / RTL | The 65816's long call and return, crossing banks. The basis of the large memory model and of syscall stubs. |
-| Large model | Compiler model where code is addressed across all banks with JSL/RTL. Paired here with a fixed DBR so data access stays cheap. |
-| Toolchain | The full chain from source to loadable artefact. Open end to end here: KiCad · Yosys · nextpnr · IceStorm · pico-sdk · ca65/64tass. |
+![Fig. 8 — The debug agent as a requester inside Helium. The RP2040 commands over SPI and never drives the bus; internal accesses go through the cache, external cycles are taken with PHI2 stalled and BE low.](figures/fig-8-debug-agent.svg)
+LEGEND: Trace legend: <span class="m">mint = command and data path</span> · <span class="g">gold = CPU clock and bus control</span> · dashed = optional.
+
+- R.13 — Coherence, four rules. **One: the agent goes through the cache controller**, exactly as the CPU port does, so a physical read of an SDRAM address whose sub-block is dirty in SRAM returns the cached value. This is not negotiable — a debug tool that reports memory contents differing from what the CPU sees is worse than no tool at all, because it produces confident wrong answers during exactly the sessions where the engineer can least detect them. **Two: `NOCACHE` is for gateware bring-up only** — its one legitimate use is validating the cache itself (write through the cache, flush, read with `NOCACHE`, compare), and the console prints a warning banner whenever it is set. **Three: external cycles are coherent by construction**, being decoded by the same logic as a CPU cycle. **Four: writing a PTE does not invalidate the TLB** — the console's `pt write` issues `CMD_TLB_FLUSH` afterwards; anyone driving the registers directly must do the same (→ [M.7](sec_m#m7)).
+- R.14 — CPU control is an **indefinite PHI2 stall**, legal because the core is fully static (→ [E.4](sec_e#e4), [D16](sec_q#d16)). `STEP` advances one bus cycle, `STEP_INSN` runs to the next opcode fetch — which `VPA & VDA` identifies, the same pins the MMU already needs for the `X` permission (→ [E.3](sec_e#e3)). `IRQ_MASK` and `NMI_MASK` matter more than they look: a 100 Hz timer that keeps running while the CPU is stopped presents a backlog of pending interrupts on resume, which looks exactly like a kernel bug and is not.
+- R.15 — **The agent cannot read the CPU's registers.** The W65C816S has no scan chain and no debug port; A, X, Y, S, DP, DBR, PBR and P are not observable from outside, and no amount of gateware changes that. Two workarounds, in order of preference: **inferred from trace** — a halt at an instruction boundary plus the preceding cycles lets the console reconstruct PC and much of the state, passively and always; and a **debug stub** in bank `$00` that pushes every register to a known location, entered either by forcing an instruction onto the data bus during a fetch or from a `BRK` breakpoint trap (→ [J.3](sec_j#j3)). The console exposes the first as `reg` and the second as `reg -f`, and **the distinction stays visible to the user**: silently perturbing state during inspection is unacceptable in a debugger.
+- R.16 — Trace: a ring buffer in EBR capturing, per bus cycle, address (24), data (8), `RWB`, `VPA`, `VDA`, `VPB`, `MLB`, `E` and a cycle-counter delta — about 48 bits per record. The trigger compares `(address & ~TRC_TRIG_MASK)` against `TRC_TRIG_ADDR`, optionally qualified by `RWB` and `VPA`/`VDA`, and can position the capture at the start, centre or end of the window, halt the CPU when it fires, or filter down to opcode fetches only. **This is a logic analyser for one EBR block and a comparator, and it must be built with the CPU stage rather than retrofitted after the first hard kernel bug.** [[open]]
+  NOTE: 1024 records is the starting proposal, but the depth is a synthesis parameter against an EBR budget that the TLB and the cache tags are already spending (→ [Q30](sec_q#q30)). The source document costed it on an HX4K; Helium is an **HX8K** (→ [B.2](sec_b#b2)).
+- R.17 — Every transaction is covered by a watchdog — 100 µs at the Helium core clock as a starting value, generous enough for a worst-case SDRAM access with an intervening refresh and short enough that a human reads it as a delay. On expiry the agent abandons the transaction, releases the bus and PHI2, sets `ERR_TIMEOUT` and returns to idle. **The agent must never be able to hang the console**, and that constraint outranks completing any transaction: if it hangs, the engineer loses the only view into a board that is, by hypothesis, already misbehaving.
+  NOTE: The reverse interaction has to be handled too — the system watchdog that turns a hung fill into NMI or ABORT must be **suppressed while the CPU is halted by the agent**, or every debug session ends in a spurious abort.
+- R.18 — `DEBUG_ENABLE`, a Helium input on a jumper, gates the whole thing: deasserted, it forces `DBG_CTRL.ENABLE` to zero, ignores writes to it, and rejects every command with `ERR_STATE` — while still answering `DBG_ID` and `DBG_STATUS`, so the console can report *why* it is refusing rather than appearing broken. The point is not security against physical access, which is unachievable and not a goal, but making the privileged path an **explicit, visible, deliberate state of the board**.
+- R.19 — The console runs on both transports at once: **USB-CDC** over the RP2040's native USB and a **physical UART**, 115200 8N1 on a 3-pin header. The UART is not redundant. At the first stage there is no way to tell a firmware fault from a USB stack fault, and three pins remove the ambiguity; it also survives the USB peripheral being reconfigured for PIO-USB HID work (→ [D.5](sec_d#d5)). Output mirrors to both, input is taken from either, first come.
+
+## Console grammar — hexadecimal by default, `#` prefixes decimal, `p:` and `v:` qualify an address.
+
+| Group | Commands | Notes |
+|---|---|---|
+| Memory | `md` · `mw` · `mf` · `mc` · `ms` · `mt` | dump · write · fill · compare · search · test (march-c, addr-in-addr, walking-1) |
+| Mode | `mode phys / virt` · `int / ext` · `asid <n>` · `width 8 / 16` · `nocache on / off` | bare `mode` prints the current flags; `nocache` prints a warning |
+| CPU | `halt` · `run` · `step [n]` · `stepi [n]` · `reset [hold]` · `reg` · `reg -f` · `dis` | `reg` infers from trace, `reg -f` forces the stub and perturbs state (→ [R.15](sec_r#r15)) |
+| Trace | `trace arm [addr] [mask]` · `on / off` · `pos` · `dump [n]` · `filter opfetch` | `dump` disassembles the records |
+| MMU | `tlb dump / probe / flush` · `pt walk / dump / write` · `cache flush / inval / stats` | `pt walk` shows each level; `pt write` flushes the TLB after it |
+| Storage | `ld <file> <addr>` · `sv <addr> <len> <file>` · `boot <file>` | straight from the microSD the EC already owns (→ [G.2](sec_g#g2)) |
+| System | `id` · `status` · `err` · `help [cmd]` | `status` decodes every status bit; `err` decodes and clears |
+
+- R.20 — Five behavioural requirements, each of them a lesson rather than a preference. **Every error is reported with its decoded cause** — never a bare failure. **Long operations show progress**: a march test over 64 MB of SDRAM takes minutes, and a silent console for that long is indistinguishable from a hang. **Ctrl-C aborts** through `CMD_ABORT`. **`md` output is annotated** with the region it fell in — cached SRAM, pinned SRAM, SDRAM, VRAM aperture, `$FF` — derived from the physical map of [L.6](sec_l#l6). **The prompt carries the mode**: `p16>` for physical 16-bit, `v8:0042>` for virtual 8-bit under ASID `$42`.
+- R.21 — What the agent settles that was open before it: **[Q25](sec_q#q25) — how the RP2040 reaches Helium's control registers with the CPU held in reset.** It does not master the bus; it issues an internal access, and an internal write to a `$FF:00xx` address meets the same address comparator a CPU store would. So the whole "address as opcode" command model of [sheet M](sec_m) — TLB flushes, context loads, cache flushes and their `BUSY` discipline — becomes testable at E4 with no CPU, no BIOS and no kernel in the picture (→ [M.2](sec_m#m2), [D18](sec_q#d18)).
+
+## Staging — the agent's capability mapped onto this document's stages ([sheet P](sec_p)).
+
+| Stage | Debug agent capability | What it validates |
+|---|---|---|
+| E1.6 · RP2040 alone | Console up on USB-CDC and UART; microSD; bitstream load | EC firmware, SD stack, both transports |
+| E1.7 · the three FPGAs | `DBG_ID` reads `$6516` | SPI link, Helium clock, bitstream actually loaded |
+| E2 · SRAM + monitor | Physical peek/poke; `mt` march test; byte-write check | SRAM controller, shared-net timing, `md`/`mw` end to end |
+| E3 · SDRAM | Physical SDRAM access; `CMD_CACHE_FLUSH`/`INVAL`; `cache stats` | SDRAM controller, refresh under load, cache coherence |
+| E4 · MMU + cache + protection | Halt · step · trace; virtual mode; `TLB_PROBE` vs `PTWALK`; internal writes to `$FF` | PHI2 gating, `BE` handoff, arbiter, walker, ASID, [sheet M](sec_m)'s command model |
+| E5 · video + audio | External cycles into the `$FE` aperture | Inter-FPGA bus visibility, VRAM window, Neon's decode |
+
+- R.22 — **E2 is the stage that pays for the whole design.** Being able to march-test SRAM before any CPU exists converts the hardest class of bring-up bug — intermittent memory faults surfacing as random software misbehaviour — into a direct, reproducible measurement, and it does so at the exact moment the board is least able to explain itself.
+  NOTE: The free-run stage before it ([E1.8](sec_p#e18)) gets a dividend too, if the trace buffer is ready by then: capturing a NOP free-run is an analyser reading of PHI2, reset and the address bus with no analyser attached.
+- R.23 — Honest cost. In pins: `DBG_CSN` on both ends, `DEBUG_ENABLE`, `BE` from Helium, optionally `DBG_IRQN`, the 3-pin UART header, and bidirectional CPU-side pins on Helium. That lands on a budget which **does not close as written** — [Q8](sec_q#q8) already had the free 17 pins failing to cover SPI-SD, the console UART and this port. [[!blocking]]
+  NOTE: In gateware the open items are the SPI-to-core clock-domain crossing (→ [Q28](sec_q#q28)), the `BE` turnaround count at 3.3 V (→ [Q27](sec_q#q27)), where the agent sits in the arbiter's priority order (→ [Q29](sec_q#q29)), and the trace depth against remaining EBR (→ [Q30](sec_q#q30)).
+- R.24 — Deferred, not ruled out: **breakpoint comparators** — address match forcing a halt, a natural extension of the trace trigger, held back to keep the CPU stage small · **watchpoints on data value** as well as address · and a **GDB remote serial protocol stub** on the RP2040, so a host debugger drives the agent directly. The last is attractive and cheap to get wrong early; it is worth doing only once the command set above has stopped moving. [[open]]

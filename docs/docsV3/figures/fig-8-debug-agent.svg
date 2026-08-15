@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Debug agent inside Helium, commanded by the RP2040 over SPI">
+  <text x="40" y="52" class="eye">RP2040 — CONSOLE</text>
+  <rect x="40" y="64" width="230" height="86" class="blk"/>
+  <text x="155" y="90" class="t">MONITOR</text>
+  <text x="155" y="110" class="s">USB-CDC + UART 115200 · mirrored</text>
+  <text x="155" y="128" class="s">md · mw · mt · halt · step · trace</text>
+  <text x="155" y="144" class="s">never drives the bus</text>
+
+  <line x1="270" y1="98" x2="356" y2="98" class="dt"/>
+  <text x="313" y="90" class="lbl">SPI · CSN</text>
+  <line x1="356" y1="126" x2="270" y2="126" class="dts"/>
+  <text x="313" y="142" class="lbl">DBG_IRQN</text>
+
+  <rect x="340" y="30" width="440" height="300" class="blk"/>
+  <text x="356" y="52" class="eye">HELIUM · FPGA-A</text>
+
+  <rect x="356" y="64" width="180" height="70" class="blk"/>
+  <text x="446" y="88" class="t">DEBUG AGENT</text>
+  <text x="446" y="106" class="s">registers · FIFO · trace</text>
+  <text x="446" y="122" class="s">SPI-only · not in $FF</text>
+
+  <rect x="570" y="64" width="140" height="70" class="blk"/>
+  <text x="640" y="92" class="t">MMU · TLB</text>
+  <text x="640" y="112" class="s">VIRT mode</text>
+  <text x="640" y="128" class="s">walker · ASID</text>
+  <line x1="536" y1="99" x2="570" y2="99" class="dt"/>
+
+  <line x1="446" y1="134" x2="446" y2="170" class="dt"/>
+  <rect x="356" y="170" width="180" height="56" class="blk"/>
+  <text x="446" y="194" class="t">ARBITER</text>
+  <text x="446" y="214" class="s">CPU · fill · walker · refresh</text>
+
+  <line x1="536" y1="198" x2="570" y2="198" class="dt"/>
+  <rect x="570" y="170" width="140" height="56" class="blk"/>
+  <text x="640" y="194" class="t">CACHE CTRL</text>
+  <text x="640" y="214" class="s">INTERNAL</text>
+
+  <line x1="710" y1="198" x2="800" y2="198" class="dt"/>
+  <rect x="800" y="168" width="130" height="60" class="blk"/>
+  <text x="865" y="192" class="t">SDRAM 64 MB</text>
+  <text x="865" y="212" class="s">32,768 frames</text>
+
+  <line x1="446" y1="226" x2="446" y2="252" class="dt"/>
+  <rect x="356" y="252" width="250" height="56" class="blk"/>
+  <text x="481" y="276" class="t">BUS TAKE / RELEASE</text>
+  <text x="481" y="296" class="s">EXTCYC · stall PHI2 → BE low → drive</text>
+
+  <polyline points="370,308 370,344 150,344 150,420" class="pwd"/>
+  <text x="230" y="338" class="gtx">PHI2 · BE</text>
+
+  <line x1="60" y1="380" x2="800" y2="380" class="dtb"/>
+  <text x="180" y="404" class="li10">shared bus · D0–D7 + A0–A10</text>
+
+  <line x1="470" y1="308" x2="470" y2="380" class="dt"/>
+  <line x1="660" y1="226" x2="660" y2="380" class="dt"/>
+
+  <line x1="140" y1="380" x2="140" y2="420" class="dt"/>
+  <rect x="60" y="420" width="170" height="64" class="blk"/>
+  <text x="145" y="444" class="t">W65C816S</text>
+  <text x="145" y="464" class="s">halted = PHI2 stalled</text>
+
+  <line x1="435" y1="380" x2="435" y2="420" class="dt"/>
+  <rect x="350" y="420" width="170" height="64" class="blk"/>
+  <text x="435" y="444" class="t">SRAM 1 MB ×8</text>
+  <text x="435" y="464" class="s">768 K cache + 256 K pinned</text>
+
+  <line x1="705" y1="380" x2="705" y2="420" class="dt"/>
+  <rect x="620" y="420" width="170" height="64" class="blk"/>
+  <text x="705" y="444" class="t">NEON · $FE</text>
+  <text x="705" y="464" class="s">external cycles only</text>
+
+  <text x="820" y="406" class="eye">REACH</text>
+  <text x="820" y="430" class="li10">E2 physical</text>
+  <text x="820" y="448" class="li10">E4 virtual · halt</text>
+  <text x="820" y="466" class="li10">E5 external</text>
+</svg>
