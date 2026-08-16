@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 530" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Power control and telemetry path">
+  <!-- instruments -->
+  <rect x="24" y="40" width="180" height="52" class="blk"/>
+  <text x="114" y="60" class="s">MAX17048 · BQ25896</text>
+  <text x="114" y="78" class="s">I2C-AON — EC only</text>
+  <line x1="114" y1="92" x2="114" y2="124" class="dts"/>
+
+  <!-- EC -->
+  <rect x="24" y="124" width="180" height="120" class="blk"/>
+  <text x="114" y="148" class="t">RP2040 · EC</text>
+  <text x="114" y="168" class="s">polls at 1 Hz, converts</text>
+  <text x="114" y="184" class="s">to human units</text>
+  <text x="114" y="204" class="s">10 s watchdog</text>
+  <text x="114" y="222" class="s">short press · 4 s long</text>
+  <text x="114" y="238" class="s">owns every rail EN</text>
+
+  <line x1="114" y1="244" x2="114" y2="380" class="pw"/>
+  <rect x="24" y="380" width="180" height="52" class="blk"/>
+  <text x="114" y="400" class="s">rails down, in reverse</text>
+  <text x="114" y="418" class="s">→ dormant or ship mode</text>
+
+  <!-- attention pins -->
+  <line x1="204" y1="150" x2="300" y2="150" class="dt"/>
+  <text x="252" y="142" class="lbl">EC_PWR_REQ →</text>
+  <line x1="204" y1="186" x2="300" y2="186" class="dt"/>
+  <text x="252" y="178" class="lbl">← SYS_PWR_REQ</text>
+  <line x1="204" y1="222" x2="300" y2="222" class="dtb"/>
+  <text x="252" y="214" class="lbl">Debug Agent SPI</text>
+
+  <!-- telemetry bytes into staging -->
+  <line x1="170" y1="244" x2="170" y2="330" class="pwd"/>
+  <line x1="170" y1="330" x2="324" y2="330" class="pwd"/>
+  <text x="250" y="322" class="plbl">telemetry bytes</text>
+
+  <!-- Helium -->
+  <rect x="300" y="40" width="440" height="424" class="blk"/>
+  <text x="520" y="64" class="t">HELIUM · pure register logic</text>
+
+  <rect x="324" y="80" width="392" height="66" class="blk"/>
+  <text x="520" y="100" class="s">EC_PWR_STATE — SYS_REQ · REQ_REBOOT · IS_ACK · IS_NAK</text>
+  <text x="520" y="118" class="s">read-only over SPI, outside the DEBUG_ENABLE gate</text>
+  <text x="520" y="136" class="s">shutdown is a production function, not a debug one</text>
+
+  <rect x="324" y="166" width="392" height="100" class="blk"/>
+  <text x="520" y="186" class="t">request latch — reset-safe</text>
+  <text x="520" y="206" class="s">POWER_STATUS: REQ_PENDING · REQ_REBOOT · SRC_BUTTON /</text>
+  <text x="520" y="222" class="s">BATTERY / THERMAL · ACK_SENT · TELEM_EVENT</text>
+  <text x="520" y="242" class="s">POWER_CTRL: POWEROFF · REBOOT · ACK · NAK · TELEM_LATCH</text>
+  <text x="520" y="258" class="s">no cache, no arbiter, no SDRAM</text>
+
+  <rect x="324" y="300" width="116" height="60" class="blk"/>
+  <text x="382" y="326" class="t">STAGING</text>
+  <text x="382" y="344" class="s">byte by byte</text>
+  <line x1="440" y1="330" x2="466" y2="330" class="pw"/>
+  <text x="453" y="294" class="plbl">TELEM_COMMIT</text>
+  <rect x="466" y="300" width="116" height="60" class="blk"/>
+  <text x="524" y="326" class="t">LIVE</text>
+  <text x="524" y="344" class="s">TELEM_SEQ++ · AGE=0</text>
+  <line x1="582" y1="330" x2="608" y2="330" class="pw"/>
+  <text x="595" y="294" class="plbl">TELEM_LATCH</text>
+  <rect x="608" y="300" width="108" height="60" class="blk"/>
+  <text x="662" y="326" class="t">SHADOW</text>
+  <text x="662" y="344" class="s">read at leisure</text>
+
+  <text x="520" y="390" class="s">each copy is one cycle in the core clock domain — nothing can tear</text>
+  <text x="520" y="412" class="s">TELEM_AGE counts eighths of a second since the last commit, saturating at 255</text>
+  <text x="520" y="440" class="s">contents are lost with 3V3_MAIN: the EC must commit once before the CPU leaves reset</text>
+
+  <!-- CPU -->
+  <line x1="740" y1="200" x2="800" y2="200" class="dt"/>
+  <text x="770" y="192" class="lbl">bank $FF</text>
+  <line x1="740" y1="240" x2="800" y2="240" class="dts"/>
+  <text x="770" y="232" class="lbl">IRQ</text>
+  <line x1="740" y1="330" x2="800" y2="330" class="pw"/>
+  <text x="770" y="322" class="plbl">reads</text>
+
+  <rect x="800" y="150" width="146" height="216" class="blk"/>
+  <text x="873" y="176" class="t">W65C816S</text>
+  <text x="873" y="200" class="s">reads POWER_STATUS,</text>
+  <text x="873" y="216" class="s">learns the cause</text>
+  <text x="873" y="240" class="s">flushes, unmounts,</text>
+  <text x="873" y="256" class="s">quiesces the MMU</text>
+  <text x="873" y="280" class="s">writes ACK_POWEROFF</text>
+  <text x="873" y="304" class="s">latch, then read the</text>
+  <text x="873" y="320" class="s">shadow bank — /dev/power</text>
+  <text x="873" y="344" class="s">no new syscalls</text>
+
+  <text x="24" y="492" class="li">The pins carry attention, the SPI link carries detail: a level held until the transaction completes, never a pulse encoding several meanings by width.</text>
+  <text x="24" y="518" class="gtx">If the acknowledgement never comes, the watchdog expires at 10 s and the EC drops the rails anyway — after the tri-state pass. Forced does not mean careless.</text>
+</svg>

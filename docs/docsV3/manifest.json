@@ -2,11 +2,11 @@
   "title": "noVa64",
   "documentName": "Synthesis document — index and content outline",
   "footer": {
-    "referenceIndex": "Sheets A–R · Figs. 1–8 · glossary in Z",
-    "referenceSheet": "Synthesis document · sheets A–R + glossary Z · index at index.html",
-    "detail": "Detail: hoja-1-1 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · fpga-a-control-registers · helium-debug-agent · placa-65816.html (REV B)",
+    "referenceIndex": "Sheets A–S · Figs. 1–9 · glossary in Z",
+    "referenceSheet": "Synthesis document · sheets A–S + glossary Z · index at index.html",
+    "detail": "Detail: hoja-1-2 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · fpga-a-control-registers · helium-debug-agent · placa-65816.html (REV B) — power now lives here, in sheets C and S",
     "rules": "All 3.3V · hand-solderable · open toolchain",
-    "rev": "OUTLINE 1 · AUG 2026"
+    "rev": "OUTLINE 2 · POWER REV C · AUG 2026"
   },
   "sheets": [
     {
@@ -154,9 +154,17 @@
       "fig": "Fig. 8"
     },
     {
+      "file": "sec_s",
+      "letter": "S",
+      "num": "19",
+      "nav": "Power control and telemetry",
+      "index": "Power control, shutdown and telemetry · $FF power block",
+      "fig": "Fig. 9"
+    },
+    {
       "file": "sec_z",
       "letter": "Z",
-      "num": "19",
+      "num": "20",
       "nav": "Glossary",
       "index": "Glossary",
       "fig": "tables"

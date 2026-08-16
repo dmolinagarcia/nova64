@@ -52,6 +52,9 @@ Instrumentation, not a product feature. A hardware block inside Helium performs 
 | `0x30` | `TLB_INDEX` | RW | 16 | TLB entry selector |
 | `0x31` | `TLB_ENTRY` | RO | 64 | TLB entry readout |
 | `0x38` | `MMU_MIRROR` | RO | 8 | Read-only view of `MMU_STATUS` (→ [sheet M](sec_m)) |
+| `0x40` | `EC_PWR_STATE` | RO | 8 | **Always accessible**, `DEBUG_ENABLE` notwithstanding: `SYS_REQ` · `REQ_REBOOT` · `IS_ACK` · `IS_NAK` · `CPU_ACK_SEEN` (→ [S.9](sec_s#s9)) |
+| `0x41` | `TELEM_CTRL` | WO | 8 | **Always accessible**: `TELEM_COMMIT` · `TELEM_EVENT_SET` |
+| `0x42+` | `TELEM_STAGE` | WO | 16 B | **Always accessible**: the staging bank, written byte by byte in any order (→ [S.16](sec_s#s16)) |
 
 ## Commands — written to `DBG_CMD`, one at a time.
 
@@ -82,6 +85,7 @@ LEGEND: Trace legend: <span class="m">mint = command and data path</span> · <sp
 - R.17 — Every transaction is covered by a watchdog — 100 µs at the Helium core clock as a starting value, generous enough for a worst-case SDRAM access with an intervening refresh and short enough that a human reads it as a delay. On expiry the agent abandons the transaction, releases the bus and PHI2, sets `ERR_TIMEOUT` and returns to idle. **The agent must never be able to hang the console**, and that constraint outranks completing any transaction: if it hangs, the engineer loses the only view into a board that is, by hypothesis, already misbehaving.
   NOTE: The reverse interaction has to be handled too — the system watchdog that turns a hung fill into NMI or ABORT must be **suppressed while the CPU is halted by the agent**, or every debug session ends in a spurious abort.
 - R.18 — `DEBUG_ENABLE`, a Helium input on a jumper, gates the whole thing: deasserted, it forces `DBG_CTRL.ENABLE` to zero, ignores writes to it, and rejects every command with `ERR_STATE` — while still answering `DBG_ID` and `DBG_STATUS`, so the console can report *why* it is refusing rather than appearing broken. The point is not security against physical access, which is unachievable and not a goal, but making the privileged path an **explicit, visible, deliberate state of the board**.
+  NOTE: The gate now has a **documented hole, and it has to be one**: `EC_PWR_STATE` and the telemetry staging registers sit outside it. Power management is a production function, not a debug function, and putting it behind the strap would break shutdown and battery reporting on every board built with debug disabled. Neither register can initiate a bus cycle or reach memory, so the region grants nothing the strap exists to withhold — but it must be carved out of the map deliberately, and confirming it can be without disturbing what is already there is [Q38](sec_q#q38).
 - R.19 — The console runs on both transports at once: **USB-CDC** over the RP2040's native USB and a **physical UART**, 115200 8N1 on a 3-pin header. The UART is not redundant. At the first stage there is no way to tell a firmware fault from a USB stack fault, and three pins remove the ambiguity; it also survives the USB peripheral being reconfigured for PIO-USB HID work (→ [D.5](sec_d#d5)). Output mirrors to both, input is taken from either, first come.
 
 ## Console grammar — hexadecimal by default, `#` prefixes decimal, `p:` and `v:` qualify an address.

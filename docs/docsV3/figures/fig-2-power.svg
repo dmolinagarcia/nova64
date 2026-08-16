@@ -1,84 +1,123 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 960 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Power tree">
-  <rect x="40" y="60" width="150" height="70" class="blk"/>
-  <text x="115" y="84" class="t">USB-C</text>
-  <text x="115" y="104" class="s">sink · CC 5.1 kΩ · ESD</text>
-  <line x1="190" y1="95" x2="250" y2="95" class="pw"/>
-  <text x="220" y="86" class="plbl">5 V</text>
+<svg viewBox="0 0 960 580" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Power tree REV C">
+  <!-- input -->
+  <rect x="24" y="52" width="150" height="64" class="blk"/>
+  <text x="99" y="76" class="t">USB-C</text>
+  <text x="99" y="94" class="s">sink only · ESD</text>
+  <text x="99" y="110" class="s">CC1/CC2 → CH224K</text>
 
-  <rect x="250" y="50" width="200" height="90" class="blk"/>
-  <text x="350" y="74" class="t">MCP73871</text>
-  <text x="350" y="94" class="s">1S charger + power-path</text>
-  <text x="350" y="110" class="s">→ SYS node</text>
+  <rect x="24" y="140" width="150" height="52" class="blk"/>
+  <text x="99" y="160" class="t">CH224K</text>
+  <text x="99" y="178" class="s">PD sink · CFG1 6.8 kΩ</text>
+  <line x1="99" y1="116" x2="99" y2="140" class="dts"/>
 
-  <line x1="350" y1="140" x2="350" y2="170" class="pw"/>
-  <text x="380" y="158" class="plbl">VBAT</text>
-  <rect x="250" y="170" width="200" height="70" class="blk"/>
-  <text x="350" y="194" class="t">1S Li-Ion BATTERY</text>
-  <text x="350" y="214" class="s">3000 mAh · &gt;10 h est.</text>
+  <line x1="174" y1="84" x2="236" y2="84" class="pw"/>
+  <text x="205" y="74" class="plbl">VBUS 9 V</text>
 
-  <line x1="350" y1="240" x2="350" y2="260" class="dts"/>
-  <rect x="250" y="260" width="200" height="48" class="blk"/>
-  <text x="350" y="280" class="s">MAX17048 · fuel gauge</text>
-  <text x="350" y="296" class="s">I2C → EC</text>
-  <rect x="250" y="326" width="200" height="44" class="blk"/>
-  <text x="350" y="352" class="s">PCF8563 · RTC (I2C)</text>
+  <!-- charger, pack, gauge -->
+  <rect x="236" y="52" width="184" height="92" class="blk"/>
+  <text x="328" y="76" class="t">BQ25896</text>
+  <text x="328" y="94" class="s">3 A charger · power path</text>
+  <text x="328" y="110" class="s">ADC · I2C 0x6B · QON</text>
+  <text x="328" y="128" class="s">SYS floor 3.5 V · OTG unused</text>
 
-  <line x1="450" y1="95" x2="520" y2="95" class="pw"/>
-  <circle cx="520" cy="95" r="4" fill="#D9A93F"/>
-  <text x="520" y="80" class="plbl">SYS</text>
-  <line x1="520" y1="88" x2="520" y2="250" class="pw"/>
+  <line x1="328" y1="144" x2="328" y2="176" class="pw"/>
+  <text x="356" y="164" class="plbl">BAT</text>
+  <rect x="236" y="176" width="184" height="58" class="blk"/>
+  <text x="328" y="198" class="t">2× 5000 mAh 1S LiPo</text>
+  <text x="328" y="216" class="s">~10 Ah · 37 Wh · NTC</text>
 
-  <line x1="520" y1="88" x2="560" y2="88" class="pw"/>
-  <rect x="560" y="60" width="180" height="56" class="blk"/>
-  <text x="650" y="82" class="t">TPS63020</text>
-  <text x="650" y="102" class="s">buck-boost → 3V3 AO</text>
+  <line x1="328" y1="234" x2="328" y2="256" class="dts"/>
+  <rect x="236" y="256" width="184" height="44" class="blk"/>
+  <text x="328" y="274" class="s">MAX17048 · fuel gauge</text>
+  <text x="328" y="290" class="s">ALRT → AON GPIO</text>
 
-  <line x1="520" y1="180" x2="560" y2="180" class="pw"/>
-  <rect x="560" y="156" width="180" height="48" class="blk"/>
-  <text x="650" y="176" class="s">PT4110 · LED backlight</text>
-  <text x="650" y="192" class="s">EN/PWM ← EC · ~1.5W</text>
-  <line x1="740" y1="180" x2="760" y2="180" class="pw"/>
-  <text x="752" y="170" class="plbl">VLED</text>
+  <!-- SYS -->
+  <line x1="420" y1="84" x2="482" y2="84" class="pw"/>
+  <circle cx="482" cy="84" r="4.5" fill="#D9A93F"/>
+  <text x="482" y="70" class="plbl">SYS</text>
+  <line x1="482" y1="84" x2="482" y2="470" class="pw"/>
 
-  <line x1="520" y1="250" x2="560" y2="250" class="pw"/>
-  <rect x="560" y="226" width="180" height="48" class="blk"/>
-  <text x="650" y="246" class="s">TPS61023 → 5V VBUS</text>
-  <text x="650" y="262" class="s">USB host · EN ← EC</text>
-  <line x1="740" y1="250" x2="760" y2="250" class="pw"/>
-  <text x="736" y="268" class="plbl">5V VBUS</text>
+  <!-- AON rail -->
+  <line x1="482" y1="84" x2="536" y2="84" class="pw"/>
+  <rect x="536" y="56" width="186" height="58" class="blk"/>
+  <text x="629" y="78" class="t">TPS63900</text>
+  <text x="629" y="96" class="s">buck-boost · ultra-low Iq</text>
+  <text x="629" y="110" class="s">NO ENABLE</text>
+  <line x1="722" y1="84" x2="782" y2="84" class="pw"/>
+  <text x="752" y="74" class="plbl">3V3_AON</text>
+  <rect x="782" y="46" width="164" height="80" class="blk"/>
+  <text x="864" y="66" class="s">RP2040 + W25Q16</text>
+  <text x="864" y="82" class="s">CH224K VDD</text>
+  <text x="864" y="98" class="s">I2C-AON + pull-ups</text>
+  <text x="864" y="114" class="s">power button</text>
 
-  <line x1="740" y1="88" x2="770" y2="88" class="pw"/>
-  <circle cx="770" cy="88" r="3.5" fill="#D9A93F"/>
-  <text x="770" y="60" class="plbl">3V3</text>
-  <line x1="770" y1="74" x2="770" y2="290" class="pw"/>
+  <!-- 1V2 -->
+  <line x1="482" y1="196" x2="536" y2="196" class="pw"/>
+  <rect x="536" y="170" width="186" height="52" class="blk"/>
+  <text x="629" y="190" class="t">TLV62568 · buck</text>
+  <text x="629" y="208" class="s">EN / PG ↔ EC</text>
+  <line x1="722" y1="196" x2="782" y2="196" class="pw"/>
+  <text x="752" y="186" class="plbl">1V2</text>
+  <rect x="782" y="170" width="164" height="52" class="blk"/>
+  <text x="864" y="190" class="s">VCC + VCCPLL</text>
+  <text x="864" y="206" class="s">both iCE40 · RC per chip</text>
 
-  <line x1="770" y1="74" x2="800" y2="74" class="pw"/>
-  <rect x="800" y="52" width="150" height="44" class="blk"/>
-  <text x="875" y="70" class="s">3V3 logic</text>
-  <text x="875" y="86" class="s">RP2040 always-on</text>
+  <!-- 3V3_MAIN -->
+  <line x1="482" y1="290" x2="536" y2="290" class="pw"/>
+  <rect x="536" y="256" width="186" height="68" class="blk"/>
+  <text x="629" y="278" class="t">TPS63020 · buck-boost</text>
+  <text x="629" y="296" class="s">forced PWM</text>
+  <text x="629" y="312" class="s">EN / PG ↔ EC</text>
+  <line x1="722" y1="290" x2="782" y2="290" class="pw"/>
+  <text x="752" y="280" class="plbl">3V3_MAIN</text>
+  <rect x="782" y="238" width="164" height="104" class="blk"/>
+  <text x="864" y="258" class="s">VCC_SPI + all VCCIO</text>
+  <text x="864" y="274" class="s">SRAM · SDRAM</text>
+  <text x="864" y="290" class="s">W65C816S · panel logic</text>
+  <text x="864" y="306" class="s">PCM5102A · GT911 · SD</text>
+  <text x="864" y="326" class="s">BAT54 → VPP_2V5</text>
 
-  <line x1="770" y1="128" x2="800" y2="128" class="pw"/>
-  <rect x="800" y="106" width="150" height="44" class="blk"/>
-  <text x="875" y="124" class="s">1.2V LDO (EN)</text>
-  <text x="875" y="140" class="s">iCE40 cores</text>
+  <!-- backlight -->
+  <line x1="482" y1="386" x2="536" y2="386" class="pw"/>
+  <rect x="536" y="360" width="186" height="52" class="blk"/>
+  <text x="629" y="380" class="t">PT4110 · boost</text>
+  <text x="629" y="398" class="s">EN / PWM ← EC</text>
+  <line x1="722" y1="386" x2="782" y2="386" class="pw"/>
+  <rect x="782" y="364" width="164" height="44" class="blk"/>
+  <text x="864" y="384" class="s">LED string</text>
+  <text x="864" y="400" class="s">~1.5 W reserved</text>
 
-  <line x1="770" y1="182" x2="800" y2="182" class="pw"/>
-  <rect x="800" y="160" width="150" height="44" class="blk"/>
-  <text x="875" y="178" class="s">VCCPLL filtered</text>
-  <text x="875" y="194" class="s">per FPGA</text>
+  <!-- host 5 V -->
+  <line x1="482" y1="470" x2="536" y2="470" class="pw"/>
+  <rect x="536" y="444" width="186" height="52" class="blk"/>
+  <text x="629" y="464" class="t">TPS61023 · boost</text>
+  <text x="629" y="482" class="s">EN ← EC</text>
+  <line x1="722" y1="470" x2="782" y2="470" class="pw"/>
+  <rect x="782" y="448" width="164" height="44" class="blk"/>
+  <text x="864" y="468" class="s">USB-A VBUS 5 V</text>
+  <text x="864" y="484" class="s">500 mA · polyfuse</text>
 
-  <line x1="770" y1="236" x2="800" y2="236" class="pw"/>
-  <rect x="800" y="214" width="150" height="44" class="blk"/>
-  <text x="875" y="232" class="s">VPP 2.5V</text>
-  <text x="875" y="248" class="s">via BAT54</text>
+  <!-- EC -->
+  <rect x="24" y="300" width="150" height="76" class="blk"/>
+  <text x="99" y="324" class="t">RP2040 · EC</text>
+  <text x="99" y="342" class="s">runs on 3V3_AON</text>
+  <text x="99" y="358" class="s">sequencer · supervisor</text>
+  <text x="99" y="372" class="s">button on AON GPIO</text>
 
-  <line x1="770" y1="290" x2="800" y2="290" class="pw"/>
-  <rect x="800" y="268" width="150" height="44" class="blk"/>
-  <text x="875" y="286" class="s">load switch</text>
-  <text x="875" y="302" class="s">→ panel</text>
+  <!-- I2C-AON -->
+  <line x1="174" y1="338" x2="204" y2="338" class="dts"/>
+  <line x1="204" y1="96" x2="204" y2="338" class="dts"/>
+  <line x1="204" y1="96" x2="236" y2="96" class="dts"/>
+  <line x1="204" y1="278" x2="236" y2="278" class="dts"/>
+  <text x="152" y="248" class="lbl">I2C-AON</text>
 
-  <text x="40" y="392" class="li">Sequencing and EN lines governed by the RP2040 · CRESET_B held until rails are stable.</text>
-  <text x="40" y="410" class="li">0Ω jumpers per rail — isolated bring-up (stage E1).</text>
-  <text x="40" y="432" class="gtx">The boosts hang off SYS, not VBAT → the machine runs on USB with the battery depleted (power-path).</text>
+  <!-- EN / PG band -->
+  <line x1="150" y1="376" x2="150" y2="400" class="dt"/>
+  <line x1="150" y1="400" x2="460" y2="400" class="dt"/>
+  <text x="316" y="392" class="lbl">EN · PG · CRESET_B — every switched rail</text>
+
+  <text x="24" y="524" class="li">Order up: 1V2 (VCC + VCCPLL) → 3V3_MAIN (VCC_SPI + all VCCIO) → VPP_2V5 through the BAT54. Down is the reverse, with an R1 tri-state pass in between.</text>
+  <text x="24" y="544" class="li">Every switched rail: EN pulled down to 3V3_MAIN, PG back to an AON GPIO, a 0 Ω jumper and a labelled test point.</text>
+  <text x="24" y="568" class="gtx">The AON rail has no enable — a controller cannot switch the rail that powers it. Only ship mode removes it, by removing SYS.</text>
 </svg>

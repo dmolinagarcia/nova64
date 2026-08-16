@@ -78,21 +78,31 @@ Document-wide reference. Every acronym is also expanded on first use in place, s
 | Stub | In layout, a track branching off a bus. Long stubs ruin signal integrity at ~100 MHz, hence the short comb of [F.13](sec_f#f13). |
 
 ## Board, power and configuration
-  NOTE: → [sheet C](sec_c) · [sheet D](sec_d)
+  NOTE: → [sheet C](sec_c) · [sheet D](sec_d) · [sheet S](sec_s)
 
 | Term | Meaning |
 |---|---|
 | EC | Embedded Controller — the always-on microcontroller handling power, boot and housekeeping. Here, the RP2040. |
-| Rail | A supply voltage distributed across the board (3V3, 1.2V, VPP…). "Sequencing" is the order they come up in. |
+| Rail | A supply voltage distributed across the board (3V3_AON, 3V3_MAIN, 1V2, VPP…). "Sequencing" is the order they come up in. |
 | SYS | The node after the charger, fed by USB or battery indifferently. Everything hangs off it rather than off the battery. |
 | Power-path | Charger topology that powers the system and charges the cell at once, so the machine runs on USB with a flat or absent battery. |
-| 1S | One lithium cell in series — a nominal ~3.7V pack. |
-| Fuel gauge | Chip that estimates remaining charge from voltage and current history. Here the MAX17048, read by the EC over I2C. |
+| 1S | One lithium cell in series — a nominal ~3.7V pack. Two 1S cells in *parallel* are still 1S: more capacity, same voltage, no balancing. |
+| Fuel gauge | Chip that estimates remaining charge from voltage and current history. Here the MAX17048, read by the EC over I2C. Distinct from an ADC, which reports a voltage and models nothing. |
 | Buck-boost | Converter holding its output steady whether the input is above or below it — needed because a cell crosses 3.3V as it drains. |
 | Boost | Converter that only steps voltage up. Used for the backlight and the 5V host VBUS. |
-| LDO | Low-DropOut regulator — simple linear regulator, used for the 1.2V FPGA cores. |
-| Load switch | A controlled switch cutting power to a whole block — here the panel, off by default. |
-| Always-on | A rail that stays up whenever the machine has any power, so the EC can run before anything else exists. |
+| LDO | Low-DropOut regulator — a linear regulator, which wastes the voltage it drops as heat. The 1.2V rail used to be one and is now a buck ([D20](sec_q#d20)). |
+| Always-on · AON | The domain powered whenever SYS exists: the EC, its flash, the PD sink, the charger/gauge bus and the power button. Nothing else belongs there. |
+| Switched domain | Everything whose rail the EC can turn off — the FPGAs, the CPU, the memories, the panel, the touch bus. Off by default at EC reset. |
+| Iq | Quiescent current — what a converter draws on its own, at no load. Decisive for an always-on rail, irrelevant for a switched one. |
+| PG · Power Good | An open-drain output asserting that a converter has reached regulation. Used here as the sequencing interlock: the EC waits on it before raising the next rail. |
+| PD · Power Delivery | The USB-C protocol by which a sink asks for more than the default 5V, negotiated over the CC conductors. Here 9V, requested by a resistor. |
+| OTG | A charger mode in which the device sources 5V onto its own VBUS. Present on the BQ25896 and deliberately unused ([D21](sec_q#d21)). |
+| Ship mode | A charger state disconnecting the battery from SYS entirely, leaving only leakage. The machine's deepest off state; the button's `QON` pin wakes it. |
+| QON | The BQ25896 pin that resets the battery FET from hardware, with no firmware involved. The floor under every other way of turning the machine off. |
+| Ordered shutdown | The graceful path: the kernel flushes and confirms before any rail drops. Its opposite is *forced*, where the EC stops waiting for an answer. |
+| Watchdog | Here, the EC's 10-second bound on how long a kernel may take to acknowledge a shutdown request. Without one, a hung kernel hides itself as a machine that will not turn off. |
+| Staging · live · shadow | The three copies of the telemetry bank. The EC dribbles bytes into staging, one commit publishes them to live, one latch snapshots live into shadow — so an 8-bit CPU can read a 16-bit value without it changing underneath ([S.16](sec_s#s16)). |
+| Tearing | Reading a multi-byte value while it is being updated, and getting halves from two different samples. The reason for the snapshot mechanism above. |
 | SSPI | Slave SPI — the iCE40 configuration mode in which an external master (the RP2040) clocks the bitstream in. |
 | Bitstream | The compiled gateware file loaded into an FPGA at every power-up. iCE40s are SRAM-based: they forget on power-off. |
 | CRESET_B / CDONE | The iCE40's configuration handshake: held low to start loading, raised by the FPGA when configuration succeeded. |

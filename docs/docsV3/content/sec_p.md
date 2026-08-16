@@ -21,10 +21,12 @@ Nine stages, each with concrete hardware/gateware/software and a verification cr
 - [ ] E1.3 — **Layout.** Stackup decided against the router's difficulty, PLCC socket centred with the FPGAs around it and bus traces under ~10 cm, decoupling hard against the pins, continuous ground plane.
   TEST: clean DRC and gerbers checked in an external viewer, not in KiCad's own.
 - [ ] E1.4 — **Staged population — the golden rule:** never populate a block until the previous one works. The board is designed for this, with a test point and an LED per rail and 0Ω jumpers to isolate every branch.
-- [ ] E1.5 — **Power alone.**
-  TEST: 3V3 within ±2% and 1V2 within ±3% under dummy load · battery charging with correct STAT lines · every branch measured in isolation through its jumper.
+- [ ] E1.5 — **Power alone**, in the order of [C.19](sec_c#c19): charger and SYS with no downstream jumper fitted, then each rail into a resistive load, then the jumpers one at a time.
+  TEST: 3V3_AON and 3V3_MAIN within ±2% and 1V2 within ±3% under dummy load · PD contract measured at 9 V on VBUS · SYS holding with the battery disconnected entirely · charging with correct STAT lines · draw at each jumper checked against the budget table · rails driven by hand from the EN header, with no EC firmware in the picture.
+  NOTE: This stage also has to prove the **order**, not just the levels: 1V2 before 3V3_MAIN before VPP_2V5, each ramp monotonic, on a two-channel capture. A rail-order violation does not show up as a bad voltage — it shows up months later as an FPGA that configures unreliably (→ [C.8](sec_c#c8)).
 - [ ] E1.6 — **RP2040 alone.**
-  TEST: enumerates as USB-CDC and answers on the console · mounts the microSD and lists files · reports I2C telemetry · generates a measurable backlight PWM, with no FPGA populated.
+  TEST: enumerates as USB-CDC and answers on the console · mounts the microSD and lists files · reads the gauge and charger over I2C-AON and reports converted units · generates a measurable backlight PWM, with no FPGA populated · sequences every rail up and down under firmware control, including the R1 tri-state pass, measured with the switched domain dead.
+  NOTE: The **crossings audit** of [C.14](sec_c#c14) belongs before this stage, not during it — a net-by-net list of every AON↔switched connection checked against R1–R3. It is the one review pass on the board that cannot be recovered by rework if it is skipped.
 - [ ] E1.7 — **The three FPGAs.**
   TEST: the EC configures each one separately with a blinky · CDONE high on all three · reconfiguring Neon without disturbing Helium demonstrated.
   NOTE: The debug agent's `DBG_ID` reading `$6516` belongs to this stage too — one SPI frame that proves link, bitstream and Helium clock at once (→ [R.8](sec_r#r8)).
@@ -47,8 +49,8 @@ Nine stages, each with concrete hardware/gateware/software and a verification cr
 
 - [ ] E7 — **Multitasking.** Scheduler with a 100 Hz tick, syscalls via COP, two processes with MMU isolation.
   TEST: two concurrent processes; one dies from a violation and the other stays intact.
-- [ ] E8 — **Laptop + GUI.** 10.1” panel + GT911 + backlight, battery + charging, chassis; window compositor over `/dev/fb`.
-  TEST: touch GUI session running on battery.
+- [ ] E8 — **Laptop + GUI.** 10.1” panel + GT911 + backlight, battery + charging, chassis; window compositor over `/dev/fb`; `/dev/power` with the battery indicator and the shutdown dialogue.
+  TEST: touch GUI session running on battery · a short press raises a dialogue and a cancel actually cancels · `poweroff` from the shell flushes and drops the rails · a deliberately hung kernel is recovered by the 4-second press, and a deliberately hung EC by `QON` · the indicator reports *unknown* rather than a number when telemetry is stale.
 
 !!! AMIGA MILESTONE — preemptive multitasking with a windowed GUI.
 
