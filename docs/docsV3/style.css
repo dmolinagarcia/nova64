@@ -179,8 +179,9 @@
     svg [stroke="#D9A93F"]{ stroke:#6b4a00; }
     svg [stroke="rgba(241,236,217,.35)"],svg [stroke="rgba(241,236,217,.4)"]{ stroke:rgba(0,0,0,.45); }
 
-    /* full.html: one sheet per sheet of paper */
-    body.full .hoja{ break-before:page; }
+    /* full.html prints as one continuous document — sheets run on, they do
+       not each claim a fresh page. Only the masthead is kept with what
+       follows it. */
     body.full .masthead{ break-after:avoid; }
 
     /* keep rows, steps and figures from splitting across pages */

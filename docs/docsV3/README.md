@@ -34,8 +34,9 @@ carry no YAML front matter, so Jekyll copies them through untouched.
 
 `full.html` is the same content with the sheets chained one after another —
 masthead, sheet index, then A to Z — and it is what to send to the printer or
-save as PDF: the print stylesheet starts each sheet on a fresh page, and drops
-the sidebar and the navigation the way it always did. The sheet index becomes a
+save as PDF: it prints as one continuous document — the sheets run on rather
+than each claiming a fresh page — and the print stylesheet drops the sidebar and
+the navigation the way it always did. The sheet index becomes a
 working table of contents, because on that page every cross-reference is an
 in-page jump: ids are prefixed with their sheet (`#sec_p-e2`) so that E.2 in
 sheet E and E2 in sheet P stop colliding. The sidebar of the paged edition links
