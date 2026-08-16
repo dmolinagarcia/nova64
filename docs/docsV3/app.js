@@ -139,6 +139,7 @@
   // ── rendering ─────────────────────────────────────────────────────────
 
   var el = {};
+  var baseTitle = '';                 // the <title> index.html ships with
 
   function render() {
     var r = route();
@@ -150,7 +151,7 @@
       el.pager.innerHTML = pager(r);
       el.pager.style.display = el.pager.innerHTML ? '' : 'none';
       el.foot.innerHTML = titleBlock(r, doc);
-      document.title = r.isIndex ? M.title + ' — ' + M.documentName
+      document.title = r.isIndex ? (baseTitle || M.title + ' — ' + M.documentName)
                                  : M.title + ' · ' + sheetOf(r.file).letter + ' — ' + doc.title;
       inlineFigures(el.body);
 
@@ -184,6 +185,7 @@
   // ── boot ──────────────────────────────────────────────────────────────
 
   document.addEventListener('DOMContentLoaded', function () {
+    baseTitle = document.title;
     el.side = document.querySelector('.side');
     el.mast = document.querySelector('.masthead');
     el.body = document.querySelector('#content');
