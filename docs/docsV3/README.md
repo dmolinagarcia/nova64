@@ -6,11 +6,14 @@ the page at load time with `md.js` (renderer) and `app.js` (shell and router).
 Nothing in `docsV2` was touched — this is a parallel copy.
 
 ```
-index.html          the only page; shell + two scripts
+index.html          the paged edition: one sheet at a time
+full.html           every sheet in one scroll, for printing
 md.js               markdown → HTML for the dialect below
+shell.js            figure inlining and the failure state, shared by both pages
 app.js              sidebar, masthead, sheet index, pager, title block, routing
+full.js             the same pieces, assembled as one continuous document
 manifest.json       the sheet list: letter, number, nav title, index title, figure
-style.css           docsV2's stylesheet, plus three rules docsV2 carried inline
+style.css           docsV2's stylesheet, plus the few rules these two pages add
 content/*.md        the prose — one file per sheet
 figures/*.svg       the diagrams, one file each
 ```
@@ -26,6 +29,17 @@ python3 -m http.server -d docs/docsV3
 
 then <http://localhost:8000/>. On GitHub Pages it works as-is: the `.md` files
 carry no YAML front matter, so Jekyll copies them through untouched.
+
+## Printing
+
+`full.html` is the same content with the sheets chained one after another —
+masthead, sheet index, then A to Z — and it is what to send to the printer or
+save as PDF: the print stylesheet starts each sheet on a fresh page, and drops
+the sidebar and the navigation the way it always did. The sheet index becomes a
+working table of contents, because on that page every cross-reference is an
+in-page jump: ids are prefixed with their sheet (`#sec_p-e2`) so that E.2 in
+sheet E and E2 in sheet P stop colliding. The sidebar of the paged edition links
+to it at the bottom of the sheet list.
 
 ## Routes
 

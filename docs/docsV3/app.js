@@ -9,8 +9,7 @@
   'use strict';
 
   var M = null;                       // manifest.json
-  var docCache = {};                  // route file -> parsed document
-  var svgCache = {};                  // figure path -> svg source
+  var docCache = {};                  // route file -> promise of a parsed document
 
   // ── links and routes ──────────────────────────────────────────────────
 
@@ -50,6 +49,9 @@
            '<span class="de">' + s.letter + '</span>' + s.nav +
            '<span class="fg">' + s.num + '</span></a></li>';
     });
+    /* the printable edition sits at the end of the list, off the numbering */
+    h += '<li><a href="full.html"><span class="de">≡</span>All sheets · one page' +
+         '<span class="fg">print</span></a></li>';
     return h + '</ol>';
   }
 
@@ -112,30 +114,6 @@
            '<div class="cj"><div>' + f.rules + '</div><div class="gold">' + f.rev + '</div></div>';
   }
 
-  // ── figures ───────────────────────────────────────────────────────────
-
-  /* Figures live as their own .svg files so the markdown stays readable;
-     they are inlined rather than <img>-ed so the stylesheet — including the
-     print rules that recolour every trace — still reaches them. */
-  function inlineFigures(root) {
-    Array.prototype.forEach.call(root.querySelectorAll('figure[data-svg]'), function (fig) {
-      var src = fig.getAttribute('data-svg'), slot = fig.querySelector('.svg-slot');
-      if (!slot) return;
-      var put = function (svg) { if (slot.parentNode) slot.outerHTML = svg; };
-      if (svgCache[src]) { put(svgCache[src]); return; }
-      fetch(src).then(function (res) {
-        if (!res.ok) throw new Error(res.status + ' ' + src);
-        return res.text();
-      }).then(function (txt) {
-        svgCache[src] = txt.replace(/<\?xml[^>]*\?>\s*/, '');
-        put(svgCache[src]);
-      }).catch(function (e) {
-        slot.className = 'status err';
-        slot.textContent = 'Figure unavailable: ' + e.message;
-      });
-    });
-  }
-
   // ── rendering ─────────────────────────────────────────────────────────
 
   var el = {};
@@ -153,33 +131,17 @@
       el.foot.innerHTML = titleBlock(r, doc);
       document.title = r.isIndex ? (baseTitle || M.title + ' — ' + M.documentName)
                                  : M.title + ' · ' + sheetOf(r.file).letter + ' — ' + doc.title;
-      inlineFigures(el.body);
+      NovaShell.inlineFigures(el.body);
 
       var target = r.anchor && document.getElementById(r.anchor);
       if (target) target.scrollIntoView({ block: 'start' });
       else window.scrollTo(0, 0);
-    }).catch(function (e) { fail(e, 'content/' + r.file + '.md'); });
+    }).catch(function (e) { NovaShell.fail(el.body, e, 'content/' + r.file + '.md'); });
   }
 
   function load(file) {
-    if (docCache[file]) return Promise.resolve(docCache[file]);
-    return fetch('content/' + file + '.md').then(function (res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.text();
-    }).then(function (txt) {
-      docCache[file] = window.NovaMarkdown.parse(txt);
-      return docCache[file];
-    });
-  }
-
-  function fail(err, what) {
-    var local = location.protocol === 'file:';
-    el.body.className = 'status err';
-    el.body.innerHTML = '<b>Could not read ' + what + '</b> — ' + err.message +
-      (local ? '<br><br>The pages are read with <code>fetch()</code>, which a browser refuses to do over ' +
-               '<code>file://</code>. Serve the folder instead:<br><br>' +
-               '<code>python3 -m http.server -d docs/docsV3</code><br><br>then open ' +
-               '<code>http://localhost:8000/</code>.' : '');
+    if (!docCache[file]) docCache[file] = NovaShell.loadSheet(file);
+    return docCache[file];
   }
 
   // ── boot ──────────────────────────────────────────────────────────────
@@ -192,13 +154,10 @@
     el.pager = document.querySelector('.pager');
     el.foot = document.querySelector('.cajetin');
 
-    fetch('manifest.json').then(function (res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
-    }).then(function (m) {
+    NovaShell.loadManifest().then(function (m) {
       M = m;
       window.addEventListener('hashchange', render);
       render();
-    }).catch(function (e) { fail(e, 'manifest.json'); });
+    }).catch(function (e) { NovaShell.fail(el.body, e, 'manifest.json'); });
   });
 })();

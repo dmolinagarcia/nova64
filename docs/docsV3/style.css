@@ -179,6 +179,10 @@
     svg [stroke="#D9A93F"]{ stroke:#6b4a00; }
     svg [stroke="rgba(241,236,217,.35)"],svg [stroke="rgba(241,236,217,.4)"]{ stroke:rgba(0,0,0,.45); }
 
+    /* full.html: one sheet per sheet of paper */
+    body.full .hoja{ break-before:page; }
+    body.full .masthead{ break-after:avoid; }
+
     /* keep rows, steps and figures from splitting across pages */
     .sechead{ break-after:avoid; }
     ol.steps li,figure,.hito,table.simple tr{ break-inside:avoid; }
@@ -191,6 +195,9 @@
   .lead.sub{margin-top:16px;}
   figure + ol.steps{margin-top:14px;}
   .hito + ol.steps{margin-top:10px;}
+
+  /* full.html — the whole document in one scroll */
+  .pager .hint{color:rgba(241,236,217,.6);}
 
   /* renderer states — never seen on a healthy page */
   .status{border:1.3px solid rgba(241,236,217,.55);margin-top:26px;padding:16px 20px;color:rgba(241,236,217,.6);letter-spacing:2px;font-size:11px;text-transform:uppercase;}
