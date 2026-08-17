@@ -1,5 +1,5 @@
 # Glossary
-> every acronym and term used across sheets A–T
+> every acronym and term used across sheets A–U
 
 Document-wide reference. Every acronym is also expanded on first use in place, so this sheet is deliberately redundant — it exists to be jumped to, not read through. Grouped by domain; within each group, roughly in the order the concepts appear.
 
@@ -113,7 +113,7 @@ Document-wide reference. Every acronym is also expanded on first use in place, s
 | TQFP · PLCC · TSOP · BGA | Chip packages. The first three have accessible leads and can be hand-soldered; BGA hides its balls underneath and cannot, which is why it is excluded ([D01](sec_q#d01)). |
 
 ## Video, audio and peripherals
-  NOTE: → [sheet H](sec_h) · [sheet T](sec_t)
+  NOTE: → [sheet H](sec_h) · [sheet T](sec_t) · [sheet U](sec_u)
 
 | Term | Meaning |
 |---|---|
@@ -131,6 +131,16 @@ Document-wide reference. Every acronym is also expanded on first use in place, s
 | Text buffer | The 4096 cells of Mode 0, 8 KB in Neon's block RAM, initialised from the bitstream so the screen is correct at power-on with no software involved. |
 | Ring buffer | A buffer addressed modulo its size, so advancing a pointer rotates the visible contents without moving data. `TEXT_START` scrolls the console this way — 256 bytes written instead of 8,192 moved. |
 | Blitter | Block image transferrer — hardware that fills, copies and combines rectangular memory regions with no CPU involvement. The centre of Neon's graphics half. |
+| Channel | One of the blitter's four memory ports under the model of [sheet U](sec_u) — A, B, C read, D writes. Each carries a pointer, a signed modulo and an enable; a disabled read channel supplies a constant and costs no bandwidth. |
+| Minterm · logic function | One row of the truth table combining channels A, B and C. Three inputs give eight rows, so the whole function is one byte — the `LF` — selecting any of **256 operations**. `$0C` copies, `$CA` cookie-cuts, `$3C` is XOR. |
+| Cookie-cut | Compositing a masked sprite over a background in one pass: mask on A, pixels on B, destination read back on C, `LF = $CA`. Needs a mask surface in memory, which a colour key does not. |
+| Modulo | The signed value added to a channel's pointer at the end of every line — the difference between a bitmap's stride and the width being moved. **It is what makes a blit two-dimensional**, and it expresses clipping with no extra hardware. |
+| Surface | Any rectangular pixel buffer in Neon's SDRAM: framebuffer, window backing store, font atlas, icon sheet. |
+| Backing store | A surface holding one window's complete contents, **including the parts currently hidden behind other windows** — exactly what a flat framebuffer does not keep ([Q60](sec_q#q60)). |
+| Compositor | The kernel code that assembles the visible framebuffer from the backing stores, driving the blitter. Distinct from the window manager, which decides what should be where. |
+| Descending mode | Blitting with the pointers decrementing rather than incrementing. Required whenever source and destination overlap and the move is down-and-right — a window drag is the case. |
+| Damage · dirty rectangle | A region of the screen whose composited content is no longer valid and must be rebuilt. Under [U.31](sec_u#u31) a bug here costs performance, not corruption, because full recomposition stays correct. |
+| Cookie-cut vs colour key | The two ways to make a sprite non-rectangular. A key designates one palette index transparent and needs no extra memory; a mask is a second bitmap and needs generating and keeping in step. The blitter model decides which is available ([Q58](sec_q#q58)). |
 | Colour key | A palette index designated transparent; pixels of that value are not written during a copy. What makes a sprite a sprite here, with no sprite engine. |
 | Barrel shifter | Logic shifting a word by any amount in one cycle. Required to place a 1-bpp image at an arbitrary horizontal position, which is the expensive part of Mode 1 and not optional. |
 | Stride | The byte distance from the start of one image row to the next. Independent per source and destination, which is what lets one copy window a viewport out of a much wider buffer. |

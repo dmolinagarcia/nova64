@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Neon blitter datapath and SDRAM bank partition">
+
+  <!-- read channels -->
+  <rect x="24" y="60" width="150" height="58" class="blk"/>
+  <text x="99" y="82" class="t">channel A — read</text>
+  <text x="99" y="100" class="s">mask · or pattern</text>
+  <text x="99" y="114" class="s">bank 2 / 3</text>
+
+  <rect x="24" y="140" width="150" height="58" class="blk"/>
+  <text x="99" y="162" class="t">channel B — read</text>
+  <text x="99" y="180" class="s">source pixels</text>
+  <text x="99" y="194" class="s">bank 2 / 3</text>
+
+  <rect x="24" y="220" width="150" height="58" class="blk"/>
+  <text x="99" y="242" class="t">channel C — read</text>
+  <text x="99" y="260" class="s">destination read-back</text>
+  <text x="99" y="274" class="s">bank 0 / 1</text>
+
+  <text x="99" y="304" class="lbl">each: 24-bit pointer · signed modulo · enable</text>
+  <text x="99" y="320" class="lbl">disabled ⇒ supplies a constant, costs no bandwidth</text>
+
+  <!-- shifters -->
+  <rect x="204" y="60" width="112" height="58" class="blk"/>
+  <text x="260" y="84" class="t">shift A</text>
+  <text x="260" y="104" class="s">2 positions</text>
+  <rect x="204" y="140" width="112" height="58" class="blk"/>
+  <text x="260" y="164" class="t">shift B</text>
+  <text x="260" y="184" class="s">2 positions</text>
+
+  <line x1="174" y1="89" x2="204" y2="89" class="dt"/>
+  <line x1="174" y1="169" x2="204" y2="169" class="dt"/>
+  <line x1="174" y1="249" x2="420" y2="249" class="dt"/>
+  <line x1="316" y1="89" x2="420" y2="89" class="dt"/>
+  <line x1="316" y1="169" x2="420" y2="169" class="dt"/>
+
+  <text x="260" y="132" class="lbl">at 8 bpp on a 16-bit bus a shifter is a byte swap</text>
+
+  <!-- minterm -->
+  <rect x="420" y="60" width="180" height="218" class="blk"/>
+  <text x="510" y="90" class="t">minterm LUT</text>
+  <text x="510" y="114" class="s">LF byte indexed by</text>
+  <text x="510" y="130" class="s">{A,B,C} as 3 bits</text>
+  <text x="510" y="156" class="htx">256 FUNCTIONS</text>
+  <text x="510" y="182" class="s">$0C = B — copy</text>
+  <text x="510" y="200" class="s">$CA = cookie-cut</text>
+  <text x="510" y="218" class="s">$3C = B XOR C</text>
+  <text x="510" y="236" class="s">$F0 = A — pattern</text>
+  <text x="510" y="262" class="s">no colour-key compare</text>
+
+  <rect x="420" y="300" width="180" height="46" class="blk"/>
+  <text x="510" y="322" class="t">first / last word mask</text>
+  <text x="510" y="338" class="s">non-aligned edges</text>
+  <line x1="510" y1="278" x2="510" y2="300" class="dt"/>
+
+  <!-- write channel -->
+  <rect x="646" y="140" width="160" height="78" class="blk"/>
+  <text x="726" y="164" class="t">channel D — write</text>
+  <text x="726" y="184" class="s">burst buffer</text>
+  <text x="726" y="200" class="s">8 words minimum</text>
+  <text x="726" y="214" class="s">bank 0 / 1</text>
+  <line x1="600" y1="169" x2="646" y2="169" class="dtb"/>
+  <line x1="600" y1="323" x2="620" y2="323" class="dt"/>
+  <line x1="620" y1="323" x2="620" y2="200" class="dt"/>
+  <line x1="620" y1="200" x2="646" y2="200" class="dt"/>
+
+  <!-- queue -->
+  <rect x="646" y="60" width="160" height="58" class="blk"/>
+  <text x="726" y="82" class="t">command queue</text>
+  <text x="726" y="100" class="s">8 register snapshots</text>
+  <text x="726" y="114" class="s">~30 stores to fill one</text>
+  <line x1="726" y1="118" x2="726" y2="140" class="dts"/>
+
+  <!-- arbiter -->
+  <rect x="646" y="252" width="290" height="110" class="blk"/>
+  <text x="791" y="276" class="t">arbiter — fixed priority</text>
+  <text x="791" y="298" class="s">0 refresh · 1 scanout · 2 audio · 3 CPU · 4 blitter</text>
+  <text x="791" y="320" class="s">preemption only at burst boundaries</text>
+  <text x="791" y="344" class="htx">WORST-CASE SCANOUT STALL 223 ns</text>
+  <line x1="806" y1="200" x2="900" y2="200" class="dt"/>
+  <line x1="900" y1="200" x2="900" y2="252" class="dt"/>
+
+  <!-- bank partition -->
+  <text x="480" y="410" class="htx">SDRAM · 64 MB · FOUR BANKS · ONE OPEN ROW EACH</text>
+
+  <rect x="24" y="430" width="216" height="92" class="blk"/>
+  <text x="132" y="454" class="t">bank 0</text>
+  <text x="132" y="476" class="s">$000000–$3FFFFF</text>
+  <text x="132" y="498" class="s">framebuffer, front</text>
+  <text x="132" y="514" class="s">scanout reads here</text>
+
+  <rect x="252" y="430" width="216" height="92" class="blk"/>
+  <text x="360" y="454" class="t">bank 1</text>
+  <text x="360" y="476" class="s">$400000–$7FFFFF</text>
+  <text x="360" y="498" class="s">framebuffer, back</text>
+  <text x="360" y="514" class="s">the blitter writes here</text>
+
+  <rect x="480" y="430" width="216" height="92" class="blk"/>
+  <text x="588" y="454" class="t">bank 2</text>
+  <text x="588" y="476" class="s">$800000–$BFFFFF</text>
+  <text x="588" y="498" class="s">backing stores</text>
+  <text x="588" y="514" class="s">even windows</text>
+
+  <rect x="708" y="430" width="228" height="92" class="blk"/>
+  <text x="822" y="454" class="t">bank 3</text>
+  <text x="822" y="476" class="s">$C00000–$FFFFFF</text>
+  <text x="822" y="498" class="s">backing stores, odd windows</text>
+  <text x="822" y="514" class="s">font atlas · icons · audio</text>
+
+  <line x1="132" y1="430" x2="132" y2="400" class="pw"/>
+  <line x1="360" y1="430" x2="360" y2="400" class="pw"/>
+  <line x1="588" y1="430" x2="588" y2="400" class="pw"/>
+  <line x1="822" y1="430" x2="822" y2="400" class="pw"/>
+  <line x1="132" y1="400" x2="822" y2="400" class="pw"/>
+
+  <text x="480" y="552" class="s">Reads come from banks 2 and 3, writes go to the other framebuffer bank, scanout holds the first — three different open rows,</text>
+  <text x="480" y="570" class="s">so every ACTIVATE is issued inside another bank's data phase. Collapse this and delivered bandwidth halves, from ~160 to ~80 MB/s.</text>
+  <text x="480" y="594" class="plbl">the buffers swap roles at VBLANK and the separation holds either way round — which is why the partition has two framebuffer banks, not one</text>
+</svg>
