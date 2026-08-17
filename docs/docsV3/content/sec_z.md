@@ -191,6 +191,30 @@ Document-wide reference. Every acronym is also expanded on first use in place, s
 | Large model | Compiler model where code is addressed across all banks with JSL/RTL. Paired here with a fixed DBR so data access stays cheap. |
 | Toolchain | The full chain from source to loadable artefact. Open end to end here: KiCad · Yosys · nextpnr · IceStorm · pico-sdk · ca65/64tass. |
 
+## The windowing OS
+  NOTE: → [sheet V](sec_v)
+
+| Term | Meaning |
+|---|---|
+| `wserver` | The window server: window objects, z-order, input routing, focus, decoration and client validation. A **user task** here, because none of that needs a privileged instruction — the compositor beside it is kernel code, because command emission does ([Q62](sec_q#q62)). |
+| `tk` · `gcl` | The client-side libraries: the widget toolkit and the drawing layer that appends ops to the shared buffer. Both link into the application; neither is a server component. |
+| Shared command buffer | The 4 KB page `mshare` maps writable in the client and readable in the server. Drawing ops accumulate in it and flush with one syscall — **a syscall per primitive would cost more than the primitive** ([V.20](sec_v#v20)). |
+| Content list · composite list | The two kinds of command list a GUI keeps in SDRAM: one draws into a window's backing store and runs **when its content changes**, the other blits that store into the back buffer and runs **every frame**. Text lives in the first, which is why an idle window costs nothing. |
+| String cache | Composed runs of glyphs held as a strip in SDRAM, so drawing a repeated label is one `COPY_RECT` instead of one command per character. Attacks emission cost, not bandwidth — and proportional fonts fall out of it free, since it stores runs rather than glyphs. |
+| `DRAW_GLYPHS` | A proposed command taking a string pointer and a count, so a line of text is one command with no cache at all. **Complementary to the cache rather than a replacement**: the cache wins for stable labels, this wins for text that changes ([Q64](sec_q#q64)). |
+| Refresh event | The message an Amiga client got when part of its window became visible again, obliging it to repaint. **There is none here**: the backing store already holds the pixels, so a client paints when its own state changes and never otherwise. |
+| `layers.library` | The Amiga layer that answered *what is behind this window and who repaints it* — cliprects, `SIMPLE_REFRESH`, `SMART_REFRESH`, `SUPER_BITMAP`. Per-window backing stores delete the question, and the library with it. |
+| Intuition · IDCMP · BOOPSI | Amiga's window system, its event protocol and its widget object model. Named here as the reference the design departs from: `wserver`, a ten-event set, and a static vtable toolkit respectively. |
+| Z-order | The front-to-back ordering of windows. The compositor draws back to front — painter's algorithm — so occlusion needs no region arithmetic at all: the front window is simply drawn afterwards. |
+| Decoration | The frame, title bar and gadgets the server draws **into the window's own backing store**, above the content area and clipped away from the client. Composited as one wide blit rather than four narrow ones, which is what [U.18](sec_u#u18) asks for. |
+| Live drag | Moving a window by recompositing every frame rather than dragging an XOR outline and moving the pixels once. Affordable here, and the default. |
+| Hit test | Walking the z-list front to back to find which window a pointer position belongs to. Decoration hits stay in the server; content hits are delivered to the client in window-relative coordinates. |
+| Port · signal · message | The Exec model, proposed for this kernel: a port bound to one bit of a task's 32-bit signal mask, fixed 32-byte messages copied by the kernel, and `task_wait` as **the single blocking primitive** ([Q63](sec_q#q63)). |
+| Coalescing | Collapsing a burst of events into the latest one — never more than one motion event per frame per client. Not an optimisation at ~12 µs of kernel copy per message, and it constrains the HID event format to absolute state rather than deltas. |
+| Overdraw | Total composited area ÷ screen area, counting the desktop clear. The number that decides whether full recomposition fits: ~1.8× is comfortable at 1 bpp and consumes the whole frame at 8 ([V.10](sec_v#v10)). |
+| Widget vtable | The toolkit's dispatch: a static `init · render · event · layout · attr` table per class, deliberately mirroring the kernel's five-function driver interface. ~15 cycles per call — right at widget granularity, wrong at pixel granularity. |
+| Upload | The escape hatch for imagery Neon's primitives cannot produce: the client rasterises into system RAM and the server pushes it through the aperture. **~15 ms for a 200 × 100 patch at 8 bpp** — correct to provide, correct to discourage. |
+
 ## Debug and instrumentation
   NOTE: → [sheet R](sec_r)
 

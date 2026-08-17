@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The windowing stack, from client task to panel, and where the privilege boundary falls">
+
+  <!-- top row: client, shared page, wserver, kernel -->
+  <text x="360" y="34" class="nlbl">USER SPACE</text>
+  <text x="820" y="34" class="htx">PRIVILEGED</text>
+
+  <rect x="24" y="46" width="190" height="82" class="blk"/>
+  <text x="119" y="70" class="t">client task</text>
+  <text x="119" y="90" class="s">tk widget tree · gcl ops</text>
+  <text x="119" y="106" class="s">no aperture, no registers</text>
+  <text x="119" y="122" class="s">never repaints on demand</text>
+
+  <rect x="244" y="46" width="190" height="82" class="blk"/>
+  <text x="339" y="70" class="t">shared 4 KB page</text>
+  <text x="339" y="90" class="s">mshare — client writes</text>
+  <text x="339" y="106" class="s">server reads</text>
+  <text x="339" y="122" class="s">assumed hostile</text>
+
+  <rect x="464" y="46" width="210" height="82" class="blk"/>
+  <text x="569" y="70" class="t">wserver — user task</text>
+  <text x="569" y="90" class="s">validate · clip · z-order</text>
+  <text x="569" y="106" class="s">focus · drag · decoration</text>
+  <text x="569" y="122" class="s">owns the $FE mapping</text>
+
+  <rect x="704" y="46" width="232" height="82" class="blk"/>
+  <text x="820" y="70" class="t">kernel — /dev/neon</text>
+  <text x="820" y="90" class="s">compositor · vblank handler</text>
+  <text x="820" y="106" class="s">start list · swap · cursor</text>
+  <text x="820" y="122" class="s">two ioctls per frame</text>
+
+  <line x1="214" y1="87" x2="244" y2="87" class="dt"/>
+  <line x1="434" y1="87" x2="464" y2="87" class="dt"/>
+  <line x1="674" y1="87" x2="704" y2="87" class="pw"/>
+  <text x="339" y="142" class="lbl">one syscall per flush · 5–20 ops for a widget, 50–200 for a window</text>
+
+  <!-- the wall -->
+  <line x1="689" y1="24" x2="689" y2="300" class="pwd"/>
+  <text x="689" y="316" class="plbl">the wall of D36</text>
+
+  <!-- second row: aperture and register file -->
+  <rect x="464" y="176" width="210" height="76" class="blk"/>
+  <text x="569" y="200" class="t">$FE aperture — data</text>
+  <text x="569" y="220" class="s">list arena · atlases · palette</text>
+  <text x="569" y="236" class="s">writes posted, never stall</text>
+  <text x="569" y="250" class="s">32 KB at a time</text>
+
+  <rect x="704" y="176" width="232" height="76" class="blk"/>
+  <text x="820" y="200" class="t">$FF:8000 register file</text>
+  <text x="820" y="220" class="s">LIST_BASE · CMD_PORT</text>
+  <text x="820" y="236" class="s">VRAM_PAGE · DISPLAY_BASE</text>
+  <text x="820" y="250" class="s">unmappable to user space</text>
+
+  <line x1="569" y1="128" x2="569" y2="176" class="dt"/>
+  <line x1="820" y1="128" x2="820" y2="176" class="pw"/>
+  <text x="569" y="166" class="lbl">0.77 µs per byte</text>
+
+  <!-- left column: what emission costs -->
+  <rect x="24" y="176" width="400" height="76" class="blk"/>
+  <text x="224" y="200" class="t">per frame — the composite list</text>
+  <text x="224" y="222" class="s">20 windows ≈ 40 commands ≈ 960 B ≈ 0.7 ms of CPU</text>
+  <text x="224" y="240" class="s">a window whose content has not changed costs nothing at all</text>
+
+  <rect x="24" y="286" width="400" height="86" class="blk"/>
+  <text x="224" y="310" class="t">per repaint — the content list</text>
+  <text x="224" y="332" class="s">1,200 glyphs emitted one by one ≈ 22 ms — unusable</text>
+  <text x="224" y="350" class="s">20 cached strings ≈ 0.4 ms — what the string cache is for</text>
+  <text x="224" y="366" class="s">re-executed, not re-emitted, once N5 exists</text>
+
+  <line x1="424" y1="214" x2="464" y2="214" class="dt"/>
+  <line x1="424" y1="322" x2="450" y2="322" class="dts"/>
+  <line x1="450" y1="322" x2="450" y2="230" class="dts"/>
+  <line x1="450" y1="230" x2="464" y2="230" class="dts"/>
+
+  <!-- third row: neon -->
+  <rect x="464" y="300" width="472" height="60" class="blk"/>
+  <text x="700" y="326" class="t">command processor</text>
+  <text x="700" y="346" class="s">fetches the list from SDRAM — the CPU emitted it once</text>
+  <line x1="569" y1="252" x2="569" y2="300" class="dt"/>
+  <line x1="820" y1="252" x2="820" y2="300" class="pw"/>
+
+  <rect x="464" y="386" width="472" height="56" class="blk"/>
+  <text x="700" y="410" class="t">blitter</text>
+  <text x="700" y="430" class="s">content lists on change · one wide blit per window per frame</text>
+  <line x1="700" y1="360" x2="700" y2="386" class="dtb"/>
+
+  <!-- banks -->
+  <text x="480" y="472" class="htx">SDRAM · THE PARTITION OF D38 · ONE OPEN ROW PER BANK</text>
+
+  <rect x="24" y="486" width="216" height="80" class="blk"/>
+  <text x="132" y="508" class="t">bank 0</text>
+  <text x="132" y="528" class="s">framebuffer, front</text>
+  <text x="132" y="546" class="s">scanout reads here</text>
+
+  <rect x="252" y="486" width="216" height="80" class="blk"/>
+  <text x="360" y="508" class="t">bank 1</text>
+  <text x="360" y="528" class="s">framebuffer, back</text>
+  <text x="360" y="546" class="s">the compositor writes here</text>
+
+  <rect x="480" y="486" width="216" height="80" class="blk"/>
+  <text x="588" y="508" class="t">bank 2</text>
+  <text x="588" y="528" class="s">backing stores</text>
+  <text x="588" y="546" class="s">even-numbered windows</text>
+
+  <rect x="708" y="486" width="228" height="80" class="blk"/>
+  <text x="822" y="508" class="t">bank 3</text>
+  <text x="822" y="528" class="s">backing stores, odd windows</text>
+  <text x="822" y="546" class="s">atlas · string cache · lists</text>
+
+  <line x1="700" y1="442" x2="700" y2="462" class="dt"/>
+  <line x1="132" y1="462" x2="822" y2="462" class="dt"/>
+  <line x1="132" y1="462" x2="132" y2="486" class="dt"/>
+  <line x1="360" y1="462" x2="360" y2="486" class="dt"/>
+  <line x1="588" y1="462" x2="588" y2="486" class="dt"/>
+  <line x1="822" y1="462" x2="822" y2="486" class="dt"/>
+
+  <text x="480" y="592" class="plbl">the command lists share bank 3 with the odd windows' backing stores — a fifth stream the partition never counted, and the one hardware question this sheet adds</text>
+</svg>
