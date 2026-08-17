@@ -2,11 +2,11 @@
   "title": "noVa64",
   "documentName": "Synthesis document — index and content outline",
   "footer": {
-    "referenceIndex": "Sheets A–S · Figs. 1–9 · glossary in Z",
-    "referenceSheet": "Synthesis document · sheets A–S + glossary Z · index at index.html",
-    "detail": "Detail: hoja-1-2 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · fpga-a-control-registers · helium-debug-agent · placa-65816.html (REV B) — power now lives here, in sheets C and S",
+    "referenceIndex": "Sheets A–T · Figs. 1–10 · glossary in Z",
+    "referenceSheet": "Synthesis document · sheets A–T + glossary Z · index at index.html",
+    "detail": "Detail: hoja-1-2 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · fpga-a-control-registers · helium-debug-agent · neon-gpu (text mode · graphics modes · programming guide) · placa-65816.html (REV B) — power lives here in sheets C and S, Neon in sheet T",
     "rules": "All 3.3V · hand-solderable · open toolchain",
-    "rev": "OUTLINE 2 · POWER REV C · AUG 2026"
+    "rev": "OUTLINE 3 · POWER REV C · NEON REV A · AUG 2026"
   },
   "sheets": [
     {
@@ -162,9 +162,17 @@
       "fig": "Fig. 9"
     },
     {
+      "file": "sec_t",
+      "letter": "T",
+      "num": "20",
+      "nav": "Neon — the GPU",
+      "index": "Neon — the GPU · text, graphics, blitter and command lists",
+      "fig": "Fig. 10"
+    },
+    {
       "file": "sec_z",
       "letter": "Z",
-      "num": "20",
+      "num": "21",
       "nav": "Glossary",
       "index": "Glossary",
       "fig": "tables"

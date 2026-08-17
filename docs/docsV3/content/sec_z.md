@@ -1,5 +1,5 @@
 # Glossary
-> every acronym and term used across sheets A–R
+> every acronym and term used across sheets A–T
 
 Document-wide reference. Every acronym is also expanded on first use in place, so this sheet is deliberately redundant — it exists to be jumped to, not read through. Grouped by domain; within each group, roughly in the order the concepts appear.
 
@@ -45,7 +45,7 @@ Document-wide reference. Every acronym is also expanded on first use in place, s
 | Address as opcode | Command convention where each operation has its own address and the value written is its argument, not a command code (→ [M.2](sec_m#m2)). |
 | WDM | Opcode `$42`, reserved by WDC and executed as a two-byte, two-cycle no-op. Considered as a command channel and rejected; it stays a no-op, and a softcore must implement it as one. |
 | Memory barrier | An instruction forcing memory ordering. Not needed here and not provided: the 65816 has no prefetch queue and no store buffer, so every bus cycle is already in program order. |
-| Watchdog | Timer that resumes PHI2 and raises NMI or ABORT if a fill overruns — without it a hung fill freezes the machine with no clock and no diagnostic path. |
+| Watchdog | Timer that resumes PHI2 and raises NMI or ABORT if a fill overruns — without it a hung fill freezes the machine with no clock and no diagnostic path. It covers Neon's read stall too, which is what makes an unfitted Neon a fault report rather than a dead board ([F.11](sec_f#f11)). |
 | Refresh | The periodic recharge SDRAM needs to keep its contents. Must be interleaved into the fill state machine, not deferred until it finishes. |
 
 ## CPU, bus and gateware
@@ -73,7 +73,8 @@ Document-wide reference. Every acronym is also expanded on first use in place, s
 | Accumulator architecture | A design where most operations route through one register. Compact to encode, heavy on memory traffic, and inherently serial. |
 | Bus arbiter | The logic deciding who drives the shared bus in each cycle: CPU, cache fill, video, or refresh. |
 | PIC | Programmable Interrupt Controller — collects device IRQs, applies priorities, and raises IRQ/NMI to the CPU. |
-| EBR | Embedded Block RAM — RAM blocks inside the iCE40. Its 128 Kbit are the reason only the TLB fits on-chip while the page table lives in external SRAM. |
+| EBR | Embedded Block RAM — 32 dual-port blocks of 512 B inside each iCE40, 16 KB in total. On Helium its scarcity is why only the TLB and the cache tags fit on-chip while the page table lives in external SRAM; on Neon it is the whole of Mode 0, and it is **fully allocated with zero margin** ([T.12](sec_t#t12)). |
+| Bitstream initialisation | Giving a block RAM its contents from the compiled bitstream rather than loading them at run time. What makes Neon's font and text buffer valid before any software exists — the single most useful property of the design ([D27](sec_q#d27)). |
 | HDL | Hardware Description Language — Verilog or VHDL. The choice is still open ([Q2](sec_q#q2)). |
 | Stub | In layout, a track branching off a bus. Long stubs ruin signal integrity at ~100 MHz, hence the short comb of [F.13](sec_f#f13). |
 
@@ -112,16 +113,36 @@ Document-wide reference. Every acronym is also expanded on first use in place, s
 | TQFP · PLCC · TSOP · BGA | Chip packages. The first three have accessible leads and can be hand-soldered; BGA hides its balls underneath and cannot, which is why it is excluded ([D01](sec_q#d01)). |
 
 ## Video, audio and peripherals
-  NOTE: → [sheet H](sec_h)
+  NOTE: → [sheet H](sec_h) · [sheet T](sec_t)
 
 | Term | Meaning |
 |---|---|
-| Chip RAM | Amiga term reused here: Neon's own 64 MB SDRAM (framebuffer + audio DMA), outside the CPU hierarchy and reached through the `$FE` window. |
+| Chip RAM | Amiga term reused here: Neon's own 64 MB SDRAM — framebuffers, atlases, level buffers, command lists and audio DMA — outside the CPU hierarchy and reached through the `$FE` window. |
 | Framebuffer | The region of memory holding the pixels currently on screen. Exposed to processes as `/dev/fb`. |
-| VRAM window | The 64 KB opening in bank `$FE` through which the CPU reaches video memory, gated by the MMU's VRAM_SEL. |
-| Px-doubling | Drawing at 512×300 and emitting each pixel twice in both axes to fill 1024×600 — quarters the framebuffer and its bandwidth. |
-| RGB-TTL | Parallel video interface: one wire per colour bit plus sync and clock. No bridge chip needed, at the cost of many pins. |
+| VRAM window | The 64 KB opening in bank `$FE` through which the CPU reaches video memory, gated by the MMU's NEON_BUS_SEL. In graphics modes its low 32 KB slides over SDRAM by `VRAM_PAGE`. |
+| NEON_BUS_SEL | Helium → Neon: "this cycle is validated for you." Qualifies **both** of Neon's windows — `$FE` after translation and the permission check, `$FF:8000`–`$FF:80FF` after the bank decode and the privilege check ([B.6](sec_b#b6)). |
+| NEON_BUS_BSY | Neon → Helium: "I cannot serve this cycle yet." **Busy by default**, so an absent or unconfigured Neon stalls the machine into a watchdog report rather than onto an undriven bus. Its meaningful edge is the deassertion, which means the data is ready ([T.18](sec_t#t18)). |
+| Bus-busy stall | How the CPU reads VRAM: Helium decodes the read, holds PHI2 **low** unconditionally, and raises it when Neon clears busy. Stall first, ask afterwards — which removes the race a wait line asserted against the rising edge would have had ([D37](sec_q#d37)). |
+| Aperture | The same opening, named from Neon's side. **Data only** — Neon's control registers are not in it but at `$FF:8000`, because `$FE` is user-mappable and `$FF` is not ([D36](sec_q#d36)). |
+| Px-doubling | Drawing at a lower resolution and emitting each pixel more than once in both axes to fill 1024×600. Not a policy here but a mode: **Mode 2b** at 2×2, and Mode 2a at 3×3 ([D35](sec_q#d35)). |
+| RGB-TTL | Parallel video interface: one wire per colour bit plus sync and clock. No bridge chip needed, at the cost of many pins. Driven here at 18 bpp — RGB666. |
 | VSYNC | The pulse marking the end of a frame. Raised as an IRQ so the GUI can redraw without tearing. |
+| Cell · glyph | One character position — a glyph code plus an attribute byte · the pixel pattern for one code, held in the font. 8 × 16 px here, the standard VGA text cell. |
+| Text buffer | The 4096 cells of Mode 0, 8 KB in Neon's block RAM, initialised from the bitstream so the screen is correct at power-on with no software involved. |
+| Ring buffer | A buffer addressed modulo its size, so advancing a pointer rotates the visible contents without moving data. `TEXT_START` scrolls the console this way — 256 bytes written instead of 8,192 moved. |
+| Blitter | Block image transferrer — hardware that fills, copies and combines rectangular memory regions with no CPU involvement. The centre of Neon's graphics half. |
+| Colour key | A palette index designated transparent; pixels of that value are not written during a copy. What makes a sprite a sprite here, with no sprite engine. |
+| Barrel shifter | Logic shifting a word by any amount in one cycle. Required to place a 1-bpp image at an arbitrary horizontal position, which is the expensive part of Mode 1 and not optional. |
+| Stride | The byte distance from the start of one image row to the next. Independent per source and destination, which is what lets one copy window a viewport out of a much wider buffer. |
+| Command list | A sequence of drawing commands in SDRAM, executed autonomously by Neon. The ANTIC display list and the Amiga Copper, generalised to include the blitter. |
+| Display list patching | Writing into a list while Neon executes it — the intended usage pattern, not an abuse. Moving an object is one 32-bit store to one word ([T.41](sec_t#t41)). |
+| Page flip | Displaying one framebuffer while drawing into another, then exchanging them. `SWAP_BUFFERS`, applied at vblank so a half-drawn frame is never shown. |
+| Damage model | Dirty rectangles, z-order traversal and repaint from application state. Unavoidable with a flat framebuffer, because moving a window does not restore what was under it — the pixels were overwritten and are gone. |
+| Save-under | Copying a region about to be occluded and restoring it afterwards. Works here despite the CPU not needing to read VRAM, because the *blitter* moves it and the pixels never leave VRAM. |
+| Service port | Neon's four configuration SPI pins, reused after `CDONE` as a control channel from the EC. The reason boot progress appears on screen before a CPU exists. |
+| Clock enable | A signal gating a register's update without gating its clock. Used to derive Neon's 51.5625 MHz pixel rate inside one 103.125 MHz domain, so there is no second clock domain to cross. |
+| Row activation | The delay when SDRAM must open a new row before its data is reachable, ~60 ns. Why glyph lookup stays in block RAM, and why an aperture read has to stall the CPU. |
+| SDRAM bank | One of four independent arrays inside the device; accesses to different banks interleave with no row-activation penalty. A layout convention for copies, not something hardware enforces ([Q50](sec_q#q50)). |
 | FPC | Flexible Printed Circuit — the flat ribbon connecting the panel. "FPC-50" is its 50-contact connector. |
 | eDP | Embedded DisplayPort — serial panel interface. Rejected for v1 as it needs a bridge chip ([D05](sec_q#d05)). |
 | R-2R | A resistor-ladder DAC — the cheapest way to get analogue VGA levels out of FPGA pins. Bring-up only. |
@@ -168,7 +189,7 @@ Document-wide reference. Every acronym is also expanded on first use in place, s
 | Debug agent | The block inside Helium that performs memory and bus accesses on command from the RP2040. A requester in the arbiter, not an external master. |
 | Internal access | A transaction satisfied entirely inside Helium — SRAM, SDRAM or Helium's own registers. Nothing appears on the CPU bus. |
 | External cycle | A transaction where Helium drives the CPU bus pins, so devices outside it see a cycle indistinguishable from the 65816's. The only way to reach the `$FE` aperture. |
-| PHI2 stall | Freezing the CPU clock to steal bus time or to halt. Legal because the core is static; the same gating logic serves cache fills, halts and external cycles. |
+| PHI2 stall | Freezing the CPU clock to steal bus time or to halt. Legal because the core is static; the same gating logic serves cache fills, halts, external cycles and Neon's read stall. |
 | Cycle stealing | Taking the bus within a window the CPU is not using, instead of stalling it. The cheaper of the two paths when it is available. |
 | Trace buffer | Ring buffer in EBR recording one entry per bus cycle — address, data, and the control pins. A logic analyser built into the gateware. |
 | Trigger · arming | The address-and-mask comparison that starts or stops a capture, and the act of enabling it. Position selects whether the captured window sits before, around or after the match. |
