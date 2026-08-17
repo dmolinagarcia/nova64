@@ -8,6 +8,7 @@ Nothing in `docsV2` was touched — this is a parallel copy.
 ```
 index.html          the paged edition: one sheet at a time
 full.html           every sheet in one scroll, for printing
+theme.js            the light/dark switch, applied before the first paint
 md.js               markdown → HTML for the dialect below
 shell.js            figure inlining and the failure state, shared by both pages
 app.js              sidebar, masthead, sheet index, pager, title block, routing
@@ -41,6 +42,21 @@ working table of contents, because on that page every cross-reference is an
 in-page jump: ids are prefixed with their sheet (`#sec_p-e2`) so that E.2 in
 sheet E and E2 in sheet P stop colliding. The sidebar of the paged edition links
 to it at the bottom of the sheet list.
+
+## Light and dark
+
+The button above the masthead switches themes; the choice is remembered in
+`localStorage`, and until one is made the page follows the system setting. The
+palette is five custom properties on `:root` — ground, ink, panel, mint, gold —
+and the light theme only redefines those, so nothing else in the stylesheet
+knows a theme exists.
+
+**It stops at the screen.** The light theme lives inside `@media screen`, and
+the print block restates every colour itself, as it already did for docsV2's
+dark ground. Printing from either theme gives the same black-on-white page.
+The one thing a new colour needs is care in two places: shapes inside the
+figures that carry their colour as an attribute rather than a class are listed
+explicitly in both the print block and the light theme.
 
 ## Routes
 
