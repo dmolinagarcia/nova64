@@ -2,97 +2,108 @@
   "title": "noVa64",
   "documentName": "Synthesis document — index and content outline",
   "footer": {
-    "referenceIndex": "Sheets A–V · Figs. 1–12 · glossary in Z",
-    "referenceSheet": "Synthesis document · sheets A–V + glossary Z · index at index.html",
+    "referenceIndex": "Ten areas · sheets A–V · Figs. 1–12 · appendix Z",
+    "referenceSheet": "Synthesis document · sheets A–V + appendix Z · index at index.html",
     "detail": "Detail: hoja-1-2 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · fpga-a-control-registers · helium-debug-agent · neon-gpu (text mode · graphics modes · programming guide · blitter and compositor) · nova64-gui-architecture-sketch · placa-65816.html (REV B) · noVa64-i9-prototype-handoff (source for the P-series in sheet P) — power lives here in sheets C and S, Neon in T and U, the windowing OS in V",
     "rules": "All 3.3V · hand-solderable · open toolchain",
-    "rev": "OUTLINE 3 · POWER REV C · NEON REV B · GUI REV A · PROTOTYPE REV A · AUG 2026"
+    "rev": "OUTLINE 4 · POWER REV C · NEON REV B · GUI REV A · PROTOTYPE REV A · AUG 2026"
   },
   "sheets": [
     {
       "file": "sec_a",
       "letter": "A",
       "num": "01",
+      "area": "Introduction",
       "nav": "Vision and philosophy",
-      "index": "Project vision and philosophy",
+      "index": "Project vision and philosophy · how to read this document",
       "fig": "—"
     },
     {
       "file": "sec_b",
       "letter": "B",
       "num": "02",
+      "area": "Architecture",
       "nav": "Global architecture",
       "index": "Global architecture",
       "fig": "Fig. 1"
     },
     {
-      "file": "sec_c",
-      "letter": "C",
-      "num": "03",
-      "nav": "Power supply",
-      "index": "Power supply",
-      "fig": "Fig. 2"
-    },
-    {
-      "file": "sec_d",
-      "letter": "D",
-      "num": "04",
-      "nav": "RP2040 — embedded controller",
-      "index": "RP2040 — embedded controller",
-      "fig": "Fig. 3"
-    },
-    {
-      "file": "sec_e",
-      "letter": "E",
-      "num": "05",
-      "nav": "CPU — W65C816S and the softcore option",
-      "index": "CPU — W65C816S and the softcore option",
-      "fig": "table"
-    },
-    {
-      "file": "sec_f",
-      "letter": "F",
-      "num": "06",
-      "nav": "Physical memory structure",
-      "index": "Physical memory structure",
-      "fig": "Fig. 4"
-    },
-    {
-      "file": "sec_g",
-      "letter": "G",
-      "num": "07",
-      "nav": "Persistent storage — microSD",
-      "index": "Persistent storage — microSD",
-      "fig": "—"
-    },
-    {
       "file": "sec_h",
       "letter": "H",
-      "num": "08",
+      "num": "03",
+      "area": "Architecture",
       "nav": "Peripherals and their location",
       "index": "Peripherals and their location",
       "fig": "table"
     },
     {
-      "file": "sec_i",
-      "letter": "I",
-      "num": "09",
-      "nav": "BIOS — what it provides",
-      "index": "BIOS — what it provides",
-      "fig": "—"
+      "file": "sec_c",
+      "letter": "C",
+      "num": "04",
+      "area": "Power",
+      "nav": "Power supply",
+      "index": "Power supply",
+      "fig": "Fig. 2"
     },
     {
-      "file": "sec_j",
-      "letter": "J",
+      "file": "sec_s",
+      "letter": "S",
+      "num": "05",
+      "area": "Power",
+      "nav": "Power control and telemetry",
+      "index": "Power control, shutdown and telemetry · $FF power block",
+      "fig": "Fig. 9"
+    },
+    {
+      "file": "sec_d",
+      "letter": "D",
+      "num": "06",
+      "area": "Embedded control and boot",
+      "nav": "RP2040 — embedded controller",
+      "index": "RP2040 — embedded controller",
+      "fig": "Fig. 3"
+    },
+    {
+      "file": "sec_r",
+      "letter": "R",
+      "num": "07",
+      "area": "Embedded control and boot",
+      "nav": "Debug agent and console",
+      "index": "Debug agent and console · SPI register map",
+      "fig": "Fig. 8"
+    },
+    {
+      "file": "sec_e",
+      "letter": "E",
+      "num": "08",
+      "area": "CPU and system",
+      "nav": "CPU — W65C816S and the softcore option",
+      "index": "CPU — W65C816S and the softcore option",
+      "fig": "table"
+    },
+    {
+      "file": "sec_m",
+      "letter": "M",
+      "num": "09",
+      "area": "CPU and system",
+      "nav": "Kernel–hardware interface",
+      "index": "Kernel–hardware interface · Helium control registers",
+      "fig": "tables"
+    },
+    {
+      "file": "sec_f",
+      "letter": "F",
       "num": "10",
-      "nav": "Operating system",
-      "index": "Operating system",
-      "fig": "—"
+      "area": "Memory and storage",
+      "nav": "Physical memory structure",
+      "index": "Physical memory structure",
+      "fig": "Fig. 4"
     },
     {
       "file": "sec_k",
       "letter": "K",
       "num": "11",
+      "area": "Memory and storage",
       "nav": "Virtual memory — concepts and glossary",
       "index": "Virtual memory — concepts and glossary",
       "fig": "Fig. 5"
@@ -101,70 +112,25 @@
       "file": "sec_l",
       "letter": "L",
       "num": "12",
+      "area": "Memory and storage",
       "nav": "Virtual memory management",
       "index": "Virtual memory management",
       "fig": "Fig. 6"
     },
     {
-      "file": "sec_m",
-      "letter": "M",
+      "file": "sec_g",
+      "letter": "G",
       "num": "13",
-      "nav": "Kernel–hardware interface",
-      "index": "Kernel–hardware interface · Helium control registers",
-      "fig": "tables"
-    },
-    {
-      "file": "sec_n",
-      "letter": "N",
-      "num": "14",
-      "nav": "Process management",
-      "index": "Process management",
+      "area": "Memory and storage",
+      "nav": "Persistent storage — microSD",
+      "index": "Persistent storage — microSD",
       "fig": "—"
-    },
-    {
-      "file": "sec_o",
-      "letter": "O",
-      "num": "15",
-      "nav": "Programming and toolchain",
-      "index": "Programming and toolchain",
-      "fig": "—"
-    },
-    {
-      "file": "sec_p",
-      "letter": "P",
-      "num": "16",
-      "nav": "Step-by-step build · P0–P5 · E0–E8",
-      "index": "Step-by-step build · prototype P0–P5 · target E0–E8",
-      "fig": "Fig. 7"
-    },
-    {
-      "file": "sec_q",
-      "letter": "Q",
-      "num": "17",
-      "nav": "Decision log · open questions",
-      "index": "Decision log · open questions",
-      "fig": "—"
-    },
-    {
-      "file": "sec_r",
-      "letter": "R",
-      "num": "18",
-      "nav": "Debug agent and console",
-      "index": "Debug agent and console · SPI register map",
-      "fig": "Fig. 8"
-    },
-    {
-      "file": "sec_s",
-      "letter": "S",
-      "num": "19",
-      "nav": "Power control and telemetry",
-      "index": "Power control, shutdown and telemetry · $FF power block",
-      "fig": "Fig. 9"
     },
     {
       "file": "sec_t",
       "letter": "T",
-      "num": "20",
+      "num": "14",
+      "area": "Video",
       "nav": "Neon — the GPU",
       "index": "Neon — the GPU · text, graphics, blitter and command lists",
       "fig": "Fig. 10"
@@ -172,25 +138,82 @@
     {
       "file": "sec_u",
       "letter": "U",
-      "num": "21",
+      "num": "15",
+      "area": "Video",
       "nav": "Neon — blitter and compositor",
       "index": "Neon — blitter, arbitration and the window compositor",
       "fig": "Fig. 11"
     },
     {
+      "file": "sec_i",
+      "letter": "I",
+      "num": "16",
+      "area": "Software",
+      "nav": "BIOS — what it provides",
+      "index": "BIOS — what it provides",
+      "fig": "—"
+    },
+    {
+      "file": "sec_j",
+      "letter": "J",
+      "num": "17",
+      "area": "Software",
+      "nav": "Operating system",
+      "index": "Operating system",
+      "fig": "—"
+    },
+    {
+      "file": "sec_n",
+      "letter": "N",
+      "num": "18",
+      "area": "Software",
+      "nav": "Process management",
+      "index": "Process management",
+      "fig": "—"
+    },
+    {
+      "file": "sec_o",
+      "letter": "O",
+      "num": "19",
+      "area": "Software",
+      "nav": "Programming and toolchain",
+      "index": "Programming and toolchain",
+      "fig": "—"
+    },
+    {
       "file": "sec_v",
       "letter": "V",
-      "num": "22",
+      "num": "20",
+      "area": "Software",
       "nav": "The windowing OS",
       "index": "The windowing OS · window server, client protocol and toolkit",
       "fig": "Fig. 12"
     },
     {
+      "file": "sec_p",
+      "letter": "P",
+      "num": "21",
+      "area": "Project and build",
+      "nav": "Step-by-step build · P0–P5 · E0–E8",
+      "index": "Step-by-step build · prototype P0–P5 · target E0–E8",
+      "fig": "Fig. 7"
+    },
+    {
+      "file": "sec_q",
+      "letter": "Q",
+      "num": "22",
+      "area": "Project and build",
+      "nav": "Decision log · open questions",
+      "index": "Decision log · open questions",
+      "fig": "—"
+    },
+    {
       "file": "sec_z",
       "letter": "Z",
       "num": "23",
-      "nav": "Glossary",
-      "index": "Glossary",
+      "area": "Appendix",
+      "nav": "Appendix — glossary and figures",
+      "index": "Appendix · glossary and index of figures",
       "fig": "tables"
     }
   ]

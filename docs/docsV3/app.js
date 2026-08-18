@@ -2,8 +2,12 @@
  *
  * Everything around the prose — sidebar, masthead, sheet index, pager and
  * title block — is generated from manifest.json, so a sheet's .md file only
- * ever carries its own content. Routes are hashes: #/ is the index,
- * #/sec_a a sheet, #/sec_a/a3 a sheet scrolled to one of its items.
+ * ever carries its own content. Sheets are grouped by area: the manifest's
+ * order is the reading order, and a run of sheets sharing an `area` gets one
+ * heading in the sidebar and one band in the index.
+ *
+ * Routes are hashes: #/ is the index, #/sec_a a sheet, #/sec_a/a3 a sheet
+ * scrolled to one of its items.
  */
 (function () {
   'use strict';
@@ -44,7 +48,9 @@
   function sidebar(r) {
     var h = '<div class="cap">' + M.title + ' · SHEETS</div><ol>' +
       '<li><a href="#/"' + (r.isIndex ? ' class="here"' : '') + '><span class="de">·</span>Sheet index</a></li>';
+    var area = '';
     M.sheets.forEach(function (s) {
+      if (s.area && s.area !== area) { area = s.area; h += '<li class="grp">' + area + '</li>'; }
       h += '<li><a href="#/' + s.file + '"' + (s.file === r.file ? ' class="here"' : '') + '>' +
            '<span class="de">' + s.letter + '</span>' + s.nav +
            '<span class="fg">' + s.num + '</span></a></li>';
@@ -67,12 +73,18 @@
     }
     var s = sheetOf(r.file);
     return '<h1><a href="#/">' + M.title + '</a></h1>' +
-           '<div class="sub">Sheet ' + s.num + ' · ' + s.letter + ' — ' + doc.title + '</div>';
+           '<div class="sub">' + (s.area ? s.area + ' · ' : '') +
+           'Sheet ' + s.num + ' · ' + s.letter + ' — ' + doc.title + '</div>';
   }
 
   function indexTable() {
     var h = '<nav class="idx" aria-label="Sheet index"><div class="cap">SHEET INDEX</div><table><tbody>';
+    var area = '';
     M.sheets.forEach(function (s) {
+      if (s.area && s.area !== area) {
+        area = s.area;
+        h += '<tr class="grp"><td colspan="4">' + area + '</td></tr>';
+      }
       h += '<tr><td class="no">' + s.num + '</td><td class="de">' + s.letter + '</td>' +
            '<td><a href="#/' + s.file + '">' + s.index + '</a></td>' +
            '<td class="fg">' + s.fig + '</td></tr>';

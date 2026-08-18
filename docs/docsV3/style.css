@@ -32,11 +32,17 @@
   .idx td{padding:7px 16px;border-top:1px solid rgba(var(--ink-rgb),.16);font-size:12px;}
   .idx tr:first-child td{border-top:0}
   .idx tr:hover td{background:rgba(var(--mint-rgb),.06);}
+  .idx tr.grp td{background:rgba(var(--ink-rgb),.05);color:rgba(var(--ink-rgb),.6);font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:700;padding:8px 16px;border-top:1px solid rgba(var(--ink-rgb),.35);}
+  .idx tr.grp:hover td{background:rgba(var(--ink-rgb),.05);}
+  .idx tr.grp a{color:inherit}
   .idx .no{color:rgba(var(--ink-rgb),.5);width:46px}
   .idx .de{color:var(--gold);width:34px;font-weight:700}
   .idx .fg{color:var(--mint);text-align:right;width:120px}
 
   .hoja{border:1.3px solid rgba(var(--ink-rgb),.55);margin-top:26px;padding:16px 20px 20px;}
+  .areaband{margin-top:30px;border-bottom:1.6px solid rgba(var(--ink-rgb),.55);padding-bottom:6px;
+            font-size:12px;letter-spacing:5px;text-transform:uppercase;font-weight:800;color:var(--gold);}
+  .areaband + .hoja{margin-top:14px;}
   .sechead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:1px solid rgba(var(--ink-rgb),.3);padding-bottom:10px;margin-bottom:12px;}
   .des{background:var(--panel);border:1.3px solid var(--ink);padding:2px 9px;font-weight:800;font-size:14px;}
   .sechead h2{margin:0;font-size:16px;letter-spacing:2px;font-weight:800;}
@@ -119,6 +125,10 @@
   .side .de{color:var(--gold);font-weight:700;flex:none;width:11px;}
   .side a.here .de{color:var(--mint)}
   .side .fg{margin-left:auto;color:rgba(var(--ink-rgb),.35);font-size:9.5px;flex:none}
+  .side li.grp{padding:9px 13px 4px;border-top:1px solid rgba(var(--ink-rgb),.35);
+               font-size:9.5px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;
+               color:rgba(var(--ink-rgb),.5);}
+  .side li.grp + li a{border-top:0}
 
   .masthead h1 a{color:inherit}
   .masthead h1 a:hover{text-decoration:none;color:var(--mint)}
@@ -152,6 +162,8 @@
     /* frames → pure black */
     .masthead,.idx,.hoja,.cajetin{ border-color:#000; }
     .idx .cap,.sechead,table.simple th{ border-bottom-color:#000; }
+    .idx tr.grp td{ background:transparent; color:#000; border-top-color:#000; }
+    .areaband{ color:#000; border-bottom-color:#000; break-after:avoid; }
     .cj,.cj>div+div{ border-color:rgba(0,0,0,.6); }
     .idx td{ border-top-color:rgba(0,0,0,.35); }
     table.simple td{ border-bottom-color:rgba(0,0,0,.35); }

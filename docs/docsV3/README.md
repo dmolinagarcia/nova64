@@ -13,11 +13,30 @@ md.js               markdown → HTML for the dialect below
 shell.js            figure inlining and the failure state, shared by both pages
 app.js              sidebar, masthead, sheet index, pager, title block, routing
 full.js             the same pieces, assembled as one continuous document
-manifest.json       the sheet list: letter, number, nav title, index title, figure
+manifest.json       the sheet list: letter, number, area, nav and index titles, figure
 style.css           docsV2's stylesheet, plus the few rules these two pages add
 content/*.md        the prose — one file per sheet
 figures/*.svg       the diagrams, one file each
 ```
+
+## Areas
+
+The sheets are grouped into ten areas — Introduction, Architecture, Power,
+Embedded control and boot, CPU and system, Memory and storage, Video, Software,
+Project and build, Appendix — and the grouping lives entirely in
+`manifest.json`: **the order of the array is the reading order**, and a run of
+consecutive sheets carrying the same `area` gets one heading in the sidebar, one
+band in the sheet index, and, on `full.html`, one rule across the page before
+the first sheet of the area. Nothing else knows areas exist; there is no second
+structure to keep in step, and moving a sheet between areas means moving its row
+and fixing the `num` fields.
+
+**The letters do not follow the areas, and are never renumbered.** A letter is a
+sheet's identity — the file name (`sec_r.md`), the route (`#/sec_r`), and every
+cross-reference in the prose — while `num` is its position in the reading order.
+The two stopped agreeing when the areas were introduced, and that is the point:
+reordering the document costs a manifest edit instead of several hundred link
+rewrites.
 
 ## Running it
 
@@ -129,9 +148,13 @@ Write `content/sec_s.md`, add its row to `manifest.json` (`file`, `letter`,
 right-hand column). Sidebar, index, pager and title block follow from that; no
 HTML to edit.
 
-The glossary is deliberately the **last** sheet and deliberately lettered **Z**,
-in `content/sec_z.md`: content sheets run A, B, C… and a new one is appended at
-the end of that run, taking the next free letter, without the glossary having to
-move or anything having to be renumbered. Letters and file names are kept in
-step — sheet R lives in `sec_r.md` — because every cross-reference in the prose
-points at the file name.
+Give it an `area` too, and put its row next to the other sheets of that area —
+the array's order is what the reader sees. Adding a sheet in the middle shifts
+the `num` of everything after it, and nothing else.
+
+The appendix — glossary and index of figures — is deliberately the **last**
+sheet and deliberately lettered **Z**, in `content/sec_z.md`: content sheets run
+A, B, C… and a new one takes the next free letter of that run, without the
+appendix having to move or any letter having to be reissued. Letters and file
+names are kept in step — sheet R lives in `sec_r.md` — because every
+cross-reference in the prose points at the file name.

@@ -27,12 +27,27 @@
 
   function indexTable() {
     var h = '<nav class="idx" aria-label="Sheet index"><div class="cap">SHEET INDEX</div><table><tbody>';
+    var area = '';
     M.sheets.forEach(function (s) {
+      if (s.area && s.area !== area) {
+        area = s.area;
+        h += '<tr class="grp"><td colspan="4"><a href="#area-' + slug(area) + '">' + area + '</a></td></tr>';
+      }
       h += '<tr><td class="no">' + s.num + '</td><td class="de">' + s.letter + '</td>' +
            '<td><a href="#' + s.file + '">' + s.index + '</a></td>' +
            '<td class="fg">' + s.fig + '</td></tr>';
     });
     return h + '</tbody></table></nav>';
+  }
+
+  function slug(area) {
+    return area.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  }
+
+  /* Each area opens with a band, so the printed document reads as ten parts
+     rather than twenty-three sheets, and the index's area rows have a target. */
+  function areaBand(area) {
+    return '<div class="areaband" id="area-' + slug(area) + '">' + area + '</div>';
   }
 
   function section(sheet, doc) {
@@ -78,7 +93,14 @@
       el.body.className = '';
       el.body.innerHTML =
         index.html.replace('<div data-index></div>', index.hasIndex ? indexTable() : '') +
-        M.sheets.map(function (s, i) { return section(s, docs[i + 1]); }).join('');
+        (function () {
+          var area = '';
+          return M.sheets.map(function (s, i) {
+            var band = '';
+            if (s.area && s.area !== area) { area = s.area; band = areaBand(area); }
+            return band + section(s, docs[i + 1]);
+          }).join('');
+        })();
       el.foot.innerHTML = titleBlock();
       NovaShell.inlineFigures(el.body);
 

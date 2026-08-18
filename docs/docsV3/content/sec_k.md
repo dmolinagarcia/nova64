@@ -15,7 +15,7 @@ Explanatory groundwork, not normative: it explains paging from first principles 
 
 ![Fig. 5 — Field-width asymmetry. The virtual split falls out of the CPU's 24 bits; the physical one is chosen by the MMU, and the offset crosses untranslated.](figures/fig-5-translation.svg)
 
-## Summary of figures
+## Summary of numbers — every value the two virtual-memory sheets settle on, in one place.
 
 | Parameter | Value |
 |---|---|
