@@ -232,7 +232,7 @@
        follows it. */
 
     /* full.html: one sheet per sheet of paper */
-    body.full .hoja{ break-before:page; }
+    body.full .areaband { break-before:page; }
 
     body.full .masthead{ break-after:avoid; }
 
