@@ -73,7 +73,7 @@ Document-wide reference. Every acronym is also expanded on first use in place, s
 | Accumulator architecture | A design where most operations route through one register. Compact to encode, heavy on memory traffic, and inherently serial. |
 | Bus arbiter | The logic deciding who drives the shared bus in each cycle: CPU, cache fill, video, or refresh. |
 | PIC | Programmable Interrupt Controller — collects device IRQs, applies priorities, and raises IRQ/NMI to the CPU. |
-| EBR | Embedded Block RAM — 32 dual-port blocks of 512 B inside each iCE40, 16 KB in total. On Helium its scarcity is why only the TLB and the cache tags fit on-chip while the page table lives in external SRAM; on Neon it is the whole of Mode 0, and it is **fully allocated with zero margin** ([T.12](sec_t#t12)). |
+| EBR | Embedded Block RAM — 32 dual-port blocks of 512 B inside each iCE40, 16 KB in total. On Helium its scarcity is why only the TLB and the cache tags fit on-chip while the page table lives in external SRAM; on Neon it is the whole of Mode 0, and it is **fully allocated with zero margin** ([T.12](sec_t#t12)). The prototype board's ECP5 has ~243 KB of it, roughly fifteen times as much, which is the single most misleading number on that platform ([P.04](sec_p#p04)). |
 | Bitstream initialisation | Giving a block RAM its contents from the compiled bitstream rather than loading them at run time. What makes Neon's font and text buffer valid before any software exists — the single most useful property of the design ([D27](sec_q#d27)). |
 | HDL | Hardware Description Language — Verilog or VHDL. The choice is still open ([Q2](sec_q#q2)). |
 | Stub | In layout, a track branching off a bus. Long stubs ruin signal integrity at ~100 MHz, hence the short comb of [F.13](sec_f#f13). |
@@ -155,7 +155,7 @@ Document-wide reference. Every acronym is also expanded on first use in place, s
 | SDRAM bank | One of four independent arrays inside the device; accesses to different banks interleave with no row-activation penalty. A layout convention for copies, not something hardware enforces ([Q50](sec_q#q50)). |
 | FPC | Flexible Printed Circuit — the flat ribbon connecting the panel. "FPC-50" is its 50-contact connector. |
 | eDP | Embedded DisplayPort — serial panel interface. Rejected for v1 as it needs a bridge chip ([D05](sec_q#d05)). |
-| R-2R | A resistor-ladder DAC — the cheapest way to get analogue VGA levels out of FPGA pins. Bring-up only. |
+| R-2R | A resistor-ladder DAC — the cheapest way to get analogue VGA levels out of FPGA pins. Bring-up only on the target board; **the whole video output on the prototype**, at 6 bits per channel into 1 % resistors ([P.08](sec_p#p08)). |
 | I2S | Serial audio bus between the FPGA and the DAC. Unrelated to I2C despite the name. |
 | QSPI | Quad SPI — 4-bit-wide serial bus. Historical here: it went with the PSRAM ([D13](sec_q#d13)) and no longer appears on the board. |
 | HID | Human Interface Device — the USB class covering keyboards and mice. |
@@ -236,3 +236,17 @@ Document-wide reference. Every acronym is also expanded on first use in place, s
 | Clock domain crossing | Passing a signal between two unrelated clocks — here the SPI link and the Helium core. Needs synchronisers and a handshake, and is a classic home of intermittent faults. |
 | GDB stub | Firmware speaking the GDB remote serial protocol, letting a host debugger drive the target. Deferred until the command set stops moving (→ [R.24](sec_r#r24)). |
 | Breakpoint · watchpoint | Halt on reaching an address · halt on touching a datum. The first is `BRK` or a trace-trigger comparator; the second is deferred. |
+
+## The prototype board
+
+| Term | Meaning |
+|---|---|
+| Prototype board | The single-ECP5 carrier of [sheet P](sec_p) — Helium and Neon merged on one commercial module, with the CPU, SRAM, EC, VGA and audio on a board of our own. Temporary packaging of the design, never a variant of it ([D40](sec_q#d40)). |
+| Colorlight i9 v7.2 | The commercial module the prototype is built around: an LFE5U-45F with 8 MB SDRAM, 8 MB SPI flash, two unused Ethernet PHYs and a 25 MHz oscillator, on a DDR2 SODIMM edge connector. Sold for LED-panel drivers and widely used as a cheap FPGA board. |
+| ECP5 | Lattice's larger FPGA family. Rejected for the target board by [D01](sec_q#d01) — BGA only in the useful sizes, and the project's rule is hand-solderable — which is exactly why it is acceptable on a module somebody else soldered. |
+| SODIMM | The 200-pin edge connector the i9 module plugs into. It carries **raw FPGA balls**, not buffered I/O, which is what makes the module usable as a general-purpose carrier at all. |
+| PMOD | The 2 × 6 header convention used by the i9 extension board. Whether its pins are direct or pass through unidirectional buffers decides whether the wire-wrap stage is possible ([Q67](sec_q#q67)). |
+| DAPLink | The on-board debug probe of the i9 extension board, giving JTAG plus USB-CDC. Absent on a carrier that hosts the SODIMM socket directly, which is why the RP2040 picks up ECP5 JTAG there ([P.10](sec_p#p10)). |
+| prjtrellis · nextpnr-ecp5 | The ECP5 half of the same open toolchain — Yosys and nextpnr, different backend. Added to [E0.1](sec_p#e01) by the prototype; no proprietary tools on either board. |
+| Letterboxing | Showing a window into a buffer larger than the display rather than reflowing the buffer. How Mode 0 keeps its 128 × 32 geometry on a 640 × 480 monitor ([D44](sec_q#d44)). |
+| Leak | A prototype convenience that survives into the target design and becomes a defect there — shared memory, one clock domain, abundant EBR, a hardcoded size. [Sheet P](sec_p) carries the list, and it is reviewed at every merge, not at the transition. |

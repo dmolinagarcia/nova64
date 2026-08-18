@@ -4,9 +4,9 @@
   "footer": {
     "referenceIndex": "Sheets A–V · Figs. 1–12 · glossary in Z",
     "referenceSheet": "Synthesis document · sheets A–V + glossary Z · index at index.html",
-    "detail": "Detail: hoja-1-2 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · fpga-a-control-registers · helium-debug-agent · neon-gpu (text mode · graphics modes · programming guide · blitter and compositor) · nova64-gui-architecture-sketch · placa-65816.html (REV B) — power lives here in sheets C and S, Neon in T and U, the windowing OS in V",
+    "detail": "Detail: hoja-1-2 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · virtual-memory-concepts (REV A) · fpga-a-control-registers · helium-debug-agent · neon-gpu (text mode · graphics modes · programming guide · blitter and compositor) · nova64-gui-architecture-sketch · placa-65816.html (REV B) · noVa64-i9-prototype-handoff (source for the P-series in sheet P) — power lives here in sheets C and S, Neon in T and U, the windowing OS in V",
     "rules": "All 3.3V · hand-solderable · open toolchain",
-    "rev": "OUTLINE 3 · POWER REV C · NEON REV B · GUI REV A · AUG 2026"
+    "rev": "OUTLINE 3 · POWER REV C · NEON REV B · GUI REV A · PROTOTYPE REV A · AUG 2026"
   },
   "sheets": [
     {
@@ -133,8 +133,8 @@
       "file": "sec_p",
       "letter": "P",
       "num": "16",
-      "nav": "Step-by-step build · E0–E8",
-      "index": "Step-by-step build · E0–E8",
+      "nav": "Step-by-step build · P0–P5 · E0–E8",
+      "index": "Step-by-step build · prototype P0–P5 · target E0–E8",
       "fig": "Fig. 7"
     },
     {
