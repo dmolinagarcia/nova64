@@ -113,22 +113,27 @@
         colour is kept only where it encodes something (figure traces, chips). */
 
   /* ── multi-page shell ───────────────────────────────────────────────── */
-  .shell{display:flex;gap:26px;max-width:1260px;margin:0 auto;align-items:flex-start;}
+  .shell{display:flex;gap:34px;max-width:1290px;margin:0 auto;align-items:flex-start;}
   .main{flex:1;min-width:0;max-width:980px;}
-  .side{width:238px;flex:none;position:sticky;top:26px;border:1.3px solid rgba(var(--ink-rgb),.55);}
-  .side .cap{padding:9px 13px;border-bottom:1px solid rgba(var(--ink-rgb),.35);font-size:10px;letter-spacing:2.5px;color:rgba(var(--ink-rgb),.6);font-weight:700;}
-  .side ol{list-style:none;margin:0;padding:0;max-height:calc(100vh - 130px);overflow-y:auto;}
-  .side a{display:flex;gap:8px;padding:5px 13px;border-top:1px solid rgba(var(--ink-rgb),.12);font-size:11.5px;line-height:1.35;color:rgba(var(--ink-rgb),.78);}
-  .side li:first-child a{border-top:0}
-  .side a:hover{background:rgba(var(--mint-rgb),.07);color:var(--mint);text-decoration:none}
-  .side a.here{background:rgba(var(--mint-rgb),.10);color:var(--mint);box-shadow:inset 2px 0 0 var(--mint);}
+
+  /* The sidebar is navigation, not a sheet: it carries no frame and no rules
+     between its rows. One hairline divides it from the document, the area
+     headings supply the structure the row borders used to, and the only mark
+     on a row is the rule that appears at the left of the current one. */
+  .side{width:252px;flex:none;position:sticky;top:26px;padding-right:22px;
+        border-right:1px solid rgba(var(--ink-rgb),.22);}
+  .side .cap{padding:0 0 12px 12px;font-size:10px;letter-spacing:2.5px;color:rgba(var(--ink-rgb),.45);font-weight:700;}
+  .side ol{list-style:none;margin:0;padding:0;max-height:calc(100vh - 120px);overflow-y:auto;}
+  .side a{display:flex;gap:9px;padding:3.5px 0 3.5px 10px;font-size:11.5px;line-height:1.4;
+          color:rgba(var(--ink-rgb),.72);border-left:2px solid transparent;}
+  .side a:hover{color:var(--mint);text-decoration:none;border-left-color:rgba(var(--mint-rgb),.45);}
+  .side a.here{color:var(--mint);border-left-color:var(--mint);}
   .side .de{color:var(--gold);font-weight:700;flex:none;width:11px;}
   .side a.here .de{color:var(--mint)}
-  .side .fg{margin-left:auto;color:rgba(var(--ink-rgb),.35);font-size:9.5px;flex:none}
-  .side li.grp{padding:9px 13px 4px;border-top:1px solid rgba(var(--ink-rgb),.35);
-               font-size:9.5px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;
-               color:rgba(var(--ink-rgb),.5);}
-  .side li.grp + li a{border-top:0}
+  .side .fg{margin-left:auto;color:rgba(var(--ink-rgb),.3);font-size:9.5px;flex:none}
+  .side li.grp{margin-top:15px;padding:0 0 3px 12px;font-size:9.5px;letter-spacing:2.5px;
+               text-transform:uppercase;font-weight:700;color:rgba(var(--ink-rgb),.42);}
+  .side li:last-child{margin-top:15px;}
 
   .masthead h1 a{color:inherit}
   .masthead h1 a:hover{text-decoration:none;color:var(--mint)}
@@ -136,12 +141,21 @@
   .pager .nx{margin-left:auto;text-align:right}
   .pager b{display:block;color:rgba(var(--ink-rgb),.45);font-size:9.5px;letter-spacing:2px;font-weight:700;text-transform:uppercase}
 
+  /* Narrow: the same list, laid across the top. The dividing hairline turns
+     with it, and each area heading takes a full row so the run below it stays
+     recognisable as a group. */
   @media (max-width:900px){
     .shell{display:block}
-    .side{width:auto;position:static;margin-bottom:22px}
-    .side ol{max-height:none;display:flex;flex-wrap:wrap}
-    .side li{flex:1 1 auto}
-    .side a{border-top:0;border-right:1px solid rgba(var(--ink-rgb),.12)}
+    .side{width:auto;position:static;margin-bottom:26px;padding:0 0 14px;
+          border-right:0;border-bottom:1px solid rgba(var(--ink-rgb),.22);}
+    .side .cap{padding-left:0}
+    .side ol{max-height:none;display:flex;flex-wrap:wrap;column-gap:6px}
+    .side li{flex:0 1 auto}
+    .side li.grp{flex:1 0 100%;margin-top:12px;padding-left:0}
+    .side li:last-child{margin-top:0}
+    .side a{padding:3.5px 8px;border-left:0;border-bottom:2px solid transparent}
+    .side a:hover{border-bottom-color:rgba(var(--mint-rgb),.45)}
+    .side a.here{border-bottom-color:var(--mint)}
   }
 
   @media print{
