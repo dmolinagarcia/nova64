@@ -113,17 +113,27 @@
         colour is kept only where it encodes something (figure traces, chips). */
 
   /* ── multi-page shell ───────────────────────────────────────────────── */
-  .shell{display:flex;gap:34px;max-width:1290px;margin:0 auto;align-items:flex-start;}
+  .shell{display:flex;gap:34px;max-width:1360px;margin:0 auto;align-items:flex-start;}
   .main{flex:1;min-width:0;max-width:980px;}
 
   /* The sidebar is navigation, not a sheet: it carries no frame and no rules
      between its rows. One hairline divides it from the document, the area
      headings supply the structure the row borders used to, and the only mark
      on a row is the rule that appears at the left of the current one. */
-  .side{width:252px;flex:none;position:sticky;top:26px;padding-right:22px;
+  .side{width:320px;flex:none;position:sticky;top:26px;padding-right:22px;
         border-right:1px solid rgba(var(--ink-rgb),.22);}
   .side .cap{padding:0 0 12px 12px;font-size:10px;letter-spacing:2.5px;color:rgba(var(--ink-rgb),.45);font-weight:700;}
-  .side ol{list-style:none;margin:0;padding:0;max-height:calc(100vh - 120px);overflow-y:auto;}
+  /* The list scrolls, but its scrollbar is furniture: a hairline in the ink
+     colour over no track at all, so it reads as a mark on the page rather than
+     as a widget bolted to the side of one. It darkens while the pointer is in
+     the sidebar, which is the only time it is aimed at. */
+  .side ol{list-style:none;margin:0;padding:0;max-height:calc(100vh - 120px);overflow-y:auto;
+           scrollbar-width:thin;scrollbar-color:rgba(var(--ink-rgb),.16) transparent;}
+  .side:hover ol{scrollbar-color:rgba(var(--ink-rgb),.32) transparent;}
+  .side ol::-webkit-scrollbar{width:5px}
+  .side ol::-webkit-scrollbar-track{background:transparent}
+  .side ol::-webkit-scrollbar-thumb{background:rgba(var(--ink-rgb),.16)}
+  .side:hover ol::-webkit-scrollbar-thumb{background:rgba(var(--ink-rgb),.32)}
   .side a{display:flex;gap:9px;padding:3.5px 0 3.5px 10px;font-size:11.5px;line-height:1.4;
           color:rgba(var(--ink-rgb),.72);border-left:2px solid transparent;}
   .side a:hover{color:var(--mint);text-decoration:none;border-left-color:rgba(var(--mint-rgb),.45);}

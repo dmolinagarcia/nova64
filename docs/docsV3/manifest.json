@@ -77,7 +77,7 @@
       "letter": "E",
       "num": "08",
       "area": "CPU and system",
-      "nav": "CPU — W65C816S and the softcore option",
+      "nav": "CPU — W65C816S and softcore",
       "index": "CPU — W65C816S and the softcore option",
       "fig": "table"
     },
@@ -104,7 +104,7 @@
       "letter": "K",
       "num": "11",
       "area": "Memory and storage",
-      "nav": "Virtual memory — concepts and glossary",
+      "nav": "Virtual memory — concepts",
       "index": "Virtual memory — concepts and glossary",
       "fig": "Fig. 5"
     },
