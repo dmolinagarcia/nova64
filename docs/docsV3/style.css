@@ -230,6 +230,10 @@
     /* full.html prints as one continuous document — sheets run on, they do
        not each claim a fresh page. Only the masthead is kept with what
        follows it. */
+
+    /* full.html: one sheet per sheet of paper */
+    body.full .hoja{ break-before:page; }
+
     body.full .masthead{ break-after:avoid; }
 
     /* keep rows, steps and figures from splitting across pages */
