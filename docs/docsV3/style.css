@@ -127,7 +127,7 @@
      colour over no track at all, so it reads as a mark on the page rather than
      as a widget bolted to the side of one. It darkens while the pointer is in
      the sidebar, which is the only time it is aimed at. */
-  .side ol{list-style:none;margin:0;padding:0;max-height:calc(100vh - 120px);overflow-y:auto;
+  .side ol{list-style:none;margin:0;padding:0 15px 0 0;max-height:calc(100vh - 120px);overflow-y:auto;
            scrollbar-width:thin;scrollbar-color:rgba(var(--ink-rgb),.16) transparent;}
   .side:hover ol{scrollbar-color:rgba(var(--ink-rgb),.32) transparent;}
   .side ol::-webkit-scrollbar{width:5px}
