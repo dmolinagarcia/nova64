@@ -1,14 +1,14 @@
 # Neon — blitter and compositor
 > four channels · 256 logic functions · bank partitioning · backing stores
 
-[Sheet T](sec_t) specifies Neon as a whole and says what the drawing engine *does*; this sheet is the engine itself — its datapath, its arbitration policy, and the window compositor built on it. It comes from a fifth handoff written a day after the other four, and it does two things at once: **it closes three open questions with real numbers, and it proposes a blitter that is not the one sheet T describes.** That second half is stated first, because everything after it is conditional on how it is resolved.
+[Sheet T](sec_t) specifies Neon as a whole and says what the drawing engine *does*; this sheet is the engine itself — its datapath, its arbitration policy, and the window compositor built on it. It does two things at once: **it closes three open questions with real numbers, and it proposes a blitter that is not the one sheet T describes.** That second half is stated first, because everything after it is conditional on how it is resolved.
 
 ## The conflict — two blitters, and they are different machines, not different register maps.
 
-- U.1 — [[!blocking]] **Sheet T's engine is operation-based; this note's is channel-based.** T's blitter takes `FILL_RECT`, `COPY_KEYED`, `COPY_EXPAND` and the rest, in commands carrying `(x, y)` coordinates, fed from a 128-entry FIFO or a display list in SDRAM ([T.32](sec_t#t32), [D30](sec_q#d30)). This note's is the Amiga blitter: **four memory channels — A, B, C read, D write — combined by any of 256 bitwise logic functions**, addressed by raw pointers and per-line modulos, with edge masks and a descending mode, fed from an 8-deep queue of register snapshots. Both are good designs. They are not variants of one design.
+- U.1 — [[!blocking]] **Sheet T's engine is operation-based; this sheet's is channel-based.** T's blitter takes `FILL_RECT`, `COPY_KEYED`, `COPY_EXPAND` and the rest, in commands carrying `(x, y)` coordinates, fed from a 128-entry FIFO or a display list in SDRAM ([T.32](sec_t#t32), [D30](sec_q#d30)). This one is the Amiga blitter: **four memory channels — A, B, C read, D write — combined by any of 256 bitwise logic functions**, addressed by raw pointers and per-line modulos, with edge masks and a descending mode, fed from an 8-deep queue of register snapshots. Both are good designs. They are not variants of one design.
 - U.2 — **The capability difference is real and cuts both ways.** The minterm LUT is bitwise, so a **colour key cannot be expressed in it** — an 8-bit equality test is not a boolean function of three bits. The channel model does transparency with a **mask surface** on channel A and logic function `$CA`, which means every sprite carries a second bitmap that something must generate and keep in step. Conversely T's fixed operation set has **no XOR**, so no rubber-band outline and no reversible cursor, and no arbitrary bitwise compositing at all.
 
-| | Sheet T — operations | This note — channels |
+| | Sheet T — operations | This sheet — channels |
 |---|---|---|
 | Transparency | `COPY_KEYED`, one designated index, no extra memory | Mask surface plus `LF = $CA` |
 | Glyphs | `COPY_EXPAND`, 1-bpp atlas expanded on the fly | Mask-and-copy from an 8-bpp atlas, or a pre-expanded one |
@@ -19,19 +19,19 @@
 | Clipping | clip rectangle in hardware | expressed through pointer, width, height and modulo |
 
 - U.3 — **The decisive number is setup cost, and it falls out of [D30](sec_q#d30) rather than from either document's advocacy.** At ~30 byte stores per blit, the channel model costs about **19 µs of CPU per blit** at 8 MHz. For the GUI that is irrelevant: a composite pass is a handful of large blits and the setup amortises over hundreds of kilobytes. **For the game scenario of [T.59](sec_t#t59) it is fatal** — 24 sprites is ~450 µs per frame of pointer arithmetic, against the 140 µs that sheet T budgets for *the entire frame*, and the display list cannot help because a list of raw pointers has to be recomputed every time anything moves. This is exactly the work D30 removed by making commands carry coordinates.
-  NOTE: The note's own 8-deep command queue exists to mitigate this, and its justification quotes a **65816 at 14 MHz**. This board runs 8 MHz ([B.1](sec_b#b1)), so the figure is worse here than the note assumes, not better.
+  NOTE: The 8-deep command queue of [U.24](sec_u#u24) exists to mitigate this, and the case for it was originally argued against a **65816 at 14 MHz**. This board runs 8 MHz ([B.1](sec_b#b1)), so the figure is worse here than that argument assumed, not better.
 - U.4 — **There is a third option and it is probably the right one: keep this datapath and put T's command layer on top of it.** The command processor already has to exist for display lists, and it already has the multiplier D30 budgeted; having it generate four pointers and four modulos from a coordinate pair is arithmetic it is already doing. That buys the 256 logic functions, the mask channel and the edge masks **and** coordinate commands, display lists and a bounded per-frame CPU cost. `COPY_KEYED` and `COPY_EXPAND` remain genuinely extra hardware — a comparator and a bit expander respectively — because no minterm can express either.
-  NOTE: It is roughly LUT-neutral, which is the surprising part. This note's datapath is 900–1200 against sheet T's 700 for the 8-bpp path plus 400 for the 1-bpp barrel shifter — and [U.10](sec_u#u10) deletes that shifter outright. The command processor's 800 and the multiplier's 80 sit on top either way (→ [U.37](sec_u#u37)).
-- U.5 — **Recommendation: adopt the datapath, the bank policy and the arbiter from this note; keep the command model from sheet T.** But this is an architectural choice with consequences for the kernel, the toolchain and both milestones, and it should be made deliberately rather than inherited from whichever document was read last (→ [Q58](sec_q#q58)).
+  NOTE: It is roughly LUT-neutral, which is the surprising part. This datapath is 900–1200 against sheet T's 700 for the 8-bpp path plus 400 for the 1-bpp barrel shifter — and [U.10](sec_u#u10) deletes that shifter outright. The command processor's 800 and the multiplier's 80 sit on top either way (→ [U.37](sec_u#u37)).
+- U.5 — **Recommendation: adopt this sheet's datapath, bank policy and arbiter; keep the command model from sheet T.** But this is an architectural choice with consequences for the kernel, the toolchain and both milestones, and it should be made deliberately rather than settled by whichever sheet was read last (→ [Q58](sec_q#q58)).
 
-## What this note settles, and it is more than it overturns.
+## What this sheet settles, and it is more than it overturns.
 
 - U.6 — **The SDRAM bank partition** ([U.16](sec_u#u16)) is a concrete policy where [T.14](sec_t#t14) had only a convention, and it closes [Q50](sec_q#q50). The difference it makes is a factor of two in delivered bandwidth, which is not a tuning detail.
-- U.7 — **The arbiter's worst case is proven, not asserted** ([U.28](sec_u#u28)): 23 clocks, **223 ns** at 103.125 MHz, with preemption at burst boundaries and the CPU placed above the blitter. That is precisely the bound [Q57](sec_q#q57) asked for and the priority order [Q29](sec_q#q29) needs on Neon's side, and it independently confirms the read-stall protocol of [D37](sec_q#d37) — the note arrives at "a CPU access stalls PHI2 until the controller services it" from the other direction.
+- U.7 — **The arbiter's worst case is proven, not asserted** ([U.28](sec_u#u28)): 23 clocks, **223 ns** at 103.125 MHz, with preemption at burst boundaries and the CPU placed above the blitter. That is precisely the bound [Q57](sec_q#q57) asked for and the priority order [Q29](sec_q#q29) needs on Neon's side, and it independently confirms the read-stall protocol of [D37](sec_q#d37) — the analysis arrives at "a CPU access stalls PHI2 until the controller services it" from the other direction.
 - U.8 — **Descending mode is required, not optional.** The note lists it as an open question; sheet T already answered it by specifying `COPY_RECT` as overlap-safe with the direction chosen automatically ([T.32](sec_t#t32)), which is descending mode by another name. A window drag is the case that needs it.
 - U.9 — **Its own first open item is already closed.** The note proposes `$FE:FF00` for the register window and asks for it to be reconciled against the aperture decode; [D36](sec_q#d36) moved the registers to `$FF:8000` instead, because `$FE` is user-mappable and `$FF` is not.
 
-## Pixel format — the strongest new argument in the note, and it reaches back into Mode 1.
+## Pixel format — the strongest new argument on this sheet, and it reaches back into Mode 1.
 
 - U.10 — **8 bits per pixel, palettised, because of the shifter — not because of memory.** A blit whose destination does not start on a word boundary must shift its source before combining. On a 16-bit bus the shifter width is set by how many pixels share a word.
 
@@ -43,7 +43,7 @@
 | 16 bpp | 1 | none | Free, but see [U.15](sec_u#u15) |
 
 - U.11 — **This undercuts [T.30](sec_t#t30), which calls the 1-bpp barrel shifter "not optional" for the GUI.** It is not optional *for Mode 1*, and Mode 1 is 1 bpp only because an earlier draft assumed the GUI had to be cheap. At 1024 × 600 × 8 bpp the framebuffer is 614,400 B against Mode 1's 76,800 — irrelevant against 64 MB — and scanout is **36.8 MB/s against 4.6**, still under a quarter of the effective budget. What is bought: **256 colours instead of two, and ~400 LUT deleted.** ((`COPY_EXPAND` still needs a bit-granular source read for 1-bpp glyph atlases — that is [Q49](sec_q#q49) — but it never needs a 1-bpp *destination*, which is what the barrel shifter was for.))
-- U.12 — So a fourth mode is implied and sheet T does not have it: **1024 × 600 × 8 bpp, the GUI mode as this note assumes it throughout.** Everything in §3 of the note is computed for it. Whether it replaces Mode 1 or joins it is not a detail — it decides whether the 400 LUT come back, and it decides what the window server is written against (→ [Q59](sec_q#q59)).
+- U.12 — So a fourth mode is implied and sheet T does not have it: **1024 × 600 × 8 bpp, the GUI mode this sheet assumes throughout.** Every bandwidth figure below is computed for it. Whether it replaces Mode 1 or joins it is not a detail — it decides whether the 400 LUT come back, and it decides what the window server is written against (→ [Q59](sec_q#q59)).
 
 ## Memory baseline — the same part as [F.8](sec_f#f8), and two consequences of its geometry.
 
@@ -51,7 +51,7 @@
 |---|---|
 | Part | AS4C32M16SB-7TIN, 32M × 16, four banks, 64 MB ([D14](sec_q#d14)) |
 | Rows per bank · columns per row | 8192 · 1024 words = **2048 B** |
-| Controller clock | 103.125 MHz ([T.8](sec_t#t8)); the note assumes 100 |
+| Controller clock | 103.125 MHz ([T.8](sec_t#t8)); the original figures assumed 100 |
 | CAS latency | 2 |
 | Peak · usable | 206 MB/s · **~150 MB/s** budgeted for mixed work |
 
@@ -182,7 +182,7 @@
 
 - U.31 — **Model C, implemented strictly as an optimisation of Model B.** The compositor is written so that a full-screen composite is always correct and always affordable; damage tracking then restricts the work actually done. **A bug in damage accounting therefore costs performance, not visible corruption**, and a `COMPOSITE_ALL` path is always available as a fallback. That inversion — correctness in the slow path, speed in the fast one — is the whole value of the model, and it is only reachable because [U.15](sec_u#u15) showed full recomposition fits.
   NOTE: **[Sheet V](sec_v) is what this model looks like as an operating system**, and it makes one correction to the margin quoted here. Full recomposition fits *once* a frame at 8 bpp, not repeatedly: a typical desktop at 1.8× overdraw is ~2.2 MB and consumes essentially the whole 15.5 ms. So the "optimisation" half of Model C has to be written from the first day rather than held in reserve — the fallback stays correct, but it stops being the routine path (→ [V.11](sec_v#v11)).
-- U.32 — **Sheet T recommends Model A and defers backing stores to [Q55](sec_q#q55); this note recommends C and gives the arithmetic.** The disagreement is not really about compositing — it is about *which framebuffer*. T argued Model A against a flat 1-bpp Mode 1 where a repaint is cheap and memory was assumed tight; this note argues C against 8-bpp backing stores with 64 MB behind them. **Both are right about their own premise**, and the premise is [Q59](sec_q#q59)'s mode question, not a matter of taste (→ [Q60](sec_q#q60)).
+- U.32 — **Sheet T recommends Model A and defers backing stores to [Q55](sec_q#q55); this sheet recommends C and gives the arithmetic.** The disagreement is not really about compositing — it is about *which framebuffer*. T argued Model A against a flat 1-bpp Mode 1 where a repaint is cheap and memory was assumed tight; this sheet argues C against 8-bpp backing stores with 64 MB behind them. **Both are right about their own premise**, and the premise is [Q59](sec_q#q59)'s mode question, not a matter of taste (→ [Q60](sec_q#q60)).
   NOTE: The consequences for the kernel are opposite and neither is retrofittable cheaply. Under A, occluded pixels are **gone** and the window manager must repaint from application state — [T.55](sec_t#t55) spells out why that forces a damage model. Under C they are **preserved**, and moving a window is a recomposite. Writing the window server against one and switching to the other is close to a rewrite.
 
 | Item at 1024 × 600 × 8 bpp | Size |
@@ -213,13 +213,13 @@
 | CPU bus interface and register file | 400 | — |
 | **Total** | **~3300–3900** | **9** |
 
-- U.36 — **The note's own conclusion — that this is at or above the ceiling — was true of an HX4K and is not true here.** It estimates against 3520 usable LUT4 and calls the risk genuine; [D01](sec_q#d01) put **HX8K** in every socket, so the same figures land at about half the device and its open item 2 is closed before it was asked. What the note could not know is what else shares the part: Mode 0's text generator, the command processor, and everything else in [T.48](sec_t#t48).
+- U.36 — **The conclusion these figures were first drawn to support — that this is at or above the ceiling — was true of an HX4K and is not true here.** They were estimated against 3520 usable LUT4, which made the risk look genuine; [D01](sec_q#d01) put **HX8K** in every socket, so the same figures land at about half the device and that risk is closed before it was raised. What the estimate could not account for is what else shares the part: Mode 0's text generator, the command processor, and everything else in [T.48](sec_t#t48).
 - U.37 — Folded into sheet T's budget the totals barely move, which is [U.4](sec_u#u4)'s point in numbers: **this datapath at 900–1200 replaces T's 700 for the 8-bpp path plus 400 for the 1-bpp barrel shifter, and [U.11](sec_u#u11) deletes the shifter anyway.** Neon stays near **6,000 of 7,680 — about 78 %** either way. **Logic is not what decides [Q58](sec_q#q58).**
-- U.38 — [[!blocking]] **Block RAM is what decides it, and it does not fit.** Sheet T is at **32 of 32 with zero margin** ([T.12](sec_t#t12)). This note's 9 blocks include **2 for audio that T never counted** and **2 for the 8-deep snapshot queue against T's 1 for the command FIFO** — so the combined design wants 34 or 35 blocks, before the blitter's own burst buffers. The relief exists and is already identified: a **128-glyph font frees 4 blocks** ([Q45](sec_q#q45)), and the cursor at 2 bpp rather than 4 gives back half of one ([U.29](sec_u#u29)). **What was insurance is now spent**, and it must be decided before RTL rather than after synthesis (→ [Q61](sec_q#q61)).
+- U.38 — [[!blocking]] **Block RAM is what decides it, and it does not fit.** Sheet T is at **32 of 32 with zero margin** ([T.12](sec_t#t12)). This sheet's 9 blocks include **2 for audio that T never counted** and **2 for the 8-deep snapshot queue against T's 1 for the command FIFO** — so the combined design wants 34 or 35 blocks, before the blitter's own burst buffers. The relief exists and is already identified: a **128-glyph font frees 4 blocks** ([Q45](sec_q#q45)), and the cursor at 2 bpp rather than 4 gives back half of one ([U.29](sec_u#u29)). **What was insurance is now spent**, and it must be decided before RTL rather than after synthesis (→ [Q61](sec_q#q61)).
 
-## Stale context in the source note, recorded so it is not carried forward.
+## Stale context these figures were first drawn against, recorded so it is not carried forward.
 
-| In the note | Superseded by |
+| Assumed then | Superseded by |
 |---|---|
 | iCE40 **HX4K**, LUT budget at the ceiling | **HX8K** in all three sockets ([D01](sec_q#d01)) |
 | **ANX6345** bridge in the scanout pipeline | Direct RGB-TTL to the panel ([D05](sec_q#d05)); the bridge is a future variant only ([Q23](sec_q#q23)) |
@@ -228,7 +228,7 @@
 | 65816 at **14 MHz** | 8 MHz ([B.1](sec_b#b1)) — setup costs are worse here, not better |
 | SDRAM controller at 100 MHz | 103.125 MHz, from the 25 MHz oscillator ([T.4](sec_t#t4)) |
 | CPU aperture **writes** stall PHI2 | Writes are posted through a 32-entry FIFO and never stall; only reads stall ([T.17](sec_t#t17), [D37](sec_q#d37)) |
-| APS6404L PSRAM, ~66 MB/s QSPI ceiling | Already removed board-wide ([D13](sec_q#d13)) — the note records this correction itself |
+| APS6404L PSRAM, ~66 MB/s QSPI ceiling | Already removed board-wide ([D13](sec_q#d13)) |
 
 ![Fig. 11 — The blitter and the bank partition. Three read channels and one write channel meet in the minterm LUT; the partition below is what keeps every ACTIVATE inside another bank's data phase, and it is worth a factor of two in delivered bandwidth.](figures/fig-11-blitter.svg)
 LEGEND: Trace legend: <span class="m">mint = channel and pixel data</span> · <span class="g">gold = the bank partition and the arbiter's hard deadline</span> · dashed = the paths that exist only under the channel model of [U.1](sec_u#u1).

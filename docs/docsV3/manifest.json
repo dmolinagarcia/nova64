@@ -4,7 +4,7 @@
   "footer": {
     "referenceIndex": "Ten areas · sheets A–V · Figs. 1–12 · appendix Z",
     "referenceSheet": "Synthesis document · sheets A–V + appendix Z · index at index.html",
-    "detail": "Detail: hoja-1-3 … 1-6 · neon-gpu (text mode · graphics modes · programming guide · blitter and compositor) · nova64-gui-architecture-sketch · noVa64-i9-prototype-handoff (source for the P-series in sheet P) — power lives here in sheets C and S, Neon in T and U, the windowing OS in V",
+    "detail": "Self-contained: every sheet is the specification of what it covers, not a summary of one held elsewhere — power in C and S, the kernel–hardware interface in M, the debug agent in R, Neon in T and U, the windowing OS in V, the build in P",
     "rules": "All 3.3V · hand-solderable · open toolchain",
     "rev": "OUTLINE 4 · POWER REV C · NEON REV B · GUI REV A · PROTOTYPE REV A · AUG 2026"
   },

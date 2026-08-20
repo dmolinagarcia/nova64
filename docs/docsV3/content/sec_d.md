@@ -1,7 +1,7 @@
 # RP2040 — embedded controller
 > boot · FPGA programming · console · EC
 
-It's the laptop's "management microcontroller": it handles everything that happens before a live CPU exists, and stays on watch afterward. Detail in `hoja-1-3-config-fpga.md`.
+It's the laptop's "management microcontroller": it handles everything that happens before a live CPU exists, and stays on watch afterward.
 
 - D.1 — Triple role: **programmer** (bitstreams, BIOS, its own firmware — all over USB), **bootstrapper** (full sequence in Fig. 3), and permanent **embedded controller**. Its W25Q16 is the board's only mandatory flash.
 - D.2 — 9-step boot (Fig. 3): button → rails → SSPI configuration of Helium/Neon(/Argon) with CRESET_B/CDONE → SDRAM initialized by gateware → BIOS from SD to SRAM → SD handoff → RESB↑ → `$FFFC` vector.

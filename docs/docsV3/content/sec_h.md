@@ -1,7 +1,7 @@
 # Peripherals and their location
 > which chip · who it hangs off · how the OS sees it
 
-Every peripheral has a clear physical owner and a uniform face toward software: a `/dev/*` node served by a kernel driver. Connectors in `hoja-1-6-conectores.md`.
+Every peripheral has a clear physical owner and a uniform face toward software: a `/dev/*` node served by a kernel driver.
 
 | Peripheral | Chip / interface | Hangs off | Access from the OS |
 |---|---|---|---|
