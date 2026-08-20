@@ -4,7 +4,7 @@
   "footer": {
     "referenceIndex": "Ten areas · sheets A–V · Figs. 1–12 · appendix Z",
     "referenceSheet": "Synthesis document · sheets A–V + appendix Z · index at index.html",
-    "detail": "Detail: hoja-1-2 … 1-6 · hoja-pines-ice40 · plan-implementacion-65816 · helium-debug-agent · neon-gpu (text mode · graphics modes · programming guide · blitter and compositor) · nova64-gui-architecture-sketch · placa-65816.html (REV B) · noVa64-i9-prototype-handoff (source for the P-series in sheet P) — power lives here in sheets C and S, Neon in T and U, the windowing OS in V",
+    "detail": "Detail: hoja-1-2 … 1-6 · plan-implementacion-65816 · helium-debug-agent · neon-gpu (text mode · graphics modes · programming guide · blitter and compositor) · nova64-gui-architecture-sketch · placa-65816.html (REV B) · noVa64-i9-prototype-handoff (source for the P-series in sheet P) — power lives here in sheets C and S, Neon in T and U, the windowing OS in V",
     "rules": "All 3.3V · hand-solderable · open toolchain",
     "rev": "OUTLINE 4 · POWER REV C · NEON REV B · GUI REV A · PROTOTYPE REV A · AUG 2026"
   },
