@@ -28,6 +28,7 @@ Neon (FPGA-B) is the graphics half of the machine: a text mode that works before
 
 - T.8 — **A single clock domain at 103.125 MHz.** The pixel stage advances on a clock enable asserted every second cycle, giving 51.5625 MHz; `PCLK` leaves through a **DDR output register**, so the panel gets a clean clock with no combinational clock path and no divided-clock domain. SDRAM runs at the full rate, exactly 2× the pixel rate. The consequence is the one that matters: **there is no clock-domain crossing anywhere inside Neon** — no synchroniser FIFO between scanout and memory — which eliminates an entire class of intermittent, hard-to-diagnose failure. ((The panel latches on the falling DCLK edge, so the gateware changes data on the rising one — [E0.4](sec_p#e04).))
 - T.9 — **The second PLL is free and has two claimants.** The handoff's earlier draft spent both, one on pixels and one on SDRAM; the single-domain decision returns one. Audio wants a master clock the I2S divider can hit cleanly, and the VGA bring-up path of [sheet H](sec_h) wants 25.175 MHz for 640×480 — which the video domain cannot supply, since 103.125 / 4 is 25.78 MHz, 2.4 % fast. Most monitors tolerate that; the panel is the product and VGA is scaffolding, so this is not worth a fight (→ [Q54](sec_q#q54)).
+  NOTE: **Audio's claim is softer than this item assumes, and one strapping decision is why.** With `SCK` tied to GND the PCM5102A runs its own internal PLL off `BCK` ([sheet H](sec_h)), so Neon never owes it a dedicated master clock — it owes it a `BCK` at an exact rate, which is a weaker requirement, and one the part's PLL is designed to clean up. That does not settle [Q54](sec_q#q54), whose prior question is whether VGA is worth existing at all; but the two claimants are not evenly matched and the item should stop implying they are. It also returns a pin: three driven I2S signals rather than four.
 - T.10 — [[!blocking]] **103 MHz is demanding for an iCE40 HX and closure is unproven until synthesis.** SDRAM controllers in this range are documented on the family; that is not the same as having one placed and routed with a blitter beside it. **Fallback:** run everything single-rate at 51.5625 MHz, halving peak SDRAM bandwidth to ~103 MB/s. Every performance figure below halves and still beats CPU-driven rendering by more than an order of magnitude. **The architecture does not depend on 103 MHz; only the margins do** (→ [Q44](sec_q#q44)).
 
 ## Memory — two of them, with a strict division of responsibility.
@@ -320,10 +321,10 @@ Neon (FPGA-B) is the graphics half of the machine: a text mode that works before
 
 | Block | Pins | |
 |---|---|---|
-| Panel RGB666 + `PCLK` `HSYNC` `VSYNC` `DE` | 22 | 18 bpp is the recommendation; 24 bpp would not fit |
+| Panel RGB666 + `PCLK` `HSYNC` `VSYNC` `DE` | 22 | 18 bpp is the recommendation; 24 bpp would not fit. **33 Ω in series on every one of the 22**, placed against the FPGA — parallel edges at 51.5625 MHz into an FPC, which is the same argument as [B.7](sec_b#b7)'s clock star and a worse case of it |
 | SDRAM — 13 addr + 2 bank + 16 data + 8 control | 39 | |
 | CPU bus tap — A0–A15, D0–D7, PHI2, RWB | 26 | Bank byte captured off D0–D7 during PHI2 low |
-| I2S to the PCM5102A | 4 | |
+| I2S to the PCM5102A | 4 | **Three if `SCK` is grounded** — see [T.9](sec_t#t9) |
 | SSPI configuration, reused as the service port | 4 | `CRESET_B` and `CDONE` are dedicated pins, not I/O |
 | `NEON_BUS_SEL` in · `NEON_BUS_BSY` out · `NEON_IRQ` out | 3 | The three surviving inter-FPGA control lines. `NEON_BUS_SEL` validates **both** of Neon's windows ([T.21](sec_t#t21)) — moving the registers into `$FF` cost no pin |
 | VGA bring-up sync | 2 | The R-2R ladders hang off the panel's own RGB bus |
