@@ -61,7 +61,7 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 | RESB | The 65816's active-low reset. Released by the RP2040 as the last step before the CPU runs. |
 | ABORTB | W65C816S pin that cancels the instruction in progress without side effects. The system's fault mechanism. |
 | VPA / VDA | Pins indicating whether the cycle is an instruction fetch or a data access. They make checking the `X` flag possible. |
-| RDY | The pin Helium pulls low to stall the CPU while a cache miss is being filled. |
+| RDY | Bidirectional, open-drain: Helium pulls it low to freeze the CPU while it takes the shared nets ([F.4](sec_f#f4)), and the CPU pulls it low itself during `WAI`. **Cache-miss stalls do not use it** — [D16](sec_q#d16) moved those to PHI2 gating, since some W65C816S revisions ignore RDY during write cycles. |
 | Northbridge | Borrowed PC term for the chip sitting between CPU and memory. Here it is Helium: MMU, cache, arbiter, timer and I/O. |
 | Gateware | The logic loaded into an FPGA — the FPGA equivalent of firmware. Written in HDL, not compiled to instructions. |
 | Softcore | A CPU implemented as gateware rather than as a chip. Argon's optional 65816 is one (→ [sheet E](sec_e)). |
