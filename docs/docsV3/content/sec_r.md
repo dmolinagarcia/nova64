@@ -1,7 +1,7 @@
 # Debug agent and console
 > a requester inside Helium · SPI-only control · the console that drives it
 
-Instrumentation, not a product feature. A hardware block inside Helium performs memory and bus accesses on command, and a text monitor on the RP2040 drives it — so the board is observable from the first stage at which anything can be powered, long before a BIOS or a kernel exists. It is expected to stay in the design permanently, gated off rather than removed. Source: `helium-debug-agent.md`.
+Instrumentation, not a product feature. A hardware block inside Helium performs memory and bus accesses on command, and a text monitor on the RP2040 drives it — so the board is observable from the first stage at which anything can be powered, long before a BIOS or a kernel exists. It is expected to stay in the design permanently, gated off rather than removed.
 
 - R.1 — Five capabilities define it, and everything else on this sheet is their cost: read and write **any physical location** (SRAM and SDRAM), read and write **through the MMU** once translation exists, generate **real bus cycles** other devices can see, **halt · single-step · trace** the W65C816S, and do all of it from a terminal over USB-CDC or a physical UART.
 - R.2 — **The RP2040 is not a bus master.** It sends commands; the debug agent performs the access. Three reasons, none of them stylistic. **Pins**: mastering directly needs ~24 address plus 8 data lines plus control, well beyond what the EC has left after its committed functions — and its budget already had to be rescued once (→ [D.6](sec_d#d6)). **Reuse**: Helium already owns the SRAM controller, the SDRAM controller with refresh, the cache and the arbiter; a second path to memory would duplicate all of it and become a second source of truth about memory state. **Coherence**: an external master bypassing the cache reads stale data whenever a dirty sub-block is resident in SRAM.
@@ -32,7 +32,7 @@ Instrumentation, not a product feature. A hardware block inside Helium performs 
 | Addr | Name | Access | Width | Meaning |
 |---|---|---|---|---|
 | `0x00` | `DBG_ID` | RO | 16 | Magic `$6516`; second read returns the build revision |
-| `0x01` | `DBG_CTRL` | RW | 8 | `ENABLE` · `VIRT` · `EXTCYC` · `AUTOINC` · `NOCACHE` · `STALL` |
+| `0x01` | `DBG_CTRL` | RW | 8 | `ENABLE` · `VIRT` · `EXTCYC` · `AUTOINC` — advances `DBG_ADDR` by the access width after each access, and **not** after an error, so a failed burst leaves the address on the element that failed · `NOCACHE` · `STALL` — `0` steals cycles where it can, `1` stalls PHI2 for every access |
 | `0x02` | `DBG_STATUS` | RO | 8 | `BUSY` · `DONE` · `ERROR` · `FIFO_EMPTY` · `FIFO_FULL` · `CPU_HALTED` · `TRC_TRIGD` · `DBG_READY` |
 | `0x03` | `DBG_ERR` | RO/W1C | 8 | `TIMEOUT` · `UNMAPPED` · `PERM` · `ARB` · `CMD` · `STATE` · `FRAME` · `ALIGN` |
 | `0x04` | `DBG_ADDR` | RW | 32 | 27-bit physical, or 24-bit virtual; unused high bits must be zero |
@@ -49,7 +49,7 @@ Instrumentation, not a product feature. A hardware block inside Helium performs 
 | `0x1A` | `TRC_TRIG_ADDR` | RW | 32 | Trigger address, with `RWB`/`VPA`/`VDA` qualifiers in the upper bits |
 | `0x1E` | `TRC_TRIG_MASK` | RW | 32 | Trigger don't-care mask |
 | `0x1F` | `TRC_FIFO` | RO | burst | Trace record readout |
-| `0x20` | `DBG_FIFO` | RW | burst | 512-byte bulk data port, sized to stay ahead of the link across an SDRAM page miss |
+| `0x20` | `DBG_FIFO` | RW | burst | 512-byte bulk data port, sized to stay ahead of the link across an SDRAM page miss. **The agent never stretches the SPI clock**, so the console is the side that honours `FIFO_FULL` on writes and `FIFO_EMPTY` on reads |
 | `0x30` | `TLB_INDEX` | RW | 16 | TLB entry selector |
 | `0x31` | `TLB_ENTRY` | RO | 64 | TLB entry readout |
 | `0x38` | `MMU_MIRROR` | RO | 8 | Read-only view of `MMU_STATUS` (→ [sheet M](sec_m)) |
@@ -117,6 +117,6 @@ LEGEND: Trace legend: <span class="m">mint = command and data path</span> · <sp
 
 - R.22 — **E2 is the stage that pays for the whole design.** Being able to march-test SRAM before any CPU exists converts the hardest class of bring-up bug — intermittent memory faults surfacing as random software misbehaviour — into a direct, reproducible measurement, and it does so at the exact moment the board is least able to explain itself.
   NOTE: The free-run stage before it ([E1.8](sec_p#e18)) gets a dividend too, if the trace buffer is ready by then: capturing a NOP free-run is an analyser reading of PHI2, reset and the address bus with no analyser attached.
-- R.23 — Honest cost. In pins: `DBG_CSN` on both ends, `DEBUG_ENABLE`, `BE` from Helium, optionally `DBG_IRQN`, the 3-pin UART header, and bidirectional CPU-side pins on Helium. That lands on a budget which **does not close as written** — [Q8](sec_q#q8) already had the free 17 pins failing to cover SPI-SD, the console UART and this port. [[!blocking]]
+- R.23 — Honest cost. In pins: `DBG_CSN` on both ends, `DEBUG_ENABLE`, `BE` from Helium, optionally `DBG_IRQN` — which asserts on a trace trigger or a CPU halt, and buys only the difference between an interrupt and a poll — the 3-pin UART header, and bidirectional CPU-side pins on Helium. That lands on a budget which **does not close as written** — [Q8](sec_q#q8) already had the free 17 pins failing to cover SPI-SD, the console UART and this port. [[!blocking]]
   NOTE: In gateware the open items are the SPI-to-core clock-domain crossing (→ [Q28](sec_q#q28)), the `BE` turnaround count at 3.3 V (→ [Q27](sec_q#q27)), where the agent sits in the arbiter's priority order (→ [Q29](sec_q#q29)), and the trace depth against remaining EBR (→ [Q30](sec_q#q30)).
 - R.24 — Deferred, not ruled out: **breakpoint comparators** — address match forcing a halt, a natural extension of the trace trigger, held back to keep the CPU stage small · **watchpoints on data value** as well as address · and a **GDB remote serial protocol stub** on the RP2040, so a host debugger drives the agent directly. The last is attractive and cheap to get wrong early; it is worth doing only once the command set above has stopped moving. [[open]]
