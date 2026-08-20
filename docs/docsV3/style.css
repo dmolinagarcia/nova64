@@ -227,14 +227,12 @@
     svg [stroke="#D9A93F"]{ stroke:#6b4a00; }
     svg [stroke="rgba(241,236,217,.35)"],svg [stroke="rgba(241,236,217,.4)"]{ stroke:rgba(0,0,0,.45); }
 
-    /* full.html prints as one continuous document — sheets run on, they do
-       not each claim a fresh page. Only the masthead is kept with what
-       follows it. */
-
-    /* full.html: one sheet per sheet of paper */
-    body.full .areaband { break-before:page; }
-
-    body.full .masthead{ break-after:avoid; }
+    /* full.html prints in parts: the masthead has the first page to itself as
+       a cover, the sheet index takes the second, and every area opens on a
+       fresh one. Within an area the sheets still run on — the break is the
+       document's structure, not one page per sheet. */
+    body.full .idx{ break-before:page; }
+    body.full .areaband{ break-before:page; }
 
     /* keep rows, steps and figures from splitting across pages */
     .sechead{ break-after:avoid; }
