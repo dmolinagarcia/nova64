@@ -2,11 +2,11 @@
   "title": "noVa64",
   "documentName": "Synthesis document — index and content outline",
   "footer": {
-    "referenceIndex": "Ten areas · sheets A–V · Figs. 1–12 · appendix Z",
-    "referenceSheet": "Synthesis document · sheets A–V + appendix Z · index at index.html",
-    "detail": "Self-contained: every sheet is the specification of what it covers, not a summary of one held elsewhere — power in C and S, the kernel–hardware interface in M, the debug agent in R, Neon in T and U, the windowing OS in V, the build in P",
+    "referenceIndex": "Ten areas · sheets A–W · Figs. 1–12 · appendix Z",
+    "referenceSheet": "Synthesis document · sheets A–W + appendix Z · index at index.html",
+    "detail": "Self-contained: every sheet is the specification of what it covers, not a summary of one held elsewhere — power in C and S, the kernel–hardware interface in M, the debug agent in R, Neon in T, U and W, the windowing OS in V, the build in P",
     "rules": "All 3.3V · hand-solderable · open toolchain",
-    "rev": "OUTLINE 4 · POWER REV C · NEON REV B · GUI REV A · PROTOTYPE REV A · AUG 2026"
+    "rev": "OUTLINE 4 · POWER REV C · NEON REV B · GUI REV A · AUDIO REV A · PROTOTYPE REV A · AUG 2026"
   },
   "sheets": [
     {
@@ -130,7 +130,7 @@
       "file": "sec_t",
       "letter": "T",
       "num": "14",
-      "area": "Video",
+      "area": "Video + audio",
       "nav": "Neon — the GPU",
       "index": "Neon — the GPU · text, graphics, blitter and command lists",
       "fig": "Fig. 10"
@@ -139,15 +139,24 @@
       "file": "sec_u",
       "letter": "U",
       "num": "15",
-      "area": "Video",
+      "area": "Video + audio",
       "nav": "Neon — blitter and compositor",
       "index": "Neon — blitter, arbitration and the window compositor",
       "fig": "Fig. 11"
     },
     {
+      "file": "sec_w",
+      "letter": "W",
+      "num": "16",
+      "area": "Video + audio",
+      "nav": "Audio — DAC, mixer and driver",
+      "index": "Audio · PCM5102A, four channels, hardware mixer and /dev/audio",
+      "fig": "tables"
+    },
+    {
       "file": "sec_i",
       "letter": "I",
-      "num": "16",
+      "num": "17",
       "area": "Software",
       "nav": "BIOS — what it provides",
       "index": "BIOS — what it provides",
@@ -156,7 +165,7 @@
     {
       "file": "sec_j",
       "letter": "J",
-      "num": "17",
+      "num": "18",
       "area": "Software",
       "nav": "Operating system",
       "index": "Operating system",
@@ -165,7 +174,7 @@
     {
       "file": "sec_n",
       "letter": "N",
-      "num": "18",
+      "num": "19",
       "area": "Software",
       "nav": "Process management",
       "index": "Process management",
@@ -174,7 +183,7 @@
     {
       "file": "sec_o",
       "letter": "O",
-      "num": "19",
+      "num": "20",
       "area": "Software",
       "nav": "Programming and toolchain",
       "index": "Programming and toolchain",
@@ -183,7 +192,7 @@
     {
       "file": "sec_v",
       "letter": "V",
-      "num": "20",
+      "num": "21",
       "area": "Software",
       "nav": "The windowing OS",
       "index": "The windowing OS · window server, client protocol and toolkit",
@@ -192,7 +201,7 @@
     {
       "file": "sec_p",
       "letter": "P",
-      "num": "21",
+      "num": "22",
       "area": "Project and build",
       "nav": "Step-by-step build · P0–P5 · E0–E8 · L1–L8",
       "index": "Step-by-step build · prototype P0–P5 · target E0–E8 · laptop L1–L8",
@@ -201,7 +210,7 @@
     {
       "file": "sec_q",
       "letter": "Q",
-      "num": "22",
+      "num": "23",
       "area": "Project and build",
       "nav": "Decision log · open questions",
       "index": "Decision log · open questions",
@@ -210,7 +219,7 @@
     {
       "file": "sec_z",
       "letter": "Z",
-      "num": "23",
+      "num": "24",
       "area": "Appendix",
       "nav": "Appendix — glossary and figures",
       "index": "Appendix · glossary and index of figures",

@@ -22,8 +22,8 @@ figures/*.svg       the diagrams, one file each
 ## Areas
 
 The sheets are grouped into ten areas — Introduction, Architecture, Power,
-Embedded control and boot, CPU and system, Memory and storage, Video, Software,
-Project and build, Appendix — and the grouping lives entirely in
+Embedded control and boot, CPU and system, Memory and storage, Video + audio,
+Software, Project and build, Appendix — and the grouping lives entirely in
 `manifest.json`: **the order of the array is the reading order**, and a run of
 consecutive sheets carrying the same `area` gets one heading in the sidebar, one
 band in the sheet index, and, on `full.html`, one rule across the page before

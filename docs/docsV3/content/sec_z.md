@@ -113,7 +113,7 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 | TQFP · PLCC · TSOP · BGA | Chip packages. The first three have accessible leads and can be hand-soldered; BGA hides its balls underneath and cannot, which is why it is excluded ([D01](sec_q#d01)). |
 
 ## Video, audio and peripherals
-  NOTE: → [sheet H](sec_h) · [sheet T](sec_t) · [sheet U](sec_u)
+  NOTE: → [sheet H](sec_h) · [sheet T](sec_t) · [sheet U](sec_u) · [sheet W](sec_w)
 
 | Term | Meaning |
 |---|---|
@@ -156,7 +156,13 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 | FPC | Flexible Printed Circuit — the flat ribbon connecting the panel. "FPC-50" is its 50-contact connector. |
 | eDP | Embedded DisplayPort — serial panel interface. Rejected for v1 as it needs a bridge chip ([D05](sec_q#d05)). |
 | R-2R | A resistor-ladder DAC — the cheapest way to get analogue VGA levels out of FPGA pins. Bring-up only on the target board; **the whole video output on the prototype**, at 6 bits per channel into 1 % resistors ([P.08](sec_p#p08)). |
-| I2S | Serial audio bus between the FPGA and the DAC. Unrelated to I2C despite the name. |
+| I2S | Serial audio bus between the FPGA and the DAC — `BCK` the bit clock, `LRCK` the frame clock, `DIN` the data. Unrelated to I2C despite the name. |
+| fs · 32fs | The sample rate · a bit clock of 32 `BCK` per stereo frame, which is exactly two 16-bit slots with no padding. **The frame length decides the divider's granularity**, which is why this machine uses 32fs and not the more common 64fs ([W.6](sec_w#w6)). |
+| `SCK` grounded | Strapping that moves the PCM5102A's master clock inside the part, onto its own PLL locked to `BCK`. Costs one pin less and means **the sample rate is whatever Neon's divider produces** ([W.5](sec_w#w5)). |
+| 44,146 Hz | This machine's actual sample rate — 103.125 MHz / (32 × 73). Not 44,100, because the iCE40 PLL is integer-only and 44.1 kHz needs a denominator factor of 441 that no setting can produce. +1.8 cents of pitch, published in `AUD_RATE` so nothing has to assume it ([W.11](sec_w#w11), [Q77](sec_q#q77)). |
+| `XSMT` | The DAC's soft-mute pin, held low through an RC while the rail rises — **the anti-pop**. It protects power-up only; the power-down click is [Q76](sec_q#q76). |
+| Saturating add | Clamping a sum at full scale instead of letting it wrap. Four channels at full volume exceed full scale, and a wrap turns the loudest moment in the material into full-amplitude noise ([W.27](sec_w#w27)). |
+| Underrun | A DMA buffer running dry before software refills it. Here the channel **holds its last sample** rather than emitting zero — a step to zero is a click — and sets a sticky flag, because an underrun that cannot be observed is a bug report that says "it crackles sometimes" ([W.22](sec_w#w22)). |
 | QSPI | Quad SPI — 4-bit-wide serial bus. Historical here: it went with the PSRAM ([D13](sec_q#d13)) and no longer appears on the board. |
 | HID | Human Interface Device — the USB class covering keyboards and mice. |
 | PIO-USB | USB host implemented on the RP2040's programmable I/O blocks, since the chip has no hardware host controller. |
