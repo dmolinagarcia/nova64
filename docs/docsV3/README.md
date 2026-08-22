@@ -54,10 +54,12 @@ carry no YAML front matter, so Jekyll copies them through untouched.
 
 `full.html` is the same content with the sheets chained one after another —
 masthead, sheet index, then the ten areas in order — and it is what to send to
-the printer or save as PDF. It prints in parts: the masthead has the first page
-to itself as a cover, the sheet index takes the second, and every area opens on
-a fresh page, while within an area the sheets run on rather than each claiming
-one. The print stylesheet drops the sidebar and the navigation the way it always
+the printer or save as PDF. It prints in parts: the masthead is the cover and has the
+first page to itself, page two is left blank behind it, the sheet index takes
+page three, and every area opens on a fresh page, while within an area the
+sheets run on rather than each claiming one. The cover's drop — how far down the
+page the title block sits — is `body.full .main{ padding-top }` in the print
+block, in millimetres. The print stylesheet drops the sidebar and the navigation the way it always
 did. The sheet index becomes a
 working table of contents, because on that page every cross-reference is an
 in-page jump: ids are prefixed with their sheet (`#sec_p-e2`) so that E.2 in

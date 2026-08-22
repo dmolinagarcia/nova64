@@ -227,10 +227,16 @@
     svg [stroke="#D9A93F"]{ stroke:#6b4a00; }
     svg [stroke="rgba(241,236,217,.35)"],svg [stroke="rgba(241,236,217,.4)"]{ stroke:rgba(0,0,0,.45); }
 
-    /* full.html prints in parts: the masthead has the first page to itself as
-       a cover, the sheet index takes the second, and every area opens on a
-       fresh one. Within an area the sheets still run on — the break is the
-       document's structure, not one page per sheet. */
+    /* full.html prints in parts: the masthead is the cover and has the first
+       page to itself, page two is left blank behind it the way a title page's
+       verso is, the sheet index takes page three, and every area opens on a
+       fresh page. Within an area the sheets still run on — the break marks the
+       document's structure, it is not one page per sheet. */
+    /* the cover's air is padding on the column, not a margin on the masthead:
+       a margin against the top of a page box is the one browsers are entitled
+       to drop */
+    body.full .main{ padding-top:80mm; }
+    body.full .coverback{ display:block;height:1px;break-before:page; }
     body.full .idx{ break-before:page; }
     body.full .areaband{ break-before:page; }
 
@@ -249,6 +255,7 @@
 
   /* full.html — the whole document in one scroll */
   .pager .hint{color:rgba(var(--ink-rgb),.6);}
+  .coverback{display:none}
 
   /* renderer states — never seen on a healthy page */
   .status{border:1.3px solid rgba(var(--ink-rgb),.55);margin-top:26px;padding:16px 20px;color:rgba(var(--ink-rgb),.6);letter-spacing:2px;font-size:11px;text-transform:uppercase;}
