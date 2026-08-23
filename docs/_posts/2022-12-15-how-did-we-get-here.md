@@ -22,7 +22,7 @@ A github repo is already in place and I intend to document everything on this bl
 
 The name, nova, is the result of a brainstorming session with ChatGPT, which convinced when it related it to a Supernova. The 64 is an homage to the Commodore 64, as it induced on me the great interest in computers that has shaped my life.
 
-![noVa64 logo](https://raw.githubusercontent.com/dmolinagarcia/nova64/main/docs/img/logo_nova64_big.png)
+![noVa64 logo]({{ '/img/logo_nova64_big.png' | relative_url }})
 
 I hope you spot the wink to Commodore on the logo. :D
 

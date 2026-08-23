@@ -2,23 +2,24 @@
 layout: page
 permalink: /categories/
 title: Categories
+menu: main
 ---
 
+The entries, grouped by the part of the machine they are about.
 
-<div id="archives">
-{% for category in site.categories %}
-  <div class="archive-group">
-    {% capture category_name %}{{ category | first }}{% endcapture %}
-    <div id="#{{ category_name | slugize }}"></div>
-    <p></p>
-
-    <h3 class="category-head">{{ category_name }}</h3>
-    <a name="{{ category_name | slugize }}"></a>
-    {% for post in site.categories[category_name] %}
-    <article class="archive-item">
-      <h4><a href="{{ site.baseurl }}{{ post.url }}">{{post.title}}</a></h4>
-    </article>
-    {% endfor %}
-  </div>
-{% endfor %}
+<div class="idx" markdown="0">
+  <div class="cap">BY CATEGORY</div>
+  <table>
+    {%- for category in site.categories -%}
+      {%- assign category_name = category | first -%}
+      <tr class="grp"><td colspan="3"><a href="{{ '/categories/' | append: category_name | relative_url }}">{{ category_name }}</a></td></tr>
+      {%- for post in site.categories[category_name] -%}
+      <tr>
+        <td class="de">{{ category_name | slice: 0 | upcase }}</td>
+        <td><a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a></td>
+        <td class="fg">{{ post.date | date: "%b %-d, %Y" }}</td>
+      </tr>
+      {%- endfor -%}
+    {%- endfor -%}
+  </table>
 </div>

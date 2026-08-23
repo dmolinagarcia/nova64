@@ -1,32 +1,33 @@
 ---
 layout: default
 ---
-<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+{%- assign date_format = site.minima.date_format | default: "%b %-d, %Y" -%}
+{%- assign cat = page.categories | first -%}
+<article class="hoja h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
-  
-  <header class="post-header">
-    <h1 class="post-title p-name" itemprop="name headline">{{ page.title | escape }}</h1>
-    <p>In category <a href="/nova64/categories/{{ page.categories }}">{{ page.categories }}</a></p>
-    <p class="post-meta">
-      <time class="dt-published" datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">
-        {%- assign date_format = site.minima.date_format | default: "%b %-d, %Y" -%}
-        {{ page.date | date: date_format }}
-      </time>
-      {% assign author = page.author | default: site.author.name %}
-      {%- if author -%}
-        • <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">{{ author.name }}</span></span>
-      {%- endif -%}</p>
+  <header class="sechead">
+    <span class="des">{{ cat | slice: 0 | upcase | default: '·' }}</span>
+    <h2 class="p-name" itemprop="name headline">{{ page.title | upcase | escape }}</h2>
+    <span class="aim">
+      <time class="dt-published" datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">{{ page.date | date: date_format }}</time>
+      {%- assign author = page.author | default: site.author.name -%}
+      {%- if author %} · <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">{{ author }}</span></span>{%- endif -%}
+    </span>
+    {%- if cat %}<span class="sheet"><a class="chip g" href="{{ '/categories/' | append: cat | relative_url }}">{{ cat | upcase }}</a></span>{%- endif %}
   </header>
 
-  <div class="share-links">
-    {% include sharelinks.html %}
-  </div>
-
-  <div class="post-content e-content" itemprop="articleBody">
+  <div class="prosa e-content" itemprop="articleBody">
     {{ content }}
-    {% include navlinks.html %}
   </div>
 
+  {% include sharelinks.html %}
+
+  <a class="u-url" href="{{ page.url | relative_url }}" hidden></a>
+</article>
+
+{% include navlinks.html %}
+
+<div class="comments">
 <script src="https://utteranc.es/client.js"
         repo="dmolinagarcia/nova64"
         issue-term="pathname"
@@ -35,6 +36,4 @@ layout: default
         crossorigin="anonymous"
         async>
 </script>
-
-  <a class="u-url" href="{{ page.url | relative_url }}" hidden></a>
-</article>
+</div>

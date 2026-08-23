@@ -1,56 +1,40 @@
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Begin SEO -->
-  <title>noVa64 | development diary</title>
-  <meta name="generator" content="Jekyll v3.9.2" />
-  <meta name="author" content="Dani Molina" />
-  <meta name="description" content="noVa64 development diary" />
-  <link rel="canonical" href="https://dmolinagarcia.github.io/nova64/" />
+  {%- assign page_title = page.title | default: site.title -%}
+  {%- assign page_desc = page.excerpt | default: site.description | strip_html | normalize_whitespace | truncate: 160 -%}
 
-  <!-- Facebook Meta Tags -->
-  <meta property="og:url" content="https://dmolinagarcia.github.io/nova64">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="noVa64">
-  <meta property="og:description" content="noVa64 development diary">
-  <meta property="og:image" content="https://raw.githubusercontent.com/dmolinagarcia/nova64/main/docs/img/logo_nova64_ogimage.png">
+  <!-- Begin SEO -->
+  <title>{% if page.title %}{{ page.title | escape }} · {{ site.title }}{% else %}{{ site.title }} | development diary{% endif %}</title>
+  <meta name="author" content="{{ site.author.name }}" />
+  <meta name="description" content="{{ page_desc | escape }}" />
+  <link rel="canonical" href="{{ page.url | absolute_url }}" />
+
+  <meta property="og:url" content="{{ page.url | absolute_url }}">
+  <meta property="og:type" content="{% if page.layout == 'post' %}article{% else %}website{% endif %}">
+  <meta property="og:title" content="{{ page_title | escape }}">
+  <meta property="og:description" content="{{ page_desc | escape }}">
+  <meta property="og:image" content="{{ '/img/logo_nova64_ogimage.png' | absolute_url }}">
   <meta property="og:locale" content="en_US" />
-  <meta property="og:site_name" content="noVa64" />
-  
-  <!-- Twitter Meta Tags -->
+  <meta property="og:site_name" content="{{ site.title }}" />
+
   <meta name="twitter:card" content="summary_large_image">
-  <meta property="twitter:domain" content="dmolinagarcia.github.io">
-  <meta property="twitter:url" content="https://dmolinagarcia.github.io/nova64">
-  <meta name="twitter:title" content="noVa64">
-  <meta name="twitter:description" content="noVa64 development diary">
-  <meta name="twitter:image" content="https://raw.githubusercontent.com/dmolinagarcia/nova64/main/docs/img/logo_nova64_ogimage.png">  
-  
+  <meta name="twitter:title" content="{{ page_title | escape }}">
+  <meta name="twitter:description" content="{{ page_desc | escape }}">
+  <meta name="twitter:image" content="{{ '/img/logo_nova64_ogimage.png' | absolute_url }}">
+
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"WebSite","author":{"@type":"Person","name":"Dani Molina"},"description":"noVa64 development diary","headline":"noVa64","name":"noVa64","url":"https://dmolinagarcia.github.io/nova64/"}
+  {"@context":"https://schema.org","@type":"WebSite","author":{"@type":"Person","name":"{{ site.author.name }}"},"description":"{{ site.description }}","headline":"{{ site.title }}","name":"{{ site.title }}","url":"{{ '/' | absolute_url }}"}
   </script>
   <!-- End SEO -->
 
-  <!-- Begin CSS -->
-  <link href="/nova64/css/override.css" rel="stylesheet" type="text/css">
-  <link href="/nova64/css/prism.css" rel="stylesheet" type="text/css">
-  <link rel="stylesheet" href="{{ "/assets/main.css" | relative_url }}">
-  <!-- END CSS -->
+  <link rel="icon" href="{{ '/img/logo_nova64_small.png' | relative_url }}">
+  <link href="{{ '/css/site.css' | relative_url }}" rel="stylesheet" type="text/css">
+  <!-- the theme is applied before the first paint, so no page flashes the wrong ground -->
+  <script src="{{ '/js/theme.js' | relative_url }}"></script>
 
   {%- feed_meta -%}
 
-  <!-- highlight.js support -->
-  <link rel="stylesheet" href="/js/highlightjs/styles/github.css">
-  <link rel="stylesheet" href="/js/highlightjs/styles/ssms.css" />
-  <script type="text/javascript" src="/js/highlightjs/highlight.min.js"></script>
-  <script type="text/javascript" src="/js/highlightjs/languages/plaintext.min.js"></script>
-  <script type="text/javascript" src="/js/highlightjs/languages/powershell.min.js"></script>
-  <script type="text/javascript" src="/js/highlightjs/languages/tsql.min.js"></script>
-  <script type="text/javascript"> hljs.highlightAll(); </script>
-  <!-- end highlight.js support -->
-
-  <!-- Begin Google Search Verificator -->
   <meta name="google-site-verification" content="JJd1CQCDcTxV3aOz3FUFsEOrYGDTR3PDGf0-Ani8CC4" />
-  <!-- End Google Search Verificator -->
 </head>

@@ -1,0 +1,246 @@
+/* ── noVa64 · sitio (diario de desarrollo) ─────────────────────────────
+   La misma estética que docsV3: mismo paleta, misma tipografía, mismos
+   marcos. Lo que aquí se añade es lo que un blog necesita y una hoja del
+   documento no tiene — prosa larga, listas, citas, bloques de código.
+   El tema (claro/oscuro) se comparte con docsV3: misma clave en
+   localStorage, mismas cinco propiedades en :root. */
+
+:root{
+  --ground:#061E17;
+  --ink:#F1ECD9;    --ink-rgb:241,236,217;
+  --panel:#0E3A2C;
+  --mint:#7FD8BD;   --mint-rgb:127,216,189;
+  --gold:#D9A93F;   --gold-rgb:217,169,63;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--ground);color:var(--ink);}
+body{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+     font-size:13px;line-height:1.55;padding:26px 14px 60px;}
+a{color:var(--mint);text-decoration:none}
+a:hover{text-decoration:underline}
+a:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+img{max-width:100%;height:auto}
+
+/* ── armazón: barra lateral fija + columna de contenido ───────────────── */
+.shell{display:flex;gap:34px;max-width:1360px;margin:0 auto;align-items:flex-start;}
+.main{flex:1;min-width:0;max-width:980px;}
+
+.side{width:300px;flex:none;position:sticky;top:26px;padding-right:22px;
+      border-right:1px solid rgba(var(--ink-rgb),.22);}
+.side .brand{display:block;padding:0 0 8px 10px;font-size:17px;font-weight:800;
+             letter-spacing:3.5px;color:var(--ink);}
+.side .brand:hover{color:var(--mint);text-decoration:none}
+.side .cap{padding:0 0 12px 12px;font-size:10px;letter-spacing:2.5px;
+           color:rgba(var(--ink-rgb),.45);font-weight:700;}
+.side ol{list-style:none;margin:0;padding:0 15px 0 0;max-height:calc(100vh - 180px);overflow-y:auto;
+         scrollbar-width:thin;scrollbar-color:rgba(var(--ink-rgb),.16) transparent;}
+.side:hover ol{scrollbar-color:rgba(var(--ink-rgb),.32) transparent;}
+.side ol::-webkit-scrollbar{width:5px}
+.side ol::-webkit-scrollbar-track{background:transparent}
+.side ol::-webkit-scrollbar-thumb{background:rgba(var(--ink-rgb),.16)}
+.side:hover ol::-webkit-scrollbar-thumb{background:rgba(var(--ink-rgb),.32)}
+.side a{display:flex;gap:9px;padding:3.5px 0 3.5px 10px;font-size:11.5px;line-height:1.4;
+        color:rgba(var(--ink-rgb),.72);border-left:2px solid transparent;}
+.side a:hover{color:var(--mint);text-decoration:none;border-left-color:rgba(var(--mint-rgb),.45);}
+.side a.here{color:var(--mint);border-left-color:var(--mint);}
+.side .de{color:var(--gold);font-weight:700;flex:none;width:11px;}
+.side a.here .de{color:var(--mint)}
+.side .fg{margin-left:auto;color:rgba(var(--ink-rgb),.3);font-size:9.5px;flex:none;padding-left:8px}
+.side li.grp{margin-top:15px;padding:0 0 3px 12px;font-size:9.5px;letter-spacing:2.5px;
+             text-transform:uppercase;font-weight:700;color:rgba(var(--ink-rgb),.42);}
+
+/* ── cabecera ─────────────────────────────────────────────────────────── */
+.masthead{border:1.6px solid rgba(var(--ink-rgb),.75);padding:22px 24px 18px;}
+.masthead h1{margin:0;font-size:30px;letter-spacing:4px;font-weight:800;}
+.masthead h1 a{color:inherit}
+.masthead h1 a:hover{text-decoration:none;color:var(--mint)}
+.masthead .sub{margin-top:6px;color:rgba(var(--ink-rgb),.75);font-size:12px;
+               letter-spacing:2px;text-transform:uppercase;}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+.tag{border:1px solid rgba(var(--ink-rgb),.5);padding:2px 8px;font-size:10px;
+     letter-spacing:1.5px;color:rgba(var(--ink-rgb),.8);}
+a.tag:hover{border-color:var(--mint);color:var(--mint);text-decoration:none}
+.tag.here{border-color:var(--mint);color:var(--mint)}
+.tag.g{border-color:var(--gold);color:var(--gold);}
+.tag.m{border-color:var(--mint);color:var(--mint);}
+
+/* ── índice: la tabla del sumario, aquí para listas de entradas ───────── */
+.idx{margin-top:26px;border:1.3px solid rgba(var(--ink-rgb),.55);}
+.idx .cap{padding:10px 16px;border-bottom:1px solid rgba(var(--ink-rgb),.35);
+          font-size:11px;letter-spacing:3px;color:rgba(var(--ink-rgb),.6);font-weight:700;}
+.idx table{width:100%;border-collapse:collapse;}
+.idx td{padding:7px 16px;border-top:1px solid rgba(var(--ink-rgb),.16);font-size:12px;}
+.idx tr:first-child td{border-top:0}
+.idx tr:hover td{background:rgba(var(--mint-rgb),.06);}
+.idx tr.grp td{background:rgba(var(--ink-rgb),.05);color:rgba(var(--ink-rgb),.6);font-size:10px;
+               letter-spacing:3px;text-transform:uppercase;font-weight:700;padding:8px 16px;
+               border-top:1px solid rgba(var(--ink-rgb),.35);}
+.idx tr.grp:hover td{background:rgba(var(--ink-rgb),.05);}
+.idx tr.grp a{color:inherit}
+.idx .no{color:rgba(var(--ink-rgb),.5);width:120px;white-space:nowrap}
+.idx .de{color:var(--gold);width:34px;font-weight:700}
+.idx .fg{color:var(--mint);text-align:right;width:200px;white-space:nowrap}
+.idx tr.exr td{border-top:0;padding-top:0}
+.idx .ex{color:rgba(var(--ink-rgb),.55);font-size:11.5px;}
+.idx .ex p{margin:0}
+
+/* ── hoja: el marco que envuelve una página o una entrada ─────────────── */
+.hoja{border:1.3px solid rgba(var(--ink-rgb),.55);margin-top:26px;padding:16px 20px 20px;}
+.sechead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+         border-bottom:1px solid rgba(var(--ink-rgb),.3);padding-bottom:10px;margin-bottom:12px;}
+.des{background:var(--panel);border:1.3px solid var(--ink);padding:2px 9px;font-weight:800;font-size:14px;}
+.sechead h2{margin:0;font-size:16px;letter-spacing:2px;font-weight:800;}
+.aim{color:rgba(var(--ink-rgb),.55);font-size:10px;letter-spacing:2px;text-transform:uppercase;}
+.sheet{margin-left:auto;color:rgba(var(--ink-rgb),.4);font-size:10px;letter-spacing:2px;}
+.lead{margin:0 0 12px;color:rgba(var(--ink-rgb),.85);}
+
+/* ── prosa: lo que el documento no tiene y una entrada sí ─────────────── */
+.prosa{color:rgba(var(--ink-rgb),.88);line-height:1.7;}
+.prosa > :first-child{margin-top:0}
+.prosa p{margin:0 0 12px;}
+.prosa h1,.prosa h2,.prosa h3,.prosa h4{margin:26px 0 10px;letter-spacing:2px;font-weight:800;line-height:1.35;}
+.prosa h1{font-size:16px}
+.prosa h2{font-size:15px;border-bottom:1px solid rgba(var(--ink-rgb),.3);padding-bottom:6px}
+.prosa h3{font-size:13px;color:var(--gold);letter-spacing:2.5px;text-transform:uppercase}
+.prosa h4{font-size:12px;color:rgba(var(--ink-rgb),.7);letter-spacing:2px;text-transform:uppercase}
+.prosa ul,.prosa ol{margin:0 0 12px;padding-left:0;list-style:none}
+.prosa ul li,.prosa ol li{position:relative;padding:4px 0 4px 20px;
+                          border-top:1px dashed rgba(var(--ink-rgb),.14);}
+.prosa ul > li:first-child,.prosa ol > li:first-child{border-top:0}
+.prosa ul li::before{content:"·";position:absolute;left:6px;color:var(--mint);font-weight:700;}
+.prosa ol{counter-reset:paso}
+.prosa ol li{counter-increment:paso}
+.prosa ol li::before{content:counter(paso);position:absolute;left:0;width:16px;text-align:right;
+                     color:var(--mint);font-weight:700;font-size:11px;}
+.prosa li ul,.prosa li ol{margin:4px 0 0}
+.prosa li ul > li:first-child,.prosa li ol > li:first-child{border-top:1px dashed rgba(var(--ink-rgb),.14)}
+.prosa blockquote{margin:12px 0;padding:2px 0 2px 14px;border-left:2px solid var(--mint);
+                  color:rgba(var(--ink-rgb),.65);}
+.prosa blockquote p:last-child{margin-bottom:0}
+.prosa hr{border:0;border-top:1px solid rgba(var(--ink-rgb),.3);margin:22px 0;}
+.prosa figure,.prosa p > img{margin:16px 0}
+.prosa img{display:block;border:1px solid rgba(var(--ink-rgb),.3);}
+.prosa strong,.prosa b{color:var(--ink)}
+.prosa em,.prosa i{color:rgba(var(--ink-rgb),.9)}
+
+code{color:var(--mint);background:rgba(var(--mint-rgb),.08);padding:0 4px;font-family:inherit;}
+pre{border:1px solid rgba(var(--ink-rgb),.35);background:rgba(var(--ink-rgb),.04);
+    padding:12px 14px;margin:14px 0;overflow-x:auto;font-size:12px;line-height:1.5;}
+pre code{background:transparent;padding:0;color:rgba(var(--ink-rgb),.9);}
+.highlight,.highlighter-rouge{margin:0}
+
+/* Prose tables are matched as direct children only: an .idx block written
+   inside a page keeps the sumario's own column widths and its gold letter. */
+table.simple,.prosa > table{width:100%;border-collapse:collapse;margin:14px 0;display:block;overflow-x:auto;}
+table.simple th,.prosa > table th{font-size:10px;letter-spacing:2px;text-transform:uppercase;
+                          color:rgba(var(--ink-rgb),.55);text-align:left;padding:6px 8px;
+                          border-bottom:1px solid rgba(var(--ink-rgb),.4);}
+table.simple td,.prosa > table td{font-size:12px;color:rgba(var(--ink-rgb),.86);padding:6px 8px;
+                          border-bottom:1px solid rgba(var(--ink-rgb),.14);vertical-align:top;}
+table.simple td:first-child,.prosa > table td:first-child{color:var(--ink);font-weight:700;}
+
+.chip{display:inline-block;border:1px solid var(--mint);color:var(--mint);font-size:9.5px;
+      letter-spacing:1px;padding:0 5px;vertical-align:1px;}
+a.chip:hover{text-decoration:none;background:rgba(var(--mint-rgb),.1)}
+.chip.g{border-color:var(--gold);color:var(--gold);}
+a.chip.g:hover{background:rgba(var(--gold-rgb),.1)}
+
+/* ── pie de entrada: fecha, autor, compartir ──────────────────────────── */
+.postmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:10px;
+          letter-spacing:2px;text-transform:uppercase;color:rgba(var(--ink-rgb),.5);}
+.share{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:18px;
+       border-top:1px solid rgba(var(--ink-rgb),.2);padding-top:12px;font-size:10px;
+       letter-spacing:2px;text-transform:uppercase;color:rgba(var(--ink-rgb),.45);}
+.share button{font:inherit;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+              color:rgba(var(--ink-rgb),.8);background:transparent;
+              border:1px solid rgba(var(--ink-rgb),.5);padding:2px 8px;cursor:pointer;}
+.share button:hover{color:var(--mint);border-color:var(--mint);}
+.comments{margin-top:26px}
+
+/* ── paginador: anterior / siguiente ──────────────────────────────────── */
+.pager{display:flex;gap:14px;margin-top:24px;border-top:1px solid rgba(var(--ink-rgb),.3);
+       padding-top:12px;font-size:11.5px;}
+.pager .nx{margin-left:auto;text-align:right}
+.pager b{display:block;color:rgba(var(--ink-rgb),.45);font-size:9.5px;letter-spacing:2px;
+         font-weight:700;text-transform:uppercase}
+
+/* ── cajetín: el bloque de título al pie ──────────────────────────────── */
+.cajetin{margin-top:30px;border:1.6px solid rgba(var(--ink-rgb),.75);}
+.cj{display:flex;border-top:1px solid rgba(var(--ink-rgb),.35);flex-wrap:wrap;}
+.cj:first-child{border-top:0}
+.cj>div{padding:9px 14px;font-size:11px;letter-spacing:1px;color:rgba(var(--ink-rgb),.8);}
+.cj>div+div{border-left:1px solid rgba(var(--ink-rgb),.35);flex:1;min-width:220px}
+.cj .big{font-size:16px;font-weight:800;letter-spacing:3px;color:var(--ink);min-width:250px}
+.cj .gold{color:var(--gold);font-weight:700}
+.cj a{color:rgba(var(--ink-rgb),.8)}
+.cj a:hover{color:var(--mint)}
+
+/* ── conmutador de tema ───────────────────────────────────────────────── */
+.tools{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;}
+.tbtn{font:inherit;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+      color:rgba(var(--ink-rgb),.8);background:transparent;
+      border:1px solid rgba(var(--ink-rgb),.5);padding:3px 9px;cursor:pointer;}
+.tbtn:hover{color:var(--mint);border-color:var(--mint);}
+.tbtn:focus-visible{outline:2px solid var(--mint);outline-offset:2px;}
+
+/* ── estrecho: la lista lateral pasa a una tira sobre el contenido ────── */
+@media (max-width:900px){
+  .shell{display:block}
+  .side{width:auto;position:static;margin-bottom:26px;padding:0 0 14px;
+        border-right:0;border-bottom:1px solid rgba(var(--ink-rgb),.22);}
+  .side .cap,.side .brand{padding-left:0}
+  .side ol{max-height:none;display:flex;flex-wrap:wrap;column-gap:6px}
+  .side li{flex:0 1 auto}
+  .side li.grp{flex:1 0 100%;margin-top:12px;padding-left:0}
+  .side a{padding:3.5px 8px;border-left:0;border-bottom:2px solid transparent}
+  .side a:hover{border-bottom-color:rgba(var(--mint-rgb),.45)}
+  .side a.here{border-bottom-color:var(--mint)}
+  .side .fg{display:none}
+}
+@media (max-width:560px){ .masthead h1{font-size:22px;letter-spacing:2px} .sheet{display:none} }
+
+/* ── impresión: el fondo oscuro desaparece, así que se restituye todo lo
+      que dependía de él para contrastar ──────────────────────────────── */
+@media print{
+  .side,.pager,.tools,.share,.comments{display:none}
+  .shell{display:block}
+  .main{max-width:none}
+  @page{ margin:14mm; }
+  html,body{ background:#fff; color:#000; }
+  body{ font-size:9.5pt; line-height:1.45; padding:0; }
+  a,.lead,.prosa,.aim,.sheet,.masthead .sub,.idx .cap,.idx .no,.idx td,.idx .ex,
+  .postmeta,.cj>div,.cj .big,table.simple th,table.simple td,.prosa > table th,.prosa > table td{ color:#000; }
+  a{ text-decoration:none; }
+  .masthead,.idx,.hoja,.cajetin{ border-color:#000; }
+  .idx .cap,.sechead,table.simple th,.prosa h2{ border-bottom-color:#000; }
+  .idx tr.grp td{ background:transparent; color:#000; border-top-color:#000; }
+  .idx td{ border-top-color:rgba(0,0,0,.35); }
+  .idx tr:hover td{ background:transparent; }
+  table.simple td,.prosa > table td{ border-bottom-color:rgba(0,0,0,.35); }
+  .prosa li{ border-top-color:rgba(0,0,0,.3); }
+  .des{ background:#fff; border-color:#000; color:#000; }
+  .tag{ border-color:#000; color:#000; }
+  pre{ border-color:#000; background:transparent; }
+  pre code{ color:#000; }
+  code{ background:transparent; }
+  .prosa blockquote{ border-left-color:#000; color:#000; }
+  /* el color que significa algo se oscurece, no se aplana */
+  .idx .de,.tag.g,.chip.g,.cj .gold,.prosa h3{ color:#6b4a00; }
+  .tag.g,.chip.g{ border-color:#6b4a00; }
+  .idx .fg,code,.tag.m,.chip,.prosa ul li::before,.prosa ol li::before{ color:#004a3a; }
+  .tag.m,.chip{ border-color:#004a3a; }
+  .sechead{ break-after:avoid; }
+  .prosa li,.prosa figure,table.simple tr{ break-inside:avoid; }
+}
+
+/* ── tema claro — sólo pantalla, para que el papel nunca lo vea ───────── */
+@media screen{
+  :root[data-theme="light"]{
+    --ground:#F5F2E6;
+    --ink:#0C2E24;    --ink-rgb:12,46,36;
+    --panel:#FFFFFF;
+    --mint:#00614B;   --mint-rgb:0,97,75;
+    --gold:#7A5400;   --gold-rgb:122,84,0;
+  }
+}

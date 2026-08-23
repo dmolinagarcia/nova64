@@ -1,17 +1,10 @@
-<hr>
-<div class="post-nav" style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+{%- if page.previous.url or page.next.url -%}
+<nav class="pager">
   {%- if page.previous.url -%}
-  <p style="flex: 1 1 0; width: 45%; padding-right: 0.5em;">
-  <a class="post_navi-item nav_prev" href="/nova64{{ page.previous.url }}" title="{{ page.previous.title }}">
-    ⇠&nbsp; {{ page.previous.title }}
-  </a>
-  </p>
+  <div class="pv"><b>Previous</b><a href="{{ page.previous.url | relative_url }}">⇠ {{ page.previous.title | escape }}</a></div>
   {%- endif -%}
   {%- if page.next.url -%}
-  <p style="flex: 1 1 0; width: 45%; padding-left: 0.5em; text-align: right">
-  <a class="post_navi-item nav_next" href="/nova64{{ page.next.url }}" title="{{ page.next.title }}">
-    {{ page.next.title }} &nbsp;⇢
-  </a>
-  </p>
+  <div class="nx"><b>Next</b><a href="{{ page.next.url | relative_url }}">{{ page.next.title | escape }} ⇢</a></div>
   {%- endif -%}
-</div>
+</nav>
+{%- endif -%}

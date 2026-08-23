@@ -1,0 +1,40 @@
+{%- comment -%}
+  The sidebar is navigation, not a sheet: no frame, no rules between rows, and
+  the only mark on a row is the rule at the left of the current one. Same shape
+  as docsV3's sheet list — areas as headings, a letter in gold, the date where
+  the figure column sits there.
+{%- endcomment -%}
+<nav class="side" aria-label="Site">
+  {%- comment -%}
+    A wordmark, not the logo: the PNG carries an opaque white ground and would
+    sit on the page as a white block. It still appears where it is content —
+    the About page — and the chrome stays typographic, as docsV3's does.
+  {%- endcomment -%}
+  <a class="brand" href="{{ '/' | relative_url }}">{{ site.title | upcase }}</a>
+  <div class="cap">DEVELOPMENT DIARY</div>
+  <ol>
+    <li><a href="{{ '/' | relative_url }}" class="{% if page.url == '/' %}here{% endif %}"><span class="de">·</span><span>Home</span></a></li>
+
+    <li class="grp">Pages</li>
+    {%- assign default_paths = site.pages | map: "path" -%}
+    {%- assign page_paths = site.header_pages | default: default_paths -%}
+    {%- for path in page_paths -%}
+      {%- assign my_page = site.pages | where: "path", path | first -%}
+      {%- if my_page.title and my_page.menu == 'main' -%}
+        <li><a href="{{ my_page.url | relative_url }}" class="{% if page.url == my_page.url or page.url contains my_page.url and my_page.url != '/' %}here{% endif %}"><span class="de">·</span><span>{{ my_page.title | escape }}</span></a></li>
+      {%- endif -%}
+    {%- endfor -%}
+
+    <li class="grp">Entries</li>
+    {%- for post in site.posts limit: 12 -%}
+      <li><a href="{{ post.url | relative_url }}" class="{% if page.url == post.url %}here{% endif %}"><span class="de">{{ post.categories | first | slice: 0 | upcase | default: '·' }}</span><span>{{ post.title | escape }}</span><span class="fg">{{ post.date | date: "%Y-%m" }}</span></a></li>
+    {%- endfor -%}
+    {%- if site.posts.size > 12 -%}
+      <li><a href="{{ '/archive' | relative_url }}"><span class="de">·</span><span>All entries…</span></a></li>
+    {%- endif -%}
+
+    <li class="grp">Document</li>
+    <li><a href="{{ '/docsV3/' | relative_url }}"><span class="de">S</span><span>Synthesis document</span></a></li>
+    <li><a href="{{ '/docsV3/full.html' | relative_url }}"><span class="de">P</span><span>Printable edition</span></a></li>
+  </ol>
+</nav>

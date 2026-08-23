@@ -17,4 +17,4 @@ It's not a professional or commercially viable product.  It's not meant to be ma
 
 Hopefully, at some point. That's all I can say.
 
-![noVa64 logo](https://raw.githubusercontent.com/dmolinagarcia/nova64/main/docs/img/logo_nova64_big.png)
+![noVa64 logo]({{ '/img/logo_nova64_big.png' | relative_url }})

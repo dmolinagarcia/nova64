@@ -22,7 +22,8 @@ show_excerpts: "yes"
 #########################################################################################
 ######### Nothing below needs to be changed (unless you know what you're doing) #########
 #########################################################################################
-theme: "minima"
+# No theme gem: the site carries its own layouts, includes and stylesheet
+# (css/site.css), sharing docsV3's palette and furniture.
 url: "https://dmolinagarcia.github.io"
 baseurl : "/nova64"
 rss: rss
@@ -34,14 +35,23 @@ kramdown:
 plugins:
   - jekyll-feed
   - jekyll-sitemap
+  - jekyll-titles-from-headings
 
 titles_from_headings:
   strip_title: true
   collections: true
 
 defaults:
+  # Posts and pages carry no layout of their own: the layout is set here, so a
+  # new entry needs nothing but its category.
   - scope:
-      path: "/docs"
-      type: post
+      path: ""
+      type: "posts"
     values:
+      layout: "post"
       tags: Other
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "page"
