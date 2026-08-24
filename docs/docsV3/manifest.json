@@ -2,8 +2,8 @@
   "title": "noVa64",
   "documentName": "Synthesis document — index and content outline",
   "footer": {
-    "referenceIndex": "Ten areas · sheets A–X · Figs. 1–12 · appendix Z",
-    "referenceSheet": "Synthesis document · sheets A–X + appendix Z · index at index.html",
+    "referenceIndex": "Ten areas · sheets A–X · Figs. 1–12 · appendix Z1–Z2",
+    "referenceSheet": "Synthesis document · sheets A–X + appendix Z1–Z2 · index at index.html",
     "detail": "Self-contained: every sheet is the specification of what it covers, not a summary of one held elsewhere — power in C and S, the kernel–hardware interface in M, the debug agent in R, Neon in T, U and W, the windowing OS in V, the expansion bus in X, the build in P",
     "rules": "All 3.3V · hand-solderable · open toolchain",
     "rev": "OUTLINE 4 · POWER REV C · NEON REV B · GUI REV A · AUDIO REV A · PROTOTYPE REV A · AUG 2026"
@@ -226,13 +226,22 @@
       "fig": "—"
     },
     {
-      "file": "sec_z",
-      "letter": "Z",
+      "file": "sec_z1",
+      "letter": "Z1",
       "num": "25",
       "area": "Appendix",
-      "nav": "Appendix — glossary and figures",
-      "index": "Appendix · glossary and index of figures",
+      "nav": "Appendix — glossary",
+      "index": "Appendix · glossary of terms and acronyms",
       "fig": "tables"
+    },
+    {
+      "file": "sec_z2",
+      "letter": "Z2",
+      "num": "26",
+      "area": "Appendix",
+      "nav": "Appendix — index of figures",
+      "index": "Appendix · index of figures",
+      "fig": "table"
     }
   ]
 }

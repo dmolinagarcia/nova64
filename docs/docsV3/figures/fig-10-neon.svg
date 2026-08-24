@@ -17,7 +17,7 @@
 
   <!-- EC into the service port -->
   <line x1="210" y1="102" x2="248" y2="102" class="pw"/>
-  <text x="229" y="94" class="plbl">SPI</text>
+  <text x="220" y="94" class="plbl">SPI</text>
 
   <!-- CPU into the aperture, and the three control lines -->
   <line x1="210" y1="180" x2="248" y2="180" class="dt"/>
@@ -43,12 +43,12 @@
   <!-- text path -->
   <rect x="388" y="84" width="232" height="64" class="blk"/>
   <text x="504" y="106" class="t">EBR — 32 of 32 blocks</text>
-  <text x="504" y="124" class="s">text buffer 8 KB · font 4 KB · palette 1 KB</text>
+  <text x="504" y="124" class="s">text 8 KB · font 4 KB · palette 1 KB</text>
   <text x="504" y="140" class="s">initialised from the bitstream</text>
 
   <rect x="388" y="164" width="232" height="48" class="blk"/>
   <text x="504" y="184" class="t">character generator</text>
-  <text x="504" y="202" class="s">three stages · no line buffer · 8× of slack</text>
+  <text x="504" y="202" class="s">3 stages · no line buffer · 8× slack</text>
 
   <line x1="372" y1="108" x2="388" y2="108" class="pw"/>
   <line x1="372" y1="180" x2="388" y2="132" class="dt"/>
@@ -71,9 +71,9 @@
   <text x="530" y="280" class="s">line buffer ×2 · replication</text>
 
   <rect x="440" y="318" width="180" height="82" class="blk"/>
-  <text x="530" y="342" class="t">arbiter · SDRAM controller</text>
-  <text x="530" y="362" class="s">four ways, one clock domain,</text>
-  <text x="530" y="378" class="s">no domain crossing anywhere</text>
+  <text x="530" y="342" class="t">arbiter · SDRAM</text>
+  <text x="530" y="362" class="s">controller · four ways</text>
+  <text x="530" y="378" class="s">one domain, no crossing</text>
 
   <line x1="424" y1="365" x2="440" y2="365" class="dt"/>
   <line x1="530" y1="318" x2="530" y2="298" class="dt"/>
@@ -99,10 +99,11 @@
   <line x1="705" y1="304" x2="705" y2="284" class="dt"/>
 
   <!-- SDRAM, off-chip -->
-  <line x1="530" y1="400" x2="530" y2="530" class="dt"/>
-  <rect x="330" y="530" width="360" height="52" class="blk"/>
-  <text x="510" y="552" class="t">AS4C32M16SB · 64 MB · 16-bit · 206 MB/s peak</text>
-  <text x="510" y="570" class="s">framebuffers · atlases · level buffers · command lists — scanout takes under 3%</text>
+  <line x1="530" y1="400" x2="530" y2="520" class="dt"/>
+  <rect x="320" y="520" width="380" height="66" class="blk"/>
+  <text x="510" y="542" class="t">AS4C32M16SB · 64 MB · 16-bit · 206 MB/s peak</text>
+  <text x="510" y="560" class="s">framebuffers · atlases · level buffers · command lists</text>
+  <text x="510" y="576" class="s">scanout takes under 3 % of it</text>
 
   <!-- panel -->
   <line x1="774" y1="170" x2="820" y2="170" class="dtb"/>
@@ -115,8 +116,8 @@
 
   <!-- the two claims the figure exists to make -->
   <text x="504" y="446" class="htx">MODE 0 TAKES THE TOP PATH ONLY — NO SDRAM, NO ARBITER, NO CPU</text>
-  <text x="504" y="470" class="s">a correct screen exists the moment CDONE rises, before Helium is configured and before the 65816 leaves reset</text>
-  <text x="504" y="492" class="s">everything below the aperture is Modes 1 and 2, where the CPU emits commands and the blitter writes the pixels</text>
+  <text x="504" y="470" class="s">a correct screen exists when CDONE rises, before Helium is configured or the CPU runs</text>
+  <text x="504" y="492" class="s">below the aperture is Modes 1 and 2: the CPU emits commands, the blitter writes pixels</text>
 
   <!-- inter-FPGA control lines -->
   <text x="115" y="290" class="lbl">VRAM_SEL in · BWAIT out</text>

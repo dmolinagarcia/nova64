@@ -156,9 +156,11 @@ Give it an `area` too, and put its row next to the other sheets of that area —
 the array's order is what the reader sees. Adding a sheet in the middle shifts
 the `num` of everything after it, and nothing else.
 
-The appendix — glossary and index of figures — is deliberately the **last**
-sheet and deliberately lettered **Z**, in `content/sec_z.md`: content sheets run
-A, B, C… and a new one takes the next free letter of that run, without the
-appendix having to move or any letter having to be reissued. Letters and file
-names are kept in step — sheet R lives in `sec_r.md` — because every
-cross-reference in the prose points at the file name.
+The appendix is deliberately the **last** thing in the document and deliberately
+lettered **Z**, and it is two sheets: the glossary in `content/sec_z1.md` and the
+index of figures in `content/sec_z2.md`. Content sheets run A, B, C… and a new
+one takes the next free letter of that run, without the appendix having to move
+or any letter having to be reissued — which is also why splitting the appendix
+took a suffix rather than the next free letter. Letters and file names are kept
+in step — sheet R lives in `sec_r.md`, appendix sheet Z2 in `sec_z2.md` —
+because every cross-reference in the prose points at the file name.

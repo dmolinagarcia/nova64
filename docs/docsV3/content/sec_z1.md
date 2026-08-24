@@ -1,46 +1,46 @@
-# Appendix — glossary and index of figures
-> every acronym and term · every figure and where it lives
+# Appendix — glossary
+> every acronym and term · grouped by domain
 
-Document-wide reference, in two parts. **The glossary** comes first: every acronym is also expanded on first use in place, so it is deliberately redundant — it exists to be jumped to, not read through. It is grouped by domain, and within each group runs roughly in the order the concepts appear. **The index of figures** closes the sheet: the twelve figures are numbered across the whole document rather than per sheet ([A.13](sec_a#a13)), and each one lives in the sheet it illustrates, so the index is the only place they can be seen as a set.
+The document's terminology in one place. Every acronym is also expanded on first use where it appears, so this sheet is deliberately redundant — it exists to be jumped into, not read through. It is grouped by domain, and within each group runs roughly in the order the concepts appear. The figures have a sheet of their own ([Z2](sec_z2)).
 
 ## Virtual memory and the MMU
   NOTE: → [sheet K](sec_k) · [sheet L](sec_l)
 
 | Term | Meaning |
 |---|---|
-| Virtual memory | A layer of indirection between the addresses the CPU generates and those that reach the RAM. |
+| Virtual memory | A layer of indirection between the addresses the CPU generates and those that reach the RAM. Every process here sees a clean, contiguous 16 MB of it, and the indirection is Helium's: the 65816 has no MMU of its own. |
 | Virtual address | The address the CPU emits — what the program "believes". 24 bits here. |
-| Physical address | The address that reaches the SRAM/SDRAM chips. 27 bits here. |
-| Page | A fixed-size block of the virtual space. 2 KB. |
-| Frame | A block of the same size in physical memory. To translate is to pair a page with a frame. |
+| Physical address | The address that reaches the SRAM/SDRAM chips. 27 bits here. 27 bits here — a 128 MB ceiling, with the SDRAM frames at the bottom of that space and the pinned SRAM frames at the top ([L.6](sec_l#l6)). |
+| Page | A fixed-size block of the virtual space. 2 KB. 8,192 of them per process, and the size is deliberately decoupled from the 256 B granularity a fill actually moves. |
+| Frame | A block of the same size in physical memory. To translate is to pair a page with a frame. 32,768 of them across the SDRAM, tracked by a bitmap in the kernel. |
 | VPN | Virtual Page Number — high bits of the virtual address; identifies the page. 13 bits. |
 | Offset | Low bits; the byte within the page. Never translated. 11 bits. |
-| MMU | Memory Management Unit — the hardware that translates. Not in the CPU here: Helium implements it. |
-| Page table | An array indexed by VPN holding the PTEs. One per process, 32 KB. |
-| PTE | Page Table Entry — one entry of that table. 32 bits: frame number plus flags. |
+| MMU | Memory Management Unit — the hardware that translates. Not in the CPU here: Helium implements it. The TLB, the hardware walker, the permission checks and the `ABORTB` that reports a failure are all Helium's. |
+| Page table | An array indexed by VPN holding the PTEs. One per process, 32 KB. Flat, not multi-level: 8,192 entries × 32 bits, held in the pinned SRAM region so the walker reads it directly. |
+| PTE | Page Table Entry — one entry of that table. 32 bits: frame number plus flags. 16 bits of frame number plus the flags below — which is what puts the physical ceiling at 128 MB. |
 | PTE flags | `P` present in RAM · `W` writable · `X` executable · `U` reachable from user mode · `D` dirty (modified since load) · `A` accessed recently · `NC` non-cacheable · `PIN` non-evictable · `SW` free for the kernel's own use. |
 | TLB | Translation Lookaside Buffer — cache of VPN→frame translations inside the MMU. Avoids re-reading the table on every access. |
 | TLB hit / miss | Success or failure in that cache. A miss costs one table walk; it is not an error. |
 | TLB reach | Entries × page size — the working set the TLB can cover before it starts thrashing. 64 KB here with 32 entries; the main thing a larger page buys. |
 | Page walk / walker | The traversal of the page table that resolves a miss. Hardware here (≈100 ns, four 8-bit SRAM accesses); a software exception in other architectures. |
 | ASID | Address Space IDentifier — tag marking which process each TLB entry belongs to. Without it the whole TLB would be flushed on every context switch. |
-| Page fault | Exception raised on access to a page with `P=0`. Recoverable. |
+| Page fault | Exception raised on access to a page with `P=0`. Recoverable. Delivered as an ABORT; the handler grows a heap or stack, resolves a copy-on-write, or kills the process ([L.14](sec_l#l14)). |
 | Demand paging | Loading pages only when touched rather than all up front. Deferred to post-v1. |
 | Eager loading | Mapping and filling every segment at `exec` time. What v1 does, in place of demand paging. |
-| Swapping | Evicting rarely used pages to storage in order to free frames. |
-| Pinning | Marking a page as non-evictable. Required for the kernel, the interrupt vectors and the bank `$00` stack. |
+| Swapping | Evicting rarely used pages to storage in order to free frames. Order matters: flush the frame's dirty sub-blocks to SDRAM before writing it to the card ([L.16](sec_l#l16)). |
+| Pinning | Marking a page as non-evictable. Required for the kernel, the interrupt vectors and the bank `$00` stack. It is a physical address range rather than a cache attribute, so an access there skips tag lookup entirely and completes at fixed latency. |
 | Memory protection | Preventing a process from reading or writing outside its own space. Achieved through the PTE flags, not through translation itself. |
 | Cache line | The tagged unit of Helium's cache — 2 KB, one tag per line, but filled and written back in 256 B sub-blocks. |
 | Sub-block | The 256 B unit a fill actually moves, with its own valid and dirty bits. Keeps a miss at ~6 µs instead of ~41 µs and bounds interrupt latency. |
 | Set associative | Cache organization where a given address may sit in any of N positions ("ways") within one set. Four ways here; direct mapping would put 32,768 physical lines in competition for 384 slots. |
 | Tag | The bits stored alongside a cache line saying which physical line it currently holds. Kept in EBR, ~1.5 KB, beside the TLB. |
 | Dirty victim | The line a fill has to evict when it has been written to — it must go back to SDRAM first, which is why a miss can cost double. |
-| Write-back | Cache policy where writes stay in the cache and reach memory only on eviction. Implied by the dirty bits. |
+| Write-back | Cache policy where writes stay in the cache and reach memory only on eviction. Implied by the dirty bits. It is also why a frame is flushed before eviction and invalidated before a DMA engine fills it. |
 | Backing store | The memory a cache is a cache *of*. Here the SDRAM, which the PTEs always name. |
 | Flush vs invalidate | The two ways to empty a cache line, and they are not interchangeable. **Flush** writes dirty contents back and then marks the line clean — used before the CPU's data has to be visible to someone else. **Invalidate** drops the line without writing anything, dirty or not — used when the contents are about to be overwritten by someone else. Getting them backwards loses data in one direction and merely wastes a burst in the other ([M.12](sec_m#m12), [G.9](sec_g#g9)). |
-| Copy-on-write | Sharing a page read-only between processes and duplicating it only when one writes. An ABORT case ([L.4](sec_l#l4)). |
+| Copy-on-write | Sharing a page read-only between processes and duplicating it only when one writes. An ABORT case ([L.4](sec_l#l4)). The downgrade to read-only is one `TLB_INVAL_PAGE`, not a full flush. |
 | Static core | A CPU whose state survives an arbitrarily slow or stopped clock. The W65C816S is one, which is what makes the PHI2 stall legal. |
-| Clock gating | Stopping and restarting PHI2 in gateware. Must be glitch-free, and the first pulse on resume must meet the minimum high width. |
+| Clock gating | Stopping and restarting PHI2 in gateware. Must be glitch-free, and the first pulse on resume must meet the minimum high width. The same gate serves the cache-miss stall, Neon's busy stall and the machine's low-power state. |
 | Trampoline | The short privileged stubs in bank `$00` that receive every vector — the CPU forces PBR=0 on entry — and `JSL` straight into the real kernel in `$01` (→ [L.11](sec_l#l11)). |
 | ASID recycling | Reassigning a used ASID to a new process. Legal only after flushing that ASID's TLB entries; skipping the flush leaks the old address space into the new one, silently (→ [M.8](sec_m#m8)). |
 | Address as opcode | Command convention where each operation has its own address and the value written is its argument, not a command code (→ [M.2](sec_m#m2)). |
@@ -54,26 +54,26 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 
 | Term | Meaning |
 |---|---|
-| Bank | A 64 KB slice of the 65816's 24-bit space, selected by DBR/PBR. The virtual bank map is in [L.10](sec_l#l10). |
+| Bank | A 64 KB slice of the 65816's 24-bit space, selected by DBR/PBR. The virtual bank map is in [L.10](sec_l#l10). The map is fixed: `$00` stack, direct page and vectors · `$01` kernel · `$02`–`$FD` user · `$FE` VRAM window · `$FF` privileged I/O. |
 | DBR · PBR · DP | Data Bank, Program Bank and Direct Page registers — the 65816 state that decides which bank an access lands in. |
-| Native mode | The 65816's 16-bit, 24-bit-address mode, entered with `CLC/XCE`. The opposite is 6502 emulation mode. |
-| PHI2 | The CPU's master clock, generated by Helium. Target 8 MHz. |
+| Native mode | The 65816's 16-bit, 24-bit-address mode, entered with `CLC/XCE`. The opposite is 6502 emulation mode. The M and X flags then pick 8- or 16-bit accumulator and index registers at run time. |
+| PHI2 | The CPU's master clock, generated by Helium. Target 8 MHz. Target 8 MHz at 3.3V. Helium may hold it in either state indefinitely — the core is fully static — which is what a cache-miss stall does. |
 | BE | Bus Enable — the pin that makes the physical CPU tristate its address, data and RWB drivers and release the bus. Driven by Helium, which uses it far more often than Argon would (→ [R.3](sec_r#r3)). |
-| RESB | The 65816's active-low reset. Released by the RP2040 as the last step before the CPU runs. |
-| ABORTB | W65C816S pin that cancels the instruction in progress without side effects. The system's fault mechanism. |
+| RESB | The 65816's active-low reset. Released by the RP2040 as the last step before the CPU runs. Pulled down when no bitstream is loaded, so a blank board holds the CPU in reset instead of running it into an undriven bus. |
+| ABORTB | W65C816S pin that cancels the instruction in progress without side effects. The system's fault mechanism. Asserted by the MMU on a missing page or a permission violation, and the instruction restarts once the kernel has fixed the mapping. |
 | VPA / VDA | Pins indicating whether the cycle is an instruction fetch or a data access. They make checking the `X` flag possible. |
 | RDY | Bidirectional, open-drain: Helium pulls it low to freeze the CPU while it takes the shared nets ([F.4](sec_f#f4)), and the CPU pulls it low itself during `WAI`. **Cache-miss stalls do not use it** — [D16](sec_q#d16) moved those to PHI2 gating, since some W65C816S revisions ignore RDY during write cycles. |
 | Northbridge | Borrowed PC term for the chip sitting between CPU and memory. Here it is Helium: MMU, cache, arbiter, timer and I/O. |
 | Gateware | The logic loaded into an FPGA — the FPGA equivalent of firmware. Written in HDL, not compiled to instructions. |
-| Softcore | A CPU implemented as gateware rather than as a chip. Argon's optional 65816 is one (→ [sheet E](sec_e)). |
+| Softcore | A CPU implemented as gateware rather than as a chip. Argon's optional 65816 is one (→ [sheet E](sec_e)). The footprint ships unpopulated, and what a core owes the board is a pin list as much as an instruction set ([E.13](sec_e#e13)). |
 | Fmax | The highest clock a placed-and-routed design will meet timing at. A property of the design *on a given part* — quoting one across FPGA families is meaningless. |
 | CPI | Cycles Per Instruction. The 65816 spends 2–7, many wasted on bus protocol. Lowering it buys throughput without touching the critical path, which is why it beats chasing clock. |
 | Microcode | The internal table that sequences each instruction. On a soft core it sits in block RAM, and registering its output is the standard first move against the critical path. |
 | Cycle-exact | A core reproducing the original's timing cycle for cycle. Needed to emulate a specific machine; unnecessary here, where only programmer-visible behaviour must match (→ [E.6](sec_e#e6)). |
 | ILP | Instruction-Level Parallelism — independent work a core can overlap. An accumulator architecture offers little, which bounds what any 65816 core can gain from pipelining. |
 | Accumulator architecture | A design where most operations route through one register. Compact to encode, heavy on memory traffic, and inherently serial. |
-| Bus arbiter | The logic deciding who drives the shared bus in each cycle: CPU, cache fill, video, or refresh. |
-| PIC | Programmable Interrupt Controller — collects device IRQs, applies priorities, and raises IRQ/NMI to the CPU. |
+| Bus arbiter | The logic deciding who drives the shared bus in each cycle: CPU, cache fill, video, or refresh. The CPU is stalled rather than queued: Helium takes the shared nets with `BE` and hands the clock back afterwards. |
+| PIC | Programmable Interrupt Controller — collects device IRQs, applies priorities, and raises IRQ/NMI to the CPU. Neon's three sources arrive on one wire and are demultiplexed by the kernel reading `IRQ_STATUS`. |
 | EBR | Embedded Block RAM — 32 dual-port blocks of 512 B inside each iCE40, 16 KB in total. On Helium its scarcity is why only the TLB and the cache tags fit on-chip while the page table lives in external SRAM; on Neon it is the whole of Mode 0, and it is **fully allocated with zero margin** ([T.12](sec_t#t12)). The prototype board's ECP5 has ~243 KB of it, roughly fifteen times as much, which is the single most misleading number on that platform ([P.04](sec_p#p04)). |
 | Bitstream initialisation | Giving a block RAM its contents from the compiled bitstream rather than loading them at run time. What makes Neon's font and text buffer valid before any software exists — the single most useful property of the design ([D27](sec_q#d27)). |
 | HDL | Hardware Description Language — Verilog or VHDL. The choice is still open ([Q2](sec_q#q2)). |
@@ -92,8 +92,8 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 
 | Term | Meaning |
 |---|---|
-| EC | Embedded Controller — the always-on microcontroller handling power, boot and housekeeping. Here, the RP2040. |
-| Rail | A supply voltage distributed across the board (3V3_AON, 3V3_MAIN, 1V2, VPP…). "Sequencing" is the order they come up in. |
+| EC | Embedded Controller — the always-on microcontroller handling power, boot and housekeeping. Here, the RP2040. It stays off the shared bus entirely, and its W25Q16 is the board's only mandatory flash. |
+| Rail | A supply voltage distributed across the board (3V3_AON, 3V3_MAIN, 1V2, VPP…). "Sequencing" is the order they come up in. Every logic rail here is 3.3V, which is what keeps level shifters off the board. |
 | SYS | The node after the charger, fed by USB or battery indifferently. Everything hangs off it rather than off the battery. |
 | Power-path | Charger topology that powers the system and charges the cell at once, so the machine runs on USB with a flat or absent battery. |
 | 1S | One lithium cell in series — a nominal ~3.7V pack. Two 1S cells in *parallel* are still 1S: more capacity, same voltage, no balancing. |
@@ -116,9 +116,9 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 | SSPI | Slave SPI — the iCE40 configuration mode in which an external master (the RP2040) clocks the bitstream in. |
 | Bitstream | The compiled gateware file loaded into an FPGA at every power-up. iCE40s are SRAM-based: they forget on power-off. |
 | CRESET_B / CDONE | The iCE40's configuration handshake: held low to start loading, raised by the FPGA when configuration succeeded. |
-| Bring-up | First powering of a new board, block by block, verifying each before enabling the next. |
+| Bring-up | First powering of a new board, block by block, verifying each before enabling the next. Each stage of [sheet P](sec_p) closes on an explicit `TEST ▸`, not on a judgement. |
 | Free-run | Diagnostic where the CPU is fed a constant NOP so it just counts through addresses — proves clock, reset and address bus without any memory. |
-| Handoff | Transfer of a shared resource between two owners — here the microSD passing from the RP2040 to Helium through the '3257 mux. |
+| Handoff | Transfer of a shared resource between two owners — here the microSD passing from the RP2040 to Helium through the '3257 mux. The RP2040 releases the card before Helium's controller claims it — nothing arbitrates it in hardware. |
 | TQFP · PLCC · TSOP · BGA | Chip packages. The first three have accessible leads and can be hand-soldered; BGA hides its balls underneath and cannot, which is why it is excluded ([D01](sec_q#d01)). |
 
 ## Video, audio and peripherals
@@ -127,7 +127,7 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 | Term | Meaning |
 |---|---|
 | Chip RAM | Amiga term reused here: Neon's own 64 MB SDRAM — framebuffers, atlases, level buffers, command lists and audio DMA — outside the CPU hierarchy and reached through the `$FE` window. |
-| Framebuffer | The region of memory holding the pixels currently on screen. Exposed to processes as `/dev/fb`. |
+| Framebuffer | The region of memory holding the pixels currently on screen. Exposed to processes as `/dev/fb`. It lives in Neon's SDRAM rather than in system memory: the CPU reaches it through the `$FE` aperture and never has to read it back. |
 | VRAM window | The 64 KB opening in bank `$FE` through which the CPU reaches video memory, gated by the MMU's NEON_BUS_SEL. In graphics modes its low 32 KB slides over SDRAM by `VRAM_PAGE`. |
 | NEON_BUS_SEL | Helium → Neon: "this cycle is validated for you." Qualifies **both** of Neon's windows — `$FE` after translation and the permission check, `$FF:8000`–`$FF:80FF` after the bank decode and the privilege check ([B.6](sec_b#b6)). |
 | NEON_BUS_BSY | Neon → Helium: "I cannot serve this cycle yet." **Busy by default**, so an absent or unconfigured Neon stalls the machine into a watchdog report rather than onto an undriven bus. Its meaningful edge is the deassertion, which means the data is ready ([T.18](sec_t#t18)). |
@@ -135,7 +135,7 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 | Aperture | The same opening, named from Neon's side. **Data only** — Neon's control registers are not in it but at `$FF:8000`, because `$FE` is user-mappable and `$FF` is not ([D36](sec_q#d36)). |
 | Px-doubling | Drawing at a lower resolution and emitting each pixel more than once in both axes to fill 1024×600. Not a policy here but a mode: **Mode 2b** at 2×2, and Mode 2a at 3×3 ([D35](sec_q#d35)). |
 | RGB-TTL | Parallel video interface: one wire per colour bit plus sync and clock. No bridge chip needed, at the cost of many pins. Driven here at 18 bpp — RGB666. |
-| VSYNC | The pulse marking the end of a frame. Raised as an IRQ so the GUI can redraw without tearing. |
+| VSYNC | The pulse marking the end of a frame. Raised as an IRQ so the GUI can redraw without tearing. One of the three sources aggregated onto `NEON_IRQ`. |
 | Cell · glyph | One character position — a glyph code plus an attribute byte · the pixel pattern for one code, held in the font. 8 × 16 px here, the standard VGA text cell. |
 | Text buffer | The 4096 cells of Mode 0, 8 KB in Neon's block RAM, initialised from the bitstream so the screen is correct at power-on with no software involved. |
 | Ring buffer | A buffer addressed modulo its size, so advancing a pointer rotates the visible contents without moving data. `TEXT_START` scrolls the console this way — 256 bytes written instead of 8,192 moved. |
@@ -146,7 +146,7 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 | Modulo | The signed value added to a channel's pointer at the end of every line — the difference between a bitmap's stride and the width being moved. **It is what makes a blit two-dimensional**, and it expresses clipping with no extra hardware. |
 | Surface | Any rectangular pixel buffer in Neon's SDRAM: framebuffer, window backing store, font atlas, icon sheet. |
 | Backing store | A surface holding one window's complete contents, **including the parts currently hidden behind other windows** — exactly what a flat framebuffer does not keep ([Q60](sec_q#q60)). |
-| Compositor | The kernel code that assembles the visible framebuffer from the backing stores, driving the blitter. Distinct from the window manager, which decides what should be where. |
+| Compositor | The kernel code that assembles the visible framebuffer from the backing stores, driving the blitter. Distinct from the window manager, which decides what should be where. Which model it runs is still open: repaint every window intersecting the damage, or recompose from backing stores ([Q60](sec_q#q60)). |
 | Descending mode | Blitting with the pointers decrementing rather than incrementing. Required whenever source and destination overlap and the move is down-and-right — a window drag is the case. |
 | Damage · dirty rectangle | A region of the screen whose composited content is no longer valid and must be rebuilt. Under [U.31](sec_u#u31) a bug here costs performance, not corruption, because full recomposition stays correct. |
 | Cookie-cut vs colour key | The two ways to make a sprite non-rectangular. A key designates one palette index transparent and needs no extra memory; a mask is a second bitmap and needs generating and keeping in step. The blitter model decides which is available ([Q58](sec_q#q58)). |
@@ -177,7 +177,7 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 | PIO-USB | USB host implemented on the RP2040's programmable I/O blocks, since the chip has no hardware host controller. |
 | USB-CDC | Communications Device Class — makes the RP2040 appear as a serial port on the development PC. Carries the console. |
 | Mux | Multiplexer — switch routing one set of signals to one of several destinations. The '3257 gives the microSD two possible owners. |
-| DMA | Direct Memory Access — a device reading or writing memory itself, without the CPU moving each byte. |
+| DMA | Direct Memory Access — a device reading or writing memory itself, without the CPU moving each byte. The SPI-SD engine is the only one on this board, and it is the whole reason `CACHE_INVAL_FRAME` exists ([M.12](sec_m#m12)). |
 
 ## Operating system and toolchain
   NOTE: → [sheet I](sec_i) · [sheet J](sec_j) · [sheet N](sec_n) · [sheet O](sec_o)
@@ -187,18 +187,18 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 | BIOS | Here it means two things kept distinct: the RP2040 is the "board BIOS" (everything pre-CPU), and `BIOS.BIN` is the "system BIOS" (everything post-reset). |
 | Info block | The structure the BIOS hands the kernel at load time: RAM size, device map, battery state, RTC time. Format still open ([Q5](sec_q#q5)). |
 | Monitor | Minimal interactive debugger: examine and alter memory, load over serial. Two of them exist — one in the BIOS, running on the 65816, and the RP2040 console of [sheet R](sec_r), which covers the same ground from outside the CPU and is available a whole stage earlier. |
-| Kernel | The resident, privileged core of the OS. Lives in virtual bank `$01`, pinned in SRAM. |
+| Kernel | The resident, privileged core of the OS. Lives in virtual bank `$01`, pinned in SRAM. Entered only through `COP` or an interrupt, both of which raise privilege on the vector fetch. |
 | Syscall | A service request from a process to the kernel. Invoked here through the `COP` instruction, with the service number in the accumulator. |
 | PCB | Process Control Block — the per-process record holding saved registers, ASID and page-table pointer. ((Not the printed circuit board, which this document always spells out.)) |
 | Context switch | Switching process; entails saving state to the PCB and pointing the MMU at a different page table. |
 | Preemptive | The kernel takes the CPU back on its own (on the timer tick) rather than waiting for the process to yield it. |
 | Round-robin | Scheduling that simply cycles through ready processes in turn, each getting one quantum. |
-| Tick | The periodic timer interrupt driving scheduling. 100 Hz here. |
+| Tick | The periodic timer interrupt driving scheduling. 100 Hz here. 100 Hz, from a free-running counter in Helium — never from cycle counts, which stop being time the moment PHI2 can stall. |
 | Zombie | A finished process whose exit status is still held for its parent to collect with `wait`. |
 | Driver | Kernel module handling one device behind a fixed 5-function interface, exposed as a `/dev/*` node. |
 | devfs | The synthetic filesystem where those `/dev/*` nodes live — no bytes on the SD card. |
 | ioctl | The escape hatch of the unified I/O interface: device-specific operations that are neither read nor write, such as mapping the framebuffer. |
-| FAT | The filesystem on the microSD. Chosen so any PC can write the boot card. |
+| FAT | The filesystem on the microSD. Chosen so any PC can write the boot card. The BIOS mounts it read-only, purely to find `KERNEL.BIN` and load it. |
 | BSS | The zero-initialised data of a binary. Carries no bytes in the file: the loader just maps it and clears it. |
 | Relocation | Patching a binary's addresses to match where it was actually loaded. The MMU removes the need: every process sees the same addresses. |
 | ABI | Application Binary Interface — the contract user binaries rely on. Drivers may be rewritten as long as it holds. |
@@ -239,7 +239,7 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 | Internal access | A transaction satisfied entirely inside Helium — SRAM, SDRAM or Helium's own registers. Nothing appears on the CPU bus. |
 | External cycle | A transaction where Helium drives the CPU bus pins, so devices outside it see a cycle indistinguishable from the 65816's. The only way to reach the `$FE` aperture. |
 | PHI2 stall | Freezing the CPU clock to steal bus time or to halt. Legal because the core is static; the same gating logic serves cache fills, halts, external cycles and Neon's read stall. |
-| Cycle stealing | Taking the bus within a window the CPU is not using, instead of stalling it. The cheaper of the two paths when it is available. |
+| Cycle stealing | Taking the bus within a window the CPU is not using, instead of stalling it. The cheaper of the two paths when it is available. Available only where the CPU leaves a gap; where it does not, the stall above is the fallback. |
 | Trace buffer | Ring buffer in EBR recording one entry per bus cycle — address, data, and the control pins. A logic analyser built into the gateware. |
 | Trigger · arming | The address-and-mask comparison that starts or stops a capture, and the act of enabling it. Position selects whether the captured window sits before, around or after the match. |
 | Scan chain | The register-readout path debuggable CPUs provide. The W65C816S has none, which is why its registers can only be inferred or dumped by a stub (→ [R.15](sec_r#r15)). |
@@ -265,20 +265,3 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 | prjtrellis · nextpnr-ecp5 | The ECP5 half of the same open toolchain — Yosys and nextpnr, different backend. Added to [E0.1](sec_p#e01) by the prototype; no proprietary tools on either board. |
 | Letterboxing | Showing a window into a buffer larger than the display rather than reflowing the buffer. How Mode 0 keeps its 128 × 32 geometry on a 640 × 480 monitor ([D44](sec_q#d44)). |
 | Leak | A prototype convenience that survives into the target design and becomes a defect there — shared memory, one clock domain, abundant EBR, a hardcoded size. [Sheet P](sec_p) carries the list, and it is reviewed at every merge, not at the transition. |
-
-## Index of figures — twelve figures, numbered across the document, listed with the sheet each one belongs to.
-
-| Fig. | Sheet | What it shows |
-|---|---|---|
-| Fig. 1 | [B — Global architecture](sec_b) | The four inhabitants of the shared bus, with the RP2040 governing configuration and reset from outside it |
-| Fig. 2 | [C — Power supply](sec_c) | Power tree REV C: USB-C and CH224K into the BQ25896 power-path, SYS, and the five converters hanging off it |
-| Fig. 3 | [D — RP2040](sec_d) | The nine-step boot sequence — steps 1–6 the EC's, from step 7 the 65816's |
-| Fig. 4 | [F — Physical memory](sec_f) | Memory structure: the SRAM on the CPU's own nets, Helium driving the translated half and owning the SDRAM alone |
-| Fig. 5 | [K — Virtual memory concepts](sec_k) | Field-width asymmetry — the virtual split falls out of the CPU's 24 bits, the physical one is the MMU's choice |
-| Fig. 6 | [L — Virtual memory management](sec_l) | Address translation: TLB with ASID, the hardware walker over the flat table in SRAM, and the ABORTB fault path |
-| Fig. 7 | [P — Step-by-step build](sec_p) | The two build tracks, prototype above and target below, with both milestones at their exact point |
-| Fig. 8 | [R — Debug agent](sec_r) | The debug agent as a requester inside Helium: the EC commands over SPI and never drives the bus |
-| Fig. 9 | [S — Power control](sec_s) | The power control path — two level pins, the SPI link, and telemetry latched into atomic snapshots |
-| Fig. 10 | [T — Neon](sec_t) | Neon: the text path that depends on nothing but the bitstream, and the graphics path fed by commands rather than pixels |
-| Fig. 11 | [U — Blitter and compositor](sec_u) | The blitter datapath and the bank partition that is worth a factor of two in delivered bandwidth |
-| Fig. 12 | [V — The windowing OS](sec_v) | The windowing stack, and the privilege boundary falling on command emission rather than on the framebuffer |

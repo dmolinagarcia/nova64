@@ -156,6 +156,7 @@ Each row is a convenience here that becomes a defect there.
 - [ ] P4.e — **Command FIFO** — Neon stage N4, and the CPU stops polling `BLIT_BUSY`. SDRAM command lists are N5 and the compositor does not need them ([V.35](sec_v#v35)).
 - [ ] P4.f — **Arbiter wait-time histograms captured under sustained blitter load** — no scanout underrun, with evidence rather than assumption.
 - [ ] P5 — **System.** Audio DMA to the PCM5102A without underrun; compositor with damage-limited recomposition; kernel booting to a prompt.
+  TEST: an hour of audio with the underrun flag still clear · a window dragged across two others and every exposed region correct afterwards · the kernel reaching its prompt from a cold card with no host attached.
   NOTE: The milestone is reached on temporary hardware, which is the point and also the caveat: it proves the software and the gateware, not the machine. **[E6](sec_p#e6) is still the milestone**, and closing it costs the P-series work plus a board that exists.
 - [ ] P5.a — **Audio DMA to the PCM5102A over I2S**, continuous playback with no underrun — the machine makes sound reliably.
 - [ ] P5.b — **Kernel skeleton in C** — startup, vector table, direct-page conventions, IRQ dispatch. A kernel image that owns the machine.
@@ -183,22 +184,29 @@ Nine stages, each with concrete hardware/gateware/software and a verification cr
 - [ ] E0.1 — **Toolchain.** KiCad 8, oss-cad-suite (Yosys + nextpnr-ice40 + IceStorm), pico-sdk, and a simulator matching the HDL choice. **The P-series adds `nextpnr-ecp5` and prjtrellis to the same suite** — one more target for the same flow, no proprietary tools on either board ([P.01](sec_p#p01)).
   TEST: a simulated iCE40 blinky and a compiled RP2040 "hello".
 - [ ] E0.2 — **HDL decision** — Verilog or VHDL. Not a preference: it decides which reference softcore is usable at all (→ [Q2](sec_q#q2)).
+  TEST: the decision written into [Q2](sec_q#q2), with the reference cores it admits named beside it, before the first module of the carrier is committed.
   NOTE: **This now blocks the P-series rather than the schematic**, and it is the first thing the prototype makes urgent: every line of gateware written for the carrier is the same line that ships on the target board, so the choice is made before P0 rather than before E1.7.
 - [ ] E0.3 — **Project KiCad library.** Symbol and footprint for every component, verified one at a time.
   TEST: each footprint printed 1:1 on paper and laid against the physical part.
   NOTE: The parts the prototype never carries are the ones with nothing to catch an error first — **the power devices, the panel FPC, the touch connector, the audio DAC and the iCE40 TQ144** — so those get the paper pass twice, on different days. The carrier's own parts are checked here too, and that check blocks its schematic ([P.21](sec_p#p21)).
 - [~] E0.4 — **Panel.** Candidate fixed and its controller verified — HX8282, 24-bit TTL at 3.3V with no level shifters, driven at 18 bpp on pin budget, DE mode by default, data latched on the *falling* DCLK edge so gateware changes it on the rising one. **The modeline has moved**: not ~51.2 MHz for 1344×635 but **51.5625 MHz for 1344×640 → 59.95 Hz**, which is what the 25 MHz oscillator can actually reach through one iCE40 PLL ([T.4](sec_t#t4)). Still missing the *module* datasheet, and the blanking values remain provisional until it arrives (→ [Q1](sec_q#q1), [Q43](sec_q#q43)).
+  TEST: the datasheet's DE-mode timing transcribed into the timing generator's own parameters, and the falling-edge latch confirmed against the part's diagram rather than from memory.
 - [x] E0.5 — **Pin budget across the three TQ-144 parts** — closed, it fits. This is what proved the architecture buildable, and what forced the shared-bus topology when it did not.
 - [ ] E0.6 — **Freeze the block diagram** as the schematic's hierarchical reference.
+  TEST: every block on the frozen diagram maps to exactly one of [E1.1](sec_p#e11)'s six sheets, and nothing on the board sits outside one.
   NOTE: **This is not Fig. 1, and the distinction is what the stage is for.** [Sheet B](sec_b)'s figure is the *architecture* — who inhabits the shared bus and who governs it from outside — and it is current. What E0.6 owes is the *schematic's* hierarchy: the same machine cut along the six sheets of [E1.1](sec_p#e11), so that every block on the drawing is a page in KiCad and nothing on the board sits outside one. The REV B drawing this used to track has been retired rather than brought forward.
 - [ ] E0.7 — **Repository and documentation skeleton** — gateware, firmware, kernel, hardware, docs, with the decision log at the centre of it. One place where every artifact lands, which is cheap on day one and expensive on day two hundred.
+  TEST: a fresh clone builds the gateware, the firmware and the 65816 binaries with no path pointing outside the repository.
 - [ ] E0.8 — **The 65816 toolchain audited, not merely installed.** Calypsi C and ca65, with the calling convention and the direct-page pseudo-register usage checked against actual compiled output and written down as the ABI the kernel is built on.
+  TEST: a C function calling an assembly one and the reverse, with 8-, 16- and 24-bit arguments, disassembled and matched line by line against the written ABI.
   NOTE: [[!blocking]] **No kernel work starts before this exists.** A calling convention discovered by experiment halfway through [P5](sec_p#p5) is the kind of blocker that stops a project for a fortnight, and it is the one known blocker on the software side (→ [sheet O](sec_o)).
 - [ ] E0.9 — **Simulator harness** for the 65816, with an I/O stub at the real bank `$FF` UART address so the same binary runs on the simulator and on hardware unchanged.
+  TEST: one unmodified binary prints through the bank `$FF` UART address in the simulator and on hardware, with the same output.
   NOTE: The point is discrimination rather than convenience. From here on a kernel bug is separable from a gateware bug — which is exactly the confusion that consumes weeks during bring-up.
 - [ ] E0.10 — **CI** building both gateware targets, the RP2040 firmware and the 65816 binaries, and running the simulator suite on every commit.
   TEST: a deliberately broken commit is rejected by the pipeline, not by a person.
 - [ ] E0.11 — **Gateware split into two independent builds.** `helium.v` and `neon.v` leave the shared top level and become separate projects communicating over the shared CPU bus and the three control nets of [P.13](sec_p#p13) — every one of which stops being a wire inside a die and becomes a PCB net.
+  TEST: each project synthesises, times and loads on its own, and the only signals crossing between them are the CPU bus and the three nets of [P.13](sec_p#p13).
   NOTE: There is no serializer and no dedicated inter-FPGA link to design here: [D04](sec_q#d04) deleted that link, and [P.13](sec_p#p13) is written the way it is precisely so that this step costs a build-system change. **If it costs more than that, the discipline section was not enforced** and the cost is being paid now instead of then.
 - [ ] E0.12 — **Both halves ported to iCE40 HX8K on dev boards, and measured.** Argon's slot stays empty ([B.4](sec_b#b4)), so what has to fit is Helium and Neon: LUT, EBR and Fmax against the estimates of [P.03](sec_p#p03) and [P.04](sec_p#p04), built with the target EBR defaults and none of the prototype's instrumentation.
   TEST: **103.125 MHz closing on Neon's half** with the blitter placed beside the SDRAM controller, or the single-rate fallback taken deliberately and its bandwidth consequence accepted (→ [Q44](sec_q#q44)) · Helium fitting with the 768 KB cache's tags inside 16 KB of EBR ([F.5](sec_f#f5)).
@@ -206,9 +214,13 @@ Nine stages, each with concrete hardware/gateware/software and a verification cr
 - [ ] E0.13 — **The full software stack run on the two-device configuration** — kernel, drivers and the G-series as far as it has reached — before a board is drawn.
   TEST: nothing in the stack turns out to have depended on the single-FPGA prototype.
 - [ ] E0.14 — **Power subsystem validated on eval hardware.** CH224K PD sink, BQ25896 charger, TPS63020 and the dedicated core buck, each rail brought up on the vendor's own board into resistive loads at target current; then the EC sequencer firmware written against them — always-on domain, staged enables, fault handling, MAX17048 readout.
+  TEST: every rail brought to target current into a resistive load, with the sequencing order and each `PG` interlock observed on a scope rather than assumed.
   NOTE: This is the part of [sheet C](sec_c) and [sheet S](sec_s) the carrier deliberately does not exercise ([P.02](sec_p#p02)), so without this stage its first hardware would be REV A itself. Proving the iCE40's core-before-IO order and a monotonic ramp on an eval rig costs days; discovering a violation on a populated board costs a respin and looks, for months, like an FPGA that configures unreliably ([C.8](sec_c#c8)).
 - [ ] E0.15 — **Battery pack characterised on eval hardware** — protection, charge and discharge cycles, fuel-gauge learning — so the energy path is understood before it is designed into a layout rather than after.
+  TEST: a full charge and discharge cycle logged, and the gauge's reported state of charge compared against the energy actually measured.
+  NOTE: The gauge is the reason this cannot be deferred to the board. A fuel gauge reports from a model that only settles after a cycle or two, so the figure the GUI shows at [L3](sec_p#l3) is worth exactly what the characterisation here was.
 - [~] E1.1 — **Six hierarchical schematic sheets**, designed simplest to hardest: 1.1 power · 1.2 RP2040 / EC · 1.3 FPGA configuration · 1.4 Helium, bus and memories · 1.5 Neon, panel and audio · 1.6 Argon and connectors.
+  TEST: each sheet reviewed against the pin-budget tables as it closes, with its own DNP list written on the sheet rather than kept elsewhere.
   NOTE: All six exist as design documents; none is drawn in KiCad yet. Sheet 1.5 is held by the panel datasheet.
   NOTE: **Capture them in the order they are designed, not the order they are numbered**, and review the BOM and the DNP list against the pin-budget sheets as each one closes. The DNP that matters most is Argon: its 3V3 and 1V2 sit behind their own 0Ω jumpers so that an empty footprint cannot load the bus ([E.5](sec_e#e5)). A second one is worth placing on sheet 1.5 and is easy to forget because nothing before [L4](sec_p#l4) needs it: **a PAM8302 and a pair of speaker pads, unpopulated, behind a jumper**. Audio ends at a 3.5 mm jack today and a laptop wants a speaker; the footprint costs a square centimetre now and a respin later.
 - [ ] E1.2 — **Cross-review before layout.**
@@ -217,6 +229,8 @@ Nine stages, each with concrete hardware/gateware/software and a verification cr
   TEST: clean DRC and gerbers checked in an external viewer, not in KiCad's own.
   NOTE: **Route in order of difficulty, not in order of the netlist.** The CPU bus first, then both SDRAM interfaces, then the parallel RGB to the panel FPC — and only once those are done, power distribution and everything that is left. The hard nets get the room while there is still room to give them.
 - [ ] E1.4 — **Staged population — the golden rule:** never populate a block until the previous one works. The board is designed for this, with a test point and an LED per rail and 0Ω jumpers to isolate every branch.
+  TEST: every rail measured at its test point before the next block is populated, and the isolation jumpers left open until it is.
+  NOTE: Staged population also fixes the order the errata arrive in. A defect found with one block populated is attributable to that block; the same defect found on a fully assembled board is a search.
   NOTE: **The rails are not the only thing worth probing, and the bus has no provision at all today.** `PHI2`, `RESB`, `ABORTB`, `RDY`, `BE` and the three Neon control nets each need a labelled test point — as do `DCLK` and `DE`, one bit of each colour channel, and audio's `BCK` and `DIN`, spaced to land two probes without shorting — they are precisely the signals [E1.8](sec_p#e18) and [E5](sec_p#e5) are debugged through, and a scope lead soldered to a TQFP pin during bring-up is how boards get killed.
   NOTE: **Open the errata list at this stage and keep it as a document, not as a memory.** Every stage from here to [E8](sec_p#e8) adds to it, and [L7](sec_p#l7) is built from nothing else. A defect noticed during bring-up and not written down is a defect rediscovered on REV B.
 - [ ] E1.5 — **Power alone**, in the order of [C.19](sec_c#c19): charger and SYS with no downstream jumper fitted, then each rail into a resistive load, then the jumpers one at a time.
@@ -259,6 +273,7 @@ Nine stages, each with concrete hardware/gateware/software and a verification cr
   TEST: touch GUI session running on battery · a window drawn as a dozen commands, with the CPU back in its event loop before the blitter finishes · a window dragged over a second one and both repainted correctly from application state · a short press raises a dialogue and a cancel actually cancels · `poweroff` from the shell flushes and drops the rails · a deliberately hung kernel is recovered by the 4-second press, and a deliberately hung EC by `QON` · the indicator reports *unknown* rather than a number when telemetry is stale.
   NOTE: **The compositor's first implementation should not do precise damage regions.** Repainting a whole window costs ~1 ms, so repainting every window that intersects the dirty area, back to front, is affordable — and it skips the most defect-prone part of any window manager. Optimise only if a specific case demands it (→ [T.57](sec_t#t57)).
 - [ ] E8.1 — **GT911 touch on its dedicated I2C bus**, read by the EC and delivered into `wserver` through the same input queue as HID — absolute position, button state as a bitmap, an event that fits in 32 bytes and can be coalesced ([V.30](sec_v#v30)).
+  TEST: a touch and a drag arrive at `wserver` as events indistinguishable from the HID path's, coalesced to no more than one per frame.
 
 !!! AMIGA MILESTONE — preemptive multitasking with a windowed GUI.
 
@@ -270,14 +285,22 @@ Nine stages, each with concrete hardware/gateware/software and a verification cr
 [E8](sec_p#e8) closes with a working noVa64 on a board that runs on battery and shows a windowed desktop. What follows turns that into something you pick up, open and close, and none of it is on the critical path for either milestone — which is exactly why it is listed separately rather than folded into E8 and allowed to delay it.
 
 - [ ] L1 — **Internal keyboard matrix**, designed and scanned by the EC firmware, delivered through the existing input path of [V.30](sec_v#v30) so that nothing above the HID driver knows the difference. A built-in keyboard replaces USB HID.
+  TEST: every key and every two-key combination scanned without ghosting, with the HID driver unmodified above it.
 - [ ] L2 — **Integrated pointing device** selected and driven into `wserver` through the same queue — pointer input with no external peripheral attached.
+  TEST: the pointer crosses the full screen with no external peripheral attached, through the same queue and with no new event type.
 - [ ] L3 — **Software power management** — rail gating, sleep and wake, battery status surfaced in the GUI through the `$FF` power block of [sheet S](sec_s).
+  TEST: sleep and wake with the display, the card and the audio path all restored, and the battery indicator agreeing with the gauge after the resume.
   NOTE: This is the stage where [Q73](sec_q#q73) stops being theoretical. Everything resting on the power block had no prototype hardware at all ([P.02](sec_p#p02)), so the battery indicator, the shutdown dialogue and the stale-telemetry behaviour get their first real exercise between [E8](sec_p#e8) and here.
 - [ ] L4 — **Mechanical CAD** — lid and hinge, mainboard mounting, battery bay, port cutouts, keyboard tray. A complete enclosure model before anything is printed.
+  TEST: the model checked against the assembled board's measured outline, with every connector reachable and every fastener placed before anything is printed.
 - [ ] L5 — **Printed enclosure prototype** assembled, with the fit and cable-routing revisions applied. Everything physically fits and the lid closes.
+  TEST: the lid closes, every port is usable with the case shut, and no cable is under strain in either lid position.
+  NOTE: The revisions this stage produces are the ones CAD cannot predict — cable bend radius, connector access with a lid at 100°, and where a hand actually holds the machine.
 - [ ] L6 — **Thermal profiling and battery-life characterisation** under sustained GUI load, inside the enclosure rather than on a bench.
+  TEST: sustained GUI load to thermal equilibrium inside the closed case, with the battery figure taken on the same run rather than a separate one.
   NOTE: Inside the case is the only measurement that counts. A board that is comfortable in open air and a board in a sealed printed shell are different thermal problems, and the second one is the product.
 - [ ] L7 — **REV B**, correcting the errata accumulated from [E1.4](sec_p#e14) onward, and final assembly into the enclosure.
+  TEST: the errata list closed item by item — each one either fixed in REV B or recorded as accepted, with nothing left unclassified.
 - [ ] L8 — **Release** — schematics, gateware, kernel, SDK, disk image, build instructions, user manual.
   TEST: someone who is not you builds it from what is published.
 

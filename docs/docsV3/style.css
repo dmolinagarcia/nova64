@@ -29,10 +29,10 @@
   .idx{margin-top:26px;border:1.3px solid rgba(var(--ink-rgb),.55);}
   .idx .cap{padding:10px 16px;border-bottom:1px solid rgba(var(--ink-rgb),.35);font-size:11px;letter-spacing:3px;color:rgba(var(--ink-rgb),.6);font-weight:700;}
   .idx table{width:100%;border-collapse:collapse;}
-  .idx td{padding:7px 16px;border-top:1px solid rgba(var(--ink-rgb),.16);font-size:12px;}
+  .idx td{padding:6.5px 16px;border-top:1px solid rgba(var(--ink-rgb),.16);font-size:12px;}
   .idx tr:first-child td{border-top:0}
   .idx tr:hover td{background:rgba(var(--mint-rgb),.06);}
-  .idx tr.grp td{background:rgba(var(--ink-rgb),.05);color:rgba(var(--ink-rgb),.6);font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:700;padding:8px 16px;border-top:1px solid rgba(var(--ink-rgb),.35);}
+  .idx tr.grp td{background:rgba(var(--ink-rgb),.05);color:rgba(var(--ink-rgb),.6);font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:700;padding:7.5px 16px;border-top:1px solid rgba(var(--ink-rgb),.35);}
   .idx tr.grp:hover td{background:rgba(var(--ink-rgb),.05);}
   .idx tr.grp a{color:inherit}
   .idx .no{color:rgba(var(--ink-rgb),.5);width:46px}
@@ -231,7 +231,8 @@
        page to itself, page two is left blank behind it the way a title page's
        verso is, the sheet index takes page three, and every area opens on a
        fresh page. Within an area the sheets still run on — the break marks the
-       document's structure, it is not one page per sheet. */
+       document's structure, it is not one page per sheet, with the one
+       exception noted below. */
     /* the cover's air is padding on the column, not a margin on the masthead:
        a margin against the top of a page box is the one browsers are entitled
        to drop */
@@ -239,6 +240,28 @@
     body.full .coverback{ display:block;height:1px;break-before:page; }
     body.full .idx{ break-before:page; }
     body.full .areaband{ break-before:page; }
+
+    /* seven sheets ask for a page of their own on top of that rule, all for the
+       same reason: none of them opens its area, so no band precedes them and
+       they would otherwise run on behind the sheet before — X behind H in
+       Architecture, S behind C in Power, K behind F in Memory and storage,
+       G behind L in the same area, W behind U in Video + audio, Q behind P in
+       Project and build, and Z2 behind Z1 in the Appendix. Full edition only;
+       the paged edition gives every sheet its own screen already. */
+    body.full #sec_x,
+    body.full #sec_s,
+    body.full #sec_k,
+    body.full #sec_w,
+    body.full #sec_q,
+    body.full #sec_g,
+    body.full #sec_z2{ break-before:page; }
+
+    /* the title block closes the document on a page of its own, sitting low on
+       it. The drop is a spacer block rather than a margin, because a margin
+       against the top of a page box is the one browsers may drop — the same
+       reason the cover's air is padding on .main. Tune the height here. */
+    body.full #content::after{ content:""; display:block; break-before:page; height:195mm; }
+    body.full .cajetin{ break-inside:avoid; }
 
     /* keep rows, steps and figures from splitting across pages */
     .sechead{ break-after:avoid; }

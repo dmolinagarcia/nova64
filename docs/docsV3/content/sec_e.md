@@ -17,6 +17,10 @@ The 65816 is the premise of the project, not a component choice open for review 
 - E.10 — Which leaves the real conclusion: **the ceiling is memory, not the core.** Argon would ride the same shared bus, the same Helium cache and the same PHI2 window as the physical chip, so its effective speed is gated by the identical hierarchy. A softcore can win on CPI, on added features, or on deleting a PLCC part from the BOM — **not on raw clock**, and only if given a wider or more direct path into Helium's cache than the multiplexed external bus allows.
   NOTE: No such path exists in the design today (→ [Q14](sec_q#q14)).
 - E.11 — Honest caveat: the 65816 is an accumulator architecture — memory-traffic-heavy and fairly serial, with little instruction-level parallelism to exploit. Even pipelined, data dependencies cap the gains. "The fastest possible 65816" is a well-defined goal and a bounded one; it will not scale the way a modern core does.
+- E.12 — **Three of the five native vectors are load-bearing here.** Entry pushes PBR, PC and P, clears `D`, sets `I`, forces `PBR = $00`, and vectors through bank `$00`: `$FFE4` COP, `$FFE6` BRK, `$FFE8` ABORT, `$FFEA` NMI, `$FFEE` IRQ. **COP** is the syscall entry ([M.1](sec_m#m1)), **ABORT** the page fault ([L.4](sec_l#l4)), **BRK** the debug breakpoint ([M.3](sec_m#m3)).
+  NOTE: Those pushes are stack writes in bank `$00`, and an ABORT taken while entering the ABORT handler has nowhere to go — which is what pinning that bank ([L.11](sec_l#l11)) forecloses.
+- E.13 — **What a softcore owes the board is a pin list, wider than [E.6](sec_e#e6)'s programmer-visible set.** `VPA`/`VDA` valid every cycle, or `X` cannot be checked; `ABORTB` honoured with side effects suppressed, the instruction restartable; `BE` releasing the buses; `RDY` bidirectional, or `WAI` never releases. And a fifth [E.3](sec_e#e3) omits: **`VPB`**, the privilege transition Helium reads on the vector fetch ([L.12](sec_l#l12)).
+  NOTE: A cycle-exact core carries these because it reproduces everything; an accelerator such as FT816 is exactly where the audit below has to start.
 
 ## Candidate cores — should the slot ever be populated.
 

@@ -85,7 +85,7 @@
   <line x1="700" y1="360" x2="700" y2="386" class="dtb"/>
 
   <!-- banks -->
-  <text x="480" y="472" class="htx">SDRAM · THE PARTITION OF D38 · ONE OPEN ROW PER BANK</text>
+  <text x="480" y="456" class="htx">SDRAM · THE PARTITION OF D38 · ONE OPEN ROW PER BANK</text>
 
   <rect x="24" y="486" width="216" height="80" class="blk"/>
   <text x="132" y="508" class="t">bank 0</text>
