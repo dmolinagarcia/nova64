@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 960 700" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Global architecture block diagram">
+<svg viewBox="0 0 960 676" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Global architecture block diagram">
   <text x="40" y="26" class="eye">EC / BOOT</text>
   <rect x="40" y="40" width="230" height="110" class="blk"/>
   <text x="155" y="62" class="t">RP2040 — EC</text>
@@ -11,86 +11,87 @@
   <rect x="300" y="40" width="130" height="60" class="blk"/>
   <text x="365" y="64" class="t">microSD</text>
   <text x="365" y="84" class="s">FAT · BIOS / KERNEL</text>
-  <rect x="300" y="116" width="130" height="34" class="blk"/>
-  <text x="365" y="137" class="s">'3257 mux (handoff)</text>
+  <rect x="450" y="40" width="130" height="60" class="blk"/>
+  <text x="515" y="64" class="t">'3257 mux</text>
+  <text x="515" y="84" class="s">SPI handoff</text>
   <line x1="270" y1="70" x2="300" y2="70" class="dt"/>
-  <line x1="365" y1="100" x2="365" y2="116" class="dt"/>
-  <line x1="365" y1="150" x2="365" y2="210" class="dt"/>
-  <text x="334" y="200" class="lbl">SPI-SD</text>
+  <line x1="430" y1="70" x2="450" y2="70" class="dt"/>
+  <line x1="515" y1="100" x2="515" y2="186" class="dt"/>
+  <text x="549" y="128" class="lbl">SPI-SD</text>
 
-  <polyline points="270,140 280,140 280,170 460,170 460,210" class="op"/>
-  <text x="452" y="162" class="plbl">CFG SSPI ×3 · CDONE</text>
-  <line x1="140" y1="150" x2="140" y2="210" class="op"/>
-  <text x="172" y="168" class="plbl">RESB</text>
+  <polyline points="270,140 280,140 280,168 460,168 460,186" class="op"/>
+  <text x="452" y="160" class="plbl">CFG SSPI ×3 · CDONE</text>
+  <line x1="140" y1="150" x2="140" y2="186" class="op"/>
+  <text x="172" y="170" class="plbl">RESB</text>
 
-  <rect x="40" y="210" width="170" height="90" class="blk"/>
-  <text x="125" y="232" class="t">W65C816S</text>
-  <text x="125" y="252" class="s">PLCC-44 · 24-bit native</text>
-  <text x="125" y="268" class="s">PHI2 8 MHz · BE</text>
-  <rect x="40" y="320" width="170" height="70" class="blk opt"/>
-  <text x="125" y="344" class="t">Argon — FPGA-C (opt.)</text>
-  <text x="125" y="364" class="s">softcore 65816 · BE=0</text>
+  <rect x="40" y="186" width="170" height="90" class="blk"/>
+  <text x="125" y="208" class="t">W65C816S</text>
+  <text x="125" y="228" class="s">PLCC-44 · 24-bit native</text>
+  <text x="125" y="244" class="s">PHI2 8 MHz · BE</text>
+  <rect x="40" y="296" width="170" height="70" class="blk opt"/>
+  <text x="125" y="320" class="t">Argon — FPGA-C (opt.)</text>
+  <text x="125" y="340" class="s">softcore 65816 · BE=0</text>
 
-  <text x="250" y="200" class="lbl">SHARED A/D/CTRL BUS</text>
-  <line x1="250" y1="235" x2="250" y2="470" class="dtb"/>
-  <line x1="210" y1="255" x2="250" y2="255" class="dtb"/>
-  <line x1="210" y1="355" x2="250" y2="355" class="dts"/>
-  <line x1="250" y1="295" x2="290" y2="295" class="dtb"/>
-  <line x1="250" y1="470" x2="290" y2="470" class="dtb"/>
-  <text x="222" y="486" class="lbl">$FE · VRAM_SEL</text>
+  <text x="250" y="176" class="lbl">SHARED A/D/CTRL BUS</text>
+  <line x1="250" y1="211" x2="250" y2="446" class="dtb"/>
+  <line x1="210" y1="231" x2="250" y2="231" class="dtb"/>
+  <line x1="210" y1="331" x2="250" y2="331" class="dts"/>
+  <line x1="250" y1="271" x2="290" y2="271" class="dtb"/>
+  <line x1="250" y1="446" x2="290" y2="446" class="dtb"/>
+  <text x="222" y="462" class="lbl">$FE · VRAM_SEL</text>
 
-  <rect x="290" y="210" width="300" height="170" class="blk"/>
-  <text x="440" y="234" class="t">HELIUM — NORTHBRIDGE (FPGA-A)</text>
-  <text x="306" y="258" class="li">MMU · TLB ASID · walker HW</text>
-  <text x="306" y="276" class="li">768 KB cache · 2 KB lines · 4-way</text>
-  <text x="306" y="294" class="li">bus arbiter · PHI2 · timer</text>
-  <text x="306" y="312" class="li">PIC priorities · UART · SPI-SD</text>
-  <text x="306" y="330" class="li">I2C (RTC · gauge · GT911) · dbg</text>
-  <text x="440" y="366" class="s">iCE40HX8K TQ144 · 90/107 pins</text>
+  <rect x="290" y="186" width="300" height="170" class="blk"/>
+  <text x="440" y="210" class="t">HELIUM — NORTHBRIDGE (FPGA-A)</text>
+  <text x="306" y="234" class="li">MMU · TLB ASID · walker HW</text>
+  <text x="306" y="252" class="li">768 KB cache · 2 KB lines · 4-way</text>
+  <text x="306" y="270" class="li">bus arbiter · PHI2 · timer</text>
+  <text x="306" y="288" class="li">PIC priorities · UART · SPI-SD</text>
+  <text x="306" y="306" class="li">I2C (RTC · gauge · GT911) · dbg</text>
+  <text x="440" y="342" class="s">iCE40HX8K TQ144 · 90/107 pins</text>
 
-  <line x1="590" y1="295" x2="615" y2="295" class="dtb"/>
-  <line x1="615" y1="260" x2="615" y2="370" class="dtb"/>
-  <line x1="615" y1="260" x2="640" y2="260" class="dtb"/>
-  <line x1="615" y1="370" x2="640" y2="370" class="dtb"/>
+  <line x1="590" y1="271" x2="615" y2="271" class="dtb"/>
+  <line x1="615" y1="236" x2="615" y2="346" class="dtb"/>
+  <line x1="615" y1="236" x2="640" y2="236" class="dtb"/>
+  <line x1="615" y1="346" x2="640" y2="346" class="dtb"/>
 
-  <text x="640" y="200" class="eye">MEMORY</text>
-  <rect x="640" y="210" width="280" height="100" class="blk"/>
-  <text x="780" y="232" class="t">SRAM 1 MB ×8 · 10 ns</text>
-  <text x="656" y="254" class="li">256 KB pinned: kernel · tables · $00</text>
-  <text x="656" y="270" class="li">768 KB cache · 4-way · tags in EBR</text>
-  <text x="656" y="286" class="li">D0–D7 + A0–A10 on the CPU nets</text>
-  <rect x="640" y="330" width="280" height="80" class="blk"/>
-  <text x="780" y="352" class="t">SDRAM 64 MB</text>
-  <text x="656" y="374" class="li">32,768 frames of 2 KB</text>
-  <text x="656" y="390" class="li">AS4C32M16SB · backing store</text>
+  <text x="640" y="176" class="eye">MEMORY</text>
+  <rect x="640" y="186" width="280" height="100" class="blk"/>
+  <text x="780" y="208" class="t">SRAM 1 MB ×8 · 10 ns</text>
+  <text x="656" y="230" class="li">256 KB pinned: kernel · tables · $00</text>
+  <text x="656" y="246" class="li">768 KB cache · 4-way · tags in EBR</text>
+  <text x="656" y="262" class="li">D0–D7 + A0–A10 on the CPU nets</text>
+  <rect x="640" y="306" width="280" height="80" class="blk"/>
+  <text x="780" y="328" class="t">SDRAM 64 MB</text>
+  <text x="656" y="350" class="li">32,768 frames of 2 KB</text>
+  <text x="656" y="366" class="li">AS4C32M16SB · backing store</text>
 
-  <rect x="290" y="430" width="300" height="140" class="blk"/>
-  <text x="440" y="454" class="t">NEON — VIDEO · AUDIO (FPGA-B)</text>
-  <text x="306" y="478" class="li">RGB-TTL 1024×600 (px-doubling)</text>
-  <text x="306" y="496" class="li">64 KB VRAM window at $FE</text>
-  <text x="306" y="514" class="li">I2S → PCM5102A · VGA R-2R</text>
-  <text x="306" y="532" class="li">IRQ VSYNC</text>
-  <text x="440" y="556" class="s">iCE40 TQ144 · ~79 pins</text>
+  <rect x="290" y="406" width="300" height="140" class="blk"/>
+  <text x="440" y="430" class="t">NEON — VIDEO · AUDIO (FPGA-B)</text>
+  <text x="306" y="454" class="li">RGB-TTL 1024×600 (px-doubling)</text>
+  <text x="306" y="472" class="li">64 KB VRAM window at $FE</text>
+  <text x="306" y="490" class="li">I2S → PCM5102A · VGA R-2R</text>
+  <text x="306" y="508" class="li">IRQ VSYNC</text>
+  <text x="440" y="532" class="s">iCE40 TQ144 · ~79 pins</text>
 
-  <line x1="590" y1="462" x2="640" y2="462" class="dt"/>
-  <rect x="640" y="430" width="280" height="64" class="blk"/>
-  <text x="780" y="452" class="t">SDRAM 64 MB (AS4C32M16SB)</text>
-  <text x="780" y="472" class="s">chip RAM: framebuffer + audio</text>
+  <line x1="590" y1="438" x2="640" y2="438" class="dt"/>
+  <rect x="640" y="406" width="280" height="64" class="blk"/>
+  <text x="780" y="428" class="t">SDRAM 64 MB (AS4C32M16SB)</text>
+  <text x="780" y="448" class="s">chip RAM: framebuffer + audio</text>
 
-  <line x1="590" y1="540" x2="680" y2="540" class="dts"/>
-  <rect x="680" y="520" width="170" height="44" class="blk opt"/>
-  <text x="765" y="546" class="s">VGA (R-2R) — bring-up</text>
+  <line x1="590" y1="516" x2="680" y2="516" class="dts"/>
+  <rect x="680" y="496" width="170" height="44" class="blk opt"/>
+  <text x="765" y="522" class="s">VGA (R-2R) — bring-up</text>
 
-  <line x1="370" y1="570" x2="370" y2="600" class="dt"/>
-  <text x="452" y="588" class="lbl">RGB-TTL · 51.2 MHz</text>
-  <rect x="270" y="600" width="210" height="70" class="blk"/>
-  <text x="375" y="622" class="t">10.1&#8221; IPS PANEL</text>
-  <text x="375" y="641" class="s">ER-TFT101-1 · HX8282 · FPC-50</text>
-  <text x="375" y="657" class="s">GT911 capacitive → I2C + INT</text>
+  <line x1="370" y1="546" x2="370" y2="576" class="dt"/>
+  <text x="452" y="564" class="lbl">RGB-TTL · 51.2 MHz</text>
+  <rect x="270" y="576" width="210" height="70" class="blk"/>
+  <text x="375" y="598" class="t">10.1&#8221; IPS PANEL</text>
+  <text x="375" y="617" class="s">ER-TFT101-1 · HX8282 · FPC-50</text>
+  <text x="375" y="633" class="s">GT911 capacitive → I2C + INT</text>
 
-  <line x1="560" y1="570" x2="560" y2="600" class="dt"/>
-  <text x="580" y="588" class="lbl">I2S</text>
-  <rect x="500" y="600" width="170" height="52" class="blk"/>
-  <text x="585" y="622" class="t">PCM5102A</text>
-  <text x="585" y="641" class="s">I2S → audio jack</text>
+  <line x1="560" y1="546" x2="560" y2="576" class="dt"/>
+  <text x="580" y="564" class="lbl">I2S</text>
+  <rect x="500" y="576" width="170" height="52" class="blk"/>
+  <text x="585" y="598" class="t">PCM5102A</text>
+  <text x="585" y="617" class="s">I2S → audio jack</text>
 </svg>
