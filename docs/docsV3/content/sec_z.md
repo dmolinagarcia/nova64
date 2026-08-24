@@ -37,6 +37,7 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 | Dirty victim | The line a fill has to evict when it has been written to — it must go back to SDRAM first, which is why a miss can cost double. |
 | Write-back | Cache policy where writes stay in the cache and reach memory only on eviction. Implied by the dirty bits. |
 | Backing store | The memory a cache is a cache *of*. Here the SDRAM, which the PTEs always name. |
+| Flush vs invalidate | The two ways to empty a cache line, and they are not interchangeable. **Flush** writes dirty contents back and then marks the line clean — used before the CPU's data has to be visible to someone else. **Invalidate** drops the line without writing anything, dirty or not — used when the contents are about to be overwritten by someone else. Getting them backwards loses data in one direction and merely wastes a burst in the other ([M.12](sec_m#m12), [G.9](sec_g#g9)). |
 | Copy-on-write | Sharing a page read-only between processes and duplicating it only when one writes. An ABORT case ([L.4](sec_l#l4)). |
 | Static core | A CPU whose state survives an arbitrarily slow or stopped clock. The W65C816S is one, which is what makes the PHI2 stall legal. |
 | Clock gating | Stopping and restarting PHI2 in gateware. Must be glitch-free, and the first pulse on resume must meet the minimum high width. |

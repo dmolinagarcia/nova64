@@ -167,6 +167,7 @@ Each row is a convenience here that becomes a defect there.
 - [ ] P5.h — **Ports, signals and messages** — the IPC substrate [sheet V](sec_v) is written against.
 - [ ] P5.i — **Driver framework** — init/read/write/ioctl/irq with fd-based device paths, and `/dev/tty`, which turns the console into a driver like any other.
 - [ ] P5.j — **microSD block driver and a read-only filesystem** — files on the card visible to the OS.
+  NOTE: **The FIFO path is enough for this stage and the DMA engine is not needed yet** — the driver is written against the register names of [G.6](sec_g#g6) from the start, so the engine lands underneath it later with nothing above changing. What it cannot reach on the FIFO alone is paging (→ [D45](sec_q#d45), [Q79](sec_q#q79)).
 - [ ] P5.k — **Program loader and a shell** — type a name and a program runs in its own address space.
 - [ ] P5.l — **`/dev/fb` with an ioctl mapping framebuffer pages into a process**, plus `/dev/audio` — a user program draws at memory speed and makes sound through the ordinary device contract.
   NOTE: **The compositor's cost model is measured at G2, not here** ([V.36](sec_v#v36), [V.37](sec_v#v37)). The number wanted is the blitter's own time for a full-screen pass, separated from emission and from whatever the client tasks are doing — and it is the project's first real software gate, so it is instrumented deliberately rather than inferred from a frame rate.

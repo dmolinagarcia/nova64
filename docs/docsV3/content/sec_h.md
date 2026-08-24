@@ -14,7 +14,7 @@ Every peripheral has a clear physical owner and a uniform face toward software: 
 | Audio | **Fully specified in [sheet W](sec_w)** — four channels, a hardware mixer, and a sample rate of 44,146 Hz because no PLL setting on this board reaches 44,100 ([W.11](sec_w#w11)). PCM5102A · I2S · DMA buffers in Neon's SDRAM. Strapped `FLT`/`DEMP`/`FMT` low, `SCK` to GND for the part's internal PLL, and `XSMT` to 3V3 through an RC — that delay is the anti-pop, and without it every power-up is a click in the headphones | Neon (FPGA-B) | `/dev/audio` |
 | Keyboard / mouse | USB HID · PIO-USB + hub · VBUS via TPS61023 | RP2040 → EC channel | `/dev/kbd` · `/dev/mouse` |
 | Serial console | UART ↔ USB-CDC | Helium ↔ RP2040 | `/dev/tty` |
-| Storage | microSD · SPI · '3257 mux | Helium (FPGA-A) | `/dev/sd` → FS |
+| Storage | microSD · SPI · '3257 mux · a register block in bank `$FF` with a FIFO path and a DMA path, the latter depositing blocks straight into SDRAM ([G.6](sec_g#g6), [D45](sec_q#d45)) | Helium (FPGA-A) | `/dev/sd` → FS |
 | Real-time clock | PCF8563 · I2C | **Unassigned since the bus split** — it wants to keep time while the machine is off, which argues AON, but that bus is otherwise reserved to the charger and gauge (→ [Q35](sec_q#q35)) | `/dev/rtc` |
 | Battery and power | MAX17048 + BQ25896 · I2C-AON, EC-owned | RP2040 → telemetry snapshot in Helium → bank `$FF` ([sheet S](sec_s)) | `/dev/power` — latch, then read; `ioctl` for poweroff and reboot |
 | Power button | Momentary, wired to both `QON` and an AON GPIO | RP2040 (duration) and BQ25896 (hardware floor) | Arrives as an interrupt and a `/dev/power` state, not as a key event |
