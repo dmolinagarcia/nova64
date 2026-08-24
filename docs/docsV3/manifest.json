@@ -2,9 +2,9 @@
   "title": "noVa64",
   "documentName": "Synthesis document — index and content outline",
   "footer": {
-    "referenceIndex": "Ten areas · sheets A–W · Figs. 1–12 · appendix Z",
-    "referenceSheet": "Synthesis document · sheets A–W + appendix Z · index at index.html",
-    "detail": "Self-contained: every sheet is the specification of what it covers, not a summary of one held elsewhere — power in C and S, the kernel–hardware interface in M, the debug agent in R, Neon in T, U and W, the windowing OS in V, the build in P",
+    "referenceIndex": "Ten areas · sheets A–X · Figs. 1–12 · appendix Z",
+    "referenceSheet": "Synthesis document · sheets A–X + appendix Z · index at index.html",
+    "detail": "Self-contained: every sheet is the specification of what it covers, not a summary of one held elsewhere — power in C and S, the kernel–hardware interface in M, the debug agent in R, Neon in T, U and W, the windowing OS in V, the expansion bus in X, the build in P",
     "rules": "All 3.3V · hand-solderable · open toolchain",
     "rev": "OUTLINE 4 · POWER REV C · NEON REV B · GUI REV A · AUDIO REV A · PROTOTYPE REV A · AUG 2026"
   },
@@ -37,9 +37,18 @@
       "fig": "table"
     },
     {
+      "file": "sec_x",
+      "letter": "X",
+      "num": "04",
+      "area": "Architecture",
+      "nav": "The expansion bus",
+      "index": "The expansion bus · parallel slot and the slow I2C tier",
+      "fig": "tables"
+    },
+    {
       "file": "sec_c",
       "letter": "C",
-      "num": "04",
+      "num": "05",
       "area": "Power",
       "nav": "Power supply",
       "index": "Power supply",
@@ -48,7 +57,7 @@
     {
       "file": "sec_s",
       "letter": "S",
-      "num": "05",
+      "num": "06",
       "area": "Power",
       "nav": "Power control and telemetry",
       "index": "Power control, shutdown and telemetry · $FF power block",
@@ -57,7 +66,7 @@
     {
       "file": "sec_d",
       "letter": "D",
-      "num": "06",
+      "num": "07",
       "area": "Embedded control and boot",
       "nav": "RP2040 — embedded controller",
       "index": "RP2040 — embedded controller",
@@ -66,7 +75,7 @@
     {
       "file": "sec_r",
       "letter": "R",
-      "num": "07",
+      "num": "08",
       "area": "Embedded control and boot",
       "nav": "Debug agent and console",
       "index": "Debug agent and console · SPI register map",
@@ -75,7 +84,7 @@
     {
       "file": "sec_e",
       "letter": "E",
-      "num": "08",
+      "num": "09",
       "area": "CPU and system",
       "nav": "CPU — W65C816S and softcore",
       "index": "CPU — W65C816S and the softcore option",
@@ -84,7 +93,7 @@
     {
       "file": "sec_m",
       "letter": "M",
-      "num": "09",
+      "num": "10",
       "area": "CPU and system",
       "nav": "Kernel–hardware interface",
       "index": "Kernel–hardware interface · Helium control registers",
@@ -93,7 +102,7 @@
     {
       "file": "sec_f",
       "letter": "F",
-      "num": "10",
+      "num": "11",
       "area": "Memory and storage",
       "nav": "Physical memory structure",
       "index": "Physical memory structure",
@@ -102,7 +111,7 @@
     {
       "file": "sec_k",
       "letter": "K",
-      "num": "11",
+      "num": "12",
       "area": "Memory and storage",
       "nav": "Virtual memory — concepts",
       "index": "Virtual memory — concepts and glossary",
@@ -111,7 +120,7 @@
     {
       "file": "sec_l",
       "letter": "L",
-      "num": "12",
+      "num": "13",
       "area": "Memory and storage",
       "nav": "Virtual memory management",
       "index": "Virtual memory management",
@@ -120,7 +129,7 @@
     {
       "file": "sec_g",
       "letter": "G",
-      "num": "13",
+      "num": "14",
       "area": "Memory and storage",
       "nav": "Persistent storage — microSD",
       "index": "Persistent storage — microSD",
@@ -129,7 +138,7 @@
     {
       "file": "sec_t",
       "letter": "T",
-      "num": "14",
+      "num": "15",
       "area": "Video + audio",
       "nav": "Neon — the GPU",
       "index": "Neon — the GPU · text, graphics, blitter and command lists",
@@ -138,7 +147,7 @@
     {
       "file": "sec_u",
       "letter": "U",
-      "num": "15",
+      "num": "16",
       "area": "Video + audio",
       "nav": "Neon — blitter and compositor",
       "index": "Neon — blitter, arbitration and the window compositor",
@@ -147,7 +156,7 @@
     {
       "file": "sec_w",
       "letter": "W",
-      "num": "16",
+      "num": "17",
       "area": "Video + audio",
       "nav": "Audio — DAC, mixer and driver",
       "index": "Audio · PCM5102A, four channels, hardware mixer and /dev/audio",
@@ -156,7 +165,7 @@
     {
       "file": "sec_i",
       "letter": "I",
-      "num": "17",
+      "num": "18",
       "area": "Software",
       "nav": "BIOS — what it provides",
       "index": "BIOS — what it provides",
@@ -165,7 +174,7 @@
     {
       "file": "sec_j",
       "letter": "J",
-      "num": "18",
+      "num": "19",
       "area": "Software",
       "nav": "Operating system",
       "index": "Operating system",
@@ -174,7 +183,7 @@
     {
       "file": "sec_n",
       "letter": "N",
-      "num": "19",
+      "num": "20",
       "area": "Software",
       "nav": "Process management",
       "index": "Process management",
@@ -183,7 +192,7 @@
     {
       "file": "sec_o",
       "letter": "O",
-      "num": "20",
+      "num": "21",
       "area": "Software",
       "nav": "Programming and toolchain",
       "index": "Programming and toolchain",
@@ -192,7 +201,7 @@
     {
       "file": "sec_v",
       "letter": "V",
-      "num": "21",
+      "num": "22",
       "area": "Software",
       "nav": "The windowing OS",
       "index": "The windowing OS · window server, client protocol and toolkit",
@@ -201,7 +210,7 @@
     {
       "file": "sec_p",
       "letter": "P",
-      "num": "22",
+      "num": "23",
       "area": "Project and build",
       "nav": "Step-by-step build · P0–P5 · E0–E8 · L1–L8",
       "index": "Step-by-step build · prototype P0–P5 · target E0–E8 · laptop L1–L8",
@@ -210,7 +219,7 @@
     {
       "file": "sec_q",
       "letter": "Q",
-      "num": "23",
+      "num": "24",
       "area": "Project and build",
       "nav": "Decision log · open questions",
       "index": "Decision log · open questions",
@@ -219,7 +228,7 @@
     {
       "file": "sec_z",
       "letter": "Z",
-      "num": "24",
+      "num": "25",
       "area": "Appendix",
       "nav": "Appendix — glossary and figures",
       "index": "Appendix · glossary and index of figures",

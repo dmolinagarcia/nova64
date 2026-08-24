@@ -78,6 +78,14 @@ Document-wide reference, in two parts. **The glossary** comes first: every acron
 | Bitstream initialisation | Giving a block RAM its contents from the compiled bitstream rather than loading them at run time. What makes Neon's font and text buffer valid before any software exists — the single most useful property of the design ([D27](sec_q#d27)). |
 | HDL | Hardware Description Language — Verilog or VHDL. The choice is still open ([Q2](sec_q#q2)). |
 | Stub | In layout, a track branching off a bus. Long stubs ruin signal integrity at ~100 MHz, hence the short comb of [F.13](sec_f#f13). |
+| Expansion slot | The parallel connector of [sheet X](sec_x): the machine's own bus, buffered, with a card as a third tenant of the contract Helium already has with Neon. Unpopulated in the first build. |
+| `/EXP_SEL` · `/EXP_BSY` · `/EXP_IRQ` | The slot's three nets — select, stall, interrupt — mirroring `NEON_BUS_SEL`/`BSY`/`IRQ`, with `/EXP_BSY` idling **not busy** because an empty slot must not stall the machine ([X.11](sec_x#x11)). |
+| Slot aperture | The 1 MB per slot the MMU can map into a process, carved out of the frame numbers [F.10](sec_f#f10) leaves unpopulated and addressed on A11–A19, which are idle while the SRAM's `/CE` is ([X.8](sec_x#x8)). Always non-cacheable. |
+| Register window vs aperture | The two ways a card is reachable, and the split is [T.21](sec_t#t21)'s: **control** in bank `$FF`, unmappable to user space by construction; **bulk** through the aperture, mappable with permissions in front of it. |
+| Geographic addressing | Telling a card which slot it is in with connector pins strapped differently in each position, so the same board works in either one with no jumper ([X.14](sec_x#x14)). |
+| Bus master | A device that drives the address bus instead of the CPU. Here: Helium, and nothing else — a card cannot honour the cache-coherence discipline of [M.12](sec_m#m12), so [D48](sec_q#d48) refuses it the bus rather than trusting it ([X.16](sec_x#x16)). |
+| `I2C-EXP` | The third I2C bus, Helium's own and the only one where Helium is master. The slow expansion tier: devices mirrored into I/O windows rather than reached transactionally ([X.22](sec_x#x22)). |
+| Window (slow bus) | A copy of a device's registers in Helium's block RAM, refreshed by a sequencer and read by the CPU at bus speed. A **mirror, not a proxy** — a byte over I2C is ~90 µs and nothing may stall PHI2 for that ([X.23](sec_x#x23)). |
 
 ## Board, power and configuration
   NOTE: → [sheet C](sec_c) · [sheet D](sec_d) · [sheet S](sec_s)
