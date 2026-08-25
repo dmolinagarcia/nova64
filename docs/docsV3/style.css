@@ -248,12 +248,6 @@
        G behind L in the same area, W behind U in Video + audio, Q behind P in
        Project and build, and Z2 behind Z1 in the Appendix. Full edition only;
        the paged edition gives every sheet its own screen already. */
-    body.full #sec_x,
-    body.full #sec_s,
-    body.full #sec_k,
-    body.full #sec_w,
-    body.full #sec_q,
-    body.full #sec_g,
     body.full #sec_z2{ break-before:page; }
 
     /* the title block closes the document on a page of its own, sitting low on
