@@ -248,7 +248,7 @@
        G behind L in the same area, W behind U in Video + audio, Q behind P in
        Project and build, and Z2 behind Z1 in the Appendix. Full edition only;
        the paged edition gives every sheet its own screen already. */
-    body.full #sec_z2{ break-before:page; }
+    body.full #sec_zx{ break-before:page; }
 
     /* the title block closes the document on a page of its own, sitting low on
        it. The drop is a spacer block rather than a margin, because a margin
