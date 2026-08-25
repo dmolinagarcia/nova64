@@ -56,7 +56,7 @@
   <text x="453" y="294" class="plbl">TELEM_COMMIT</text>
   <rect x="466" y="300" width="116" height="60" class="blk"/>
   <text x="524" y="326" class="t">LIVE</text>
-  <text x="524" y="344" class="s">TELEM_SEQ++ · AGE=0</text>
+  <text x="524" y="344" class="s">SEQ++ · AGE=0</text>
   <line x1="582" y1="330" x2="608" y2="330" class="pw"/>
   <text x="595" y="294" class="plbl">TELEM_LATCH</text>
   <rect x="608" y="300" width="108" height="60" class="blk"/>
@@ -64,8 +64,8 @@
   <text x="662" y="344" class="s">read at leisure</text>
 
   <text x="520" y="390" class="s">each copy is one cycle in the core clock domain — nothing can tear</text>
-  <text x="520" y="412" class="s">TELEM_AGE counts eighths of a second since the last commit, saturating at 255</text>
-  <text x="520" y="440" class="s">contents are lost with 3V3_MAIN: the EC must commit once before the CPU leaves reset</text>
+  <text x="520" y="412" class="s">TELEM_AGE counts eighths of a second, saturating at 255</text>
+  <text x="520" y="440" class="s">these copies die with 3V3_MAIN: the EC commits once before the CPU runs</text>
 
   <!-- CPU -->
   <line x1="740" y1="200" x2="800" y2="200" class="dt"/>
@@ -83,9 +83,9 @@
   <text x="873" y="256" class="s">quiesces the MMU</text>
   <text x="873" y="280" class="s">writes ACK_POWEROFF</text>
   <text x="873" y="304" class="s">latch, then read the</text>
-  <text x="873" y="320" class="s">shadow bank — /dev/power</text>
+  <text x="873" y="320" class="s">shadow bank, /dev/power</text>
   <text x="873" y="344" class="s">no new syscalls</text>
 
-  <text x="24" y="492" class="li">The pins carry attention, the SPI link carries detail: a level held until the transaction completes, never a pulse encoding several meanings by width.</text>
-  <text x="24" y="518" class="gtx">If the acknowledgement never comes, the watchdog expires at 10 s and the EC drops the rails anyway — after the tri-state pass. Forced does not mean careless.</text>
+  <text x="24" y="492" class="li">The pins carry attention, the SPI link carries detail: a level held until the transaction completes, never a pulse encoding meanings.</text>
+  <text x="24" y="518" class="gtx">If the acknowledgement never comes, the watchdog expires at 10 s and the EC drops the rails — after the tri-state pass. Not careless.</text>
 </svg>
