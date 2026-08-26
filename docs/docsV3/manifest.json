@@ -6,7 +6,7 @@
     "referenceSheet": "Synthesis document · sheets A–X + appendix Z1–Z2 · index at index.html",
     "detail": "Self-contained: every sheet is the specification of what it covers, not a summary of one held elsewhere — power in C and S, the kernel–hardware interface in M, the debug agent in R, Neon in T, U and W, the windowing OS in V, the expansion bus in X, the build in P",
     "rules": "All 3.3V · hand-solderable · open toolchain",
-    "rev": "OUTLINE 4 · POWER REV C · NEON REV B · GUI REV A · AUDIO REV A · PROTOTYPE REV A · AUG 2026"
+    "rev": "DOC v0.1 · ARCHITECTURE REV A · POWER REV C · EC REV A · CPU REV A · MEMORY REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · PROTOTYPE REV A · AUG 2026"
   },
   "sheets": [
     {
