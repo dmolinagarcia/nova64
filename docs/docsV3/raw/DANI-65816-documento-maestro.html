@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DANI-65816 · Documento maestro del proyecto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --smask:#0C352A; --smask2:#092A21; --panel:#0F4033;
+  --silk:#EDEAE0; --silk-dim:rgba(237,234,224,.62); --silk-faint:rgba(237,234,224,.28);
+  --gold:#C9A227; --gold-hi:#E3C24D; --copper:#B87333;
+  --line:rgba(237,234,224,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{
+  background:linear-gradient(180deg,var(--smask) 0%,var(--smask2) 100%);
+  color:var(--silk);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:15px;line-height:1.55;
+  padding:20px 14px 80px;
+}
+.wrap{max-width:860px;margin:0 auto}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+
+/* ── Masthead: cartucho de serigrafía ── */
+header{border:1.5px solid var(--silk);padding:18px 16px 14px;position:relative;margin-bottom:26px}
+header::after{content:"";position:absolute;inset:4px;border:1px solid var(--silk-faint);pointer-events:none}
+.refdes{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase}
+h1{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:clamp(20px,5vw,30px);letter-spacing:.04em;margin:6px 0 4px}
+.sub{color:var(--silk-dim);font-size:13.5px;max-width:60ch}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;border:1px solid var(--line);padding:4px 9px;color:var(--silk-dim)}
+.chip b{color:var(--gold-hi);font-weight:600}
+
+/* ── Secciones como designadores ── */
+section{margin:34px 0}
+.sechead{display:flex;align-items:baseline;gap:12px;border-bottom:1.5px solid var(--silk);padding-bottom:8px;margin-bottom:16px}
+.sechead .des{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--smask);background:var(--gold);padding:2px 8px;font-size:13px}
+.sechead h2{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:16px;letter-spacing:.05em;text-transform:uppercase}
+.sechead .aim{margin-left:auto;font-size:11px;color:var(--silk-dim);font-family:"IBM Plex Mono",monospace;display:none}
+@media(min-width:640px){.sechead .aim{display:block}}
+h3{font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-hi);margin:20px 0 8px}
+p{margin:8px 0;color:var(--silk)}
+p.dim,li .why{color:var(--silk-dim)}
+strong{color:var(--gold-hi);font-weight:600}
+em{color:var(--silk);font-style:italic}
+
+/* ── Pasos con pads de estado ── */
+ol.steps{list-style:none;counter-reset:none}
+ol.steps li{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.pad{width:14px;height:14px;border-radius:50%;border:2px solid var(--gold);margin-top:3px;flex:none}
+.pad.done{background:var(--gold)}
+.pad.part{background:linear-gradient(90deg,var(--gold) 50%,transparent 50%)}
+.pad.opt{border-style:dashed;border-color:var(--silk-dim)}
+li .id{font-family:"IBM Plex Mono",monospace;color:var(--gold-hi);font-weight:600;font-size:13px}
+li .test{display:block;margin-top:4px;font-size:13px;color:var(--silk-dim)}
+li .test::before{content:"TEST ▸ ";font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--copper);letter-spacing:.1em}
+.milestone{border:1.5px solid var(--gold);background:rgba(201,162,39,.08);padding:10px 12px;margin:14px 0;font-family:"IBM Plex Mono",monospace;font-size:13px}
+.milestone b{color:var(--gold-hi)}
+
+/* ── Tablas ── */
+table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+th{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-align:left;border-bottom:1px solid var(--gold);padding:6px 8px}
+td{border-bottom:1px solid var(--line);padding:6px 8px;vertical-align:top}
+td:first-child{font-family:"IBM Plex Mono",monospace;color:var(--silk)}
+.tscroll{overflow-x:auto}
+
+/* ── Figuras SVG ── */
+figure{border:1px solid var(--line);background:var(--panel);padding:10px;margin:14px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;color:var(--silk-dim);text-transform:uppercase;margin-top:8px;text-align:center}
+
+/* ── Leyenda ── */
+.legend{display:flex;flex-wrap:wrap;gap:14px 22px;font-size:12px;color:var(--silk-dim);align-items:center;border:1px dashed var(--line);padding:10px 12px}
+.legend span{display:flex;align-items:center;gap:7px}
+
+.note{border-left:3px solid var(--copper);padding:6px 12px;margin:12px 0;color:var(--silk-dim);font-size:13.5px}
+.note b{color:var(--silk)}
+ul.plain{list-style:none}
+ul.plain li{padding:5px 0 5px 18px;position:relative;border-bottom:1px dashed var(--line);font-size:13.5px}
+ul.plain li::before{content:"◆";position:absolute;left:0;color:var(--copper);font-size:9px;top:9px}
+footer{margin-top:44px;border-top:1.5px solid var(--silk);padding-top:10px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.12em;color:var(--silk-dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+</style>
+</head>
+<body><div class="wrap">
+
+<header>
+  <div class="refdes">Proyecto de aprendizaje · ordenador retro original · rev. documento 2026-08-03</div>
+  <h1>DANI-65816 <span style="color:var(--gold)">·</span> REV A</h1>
+  <p class="sub">Ordenador portátil W65C816S con MMU, memoria virtual, multitarea y GUI — construido paso a paso sobre 3× iCE40HX4K, íntegramente soldable a mano. Documento maestro: arquitectura, plan por etapas, tests y pendientes.</p>
+  <div class="meta">
+    <span class="chip">CPU <b>W65C816S @ 3.3V</b></span>
+    <span class="chip">FPGA <b>3× iCE40HX4K TQ-144</b></span>
+    <span class="chip">EC <b>RP2040</b></span>
+    <span class="chip">PANEL <b>10.1" 1024×600 RGB</b></span>
+    <span class="chip">ESTADO <b>Etapas 0–1 diseñadas</b></span>
+  </div>
+</header>
+
+<div class="legend">
+  <span><span class="pad done"></span> Hecho</span>
+  <span><span class="pad part"></span> En curso / parcial</span>
+  <span><span class="pad"></span> Pendiente</span>
+  <span><span class="pad opt"></span> Opcional / futuro</span>
+  <span class="mono" style="color:var(--copper)">TEST ▸ criterio de éxito verificable</span>
+</div>
+
+<section id="arq">
+<div class="sechead"><span class="des">A</span><h2>Arquitectura del sistema</h2><span class="aim">un bus, cuatro habitantes</span></div>
+
+<figure>
+<svg viewBox="0 0 860 560" font-family="IBM Plex Mono,monospace">
+  <defs>
+    <marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L8,4L0,8z" fill="#C9A227"/></marker>
+  </defs>
+  <!-- BUS central -->
+  <rect x="60" y="252" width="600" height="46" fill="none" stroke="#E3C24D" stroke-width="2.5"/>
+  <text x="360" y="272" fill="#E3C24D" font-size="15" text-anchor="middle" font-weight="600">BUS COMPARTIDO 65816</text>
+  <text x="360" y="289" fill="#EDEAE0" font-size="10.5" text-anchor="middle" opacity=".75">D/BA[7:0] · A[15:0] · RWB · PHI2 · RDY · ABORTB · IRQB · RESB · BE · VDA/VPA/VPB</text>
+
+  <!-- CPU -->
+  <g>
+    <rect x="90" y="120" width="180" height="86" fill="none" stroke="#EDEAE0" stroke-width="2"/>
+    <rect x="94" y="124" width="172" height="78" fill="none" stroke="#EDEAE0" stroke-width=".7" opacity=".35"/>
+    <text x="180" y="150" fill="#EDEAE0" font-size="14" text-anchor="middle" font-weight="600">W65C816S</text>
+    <text x="180" y="168" fill="#EDEAE0" font-size="10.5" text-anchor="middle" opacity=".75">PLCC-44 en zócalo</text>
+    <text x="180" y="184" fill="#EDEAE0" font-size="10.5" text-anchor="middle" opacity=".75">PHI2 1–4 MHz (máx ~8)</text>
+    <line x1="180" y1="206" x2="180" y2="250" stroke="#C9A227" stroke-width="2" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- FPGA-C -->
+  <g stroke-dasharray="6 5">
+    <rect x="480" y="120" width="180" height="86" fill="none" stroke="#EDEAE0" stroke-width="2"/>
+    <text x="570" y="150" fill="#EDEAE0" font-size="14" text-anchor="middle" font-weight="600">FPGA-C · iCE40</text>
+    <text x="570" y="168" fill="#EDEAE0" font-size="10.5" text-anchor="middle" opacity=".75">softcore 65816</text>
+    <text x="570" y="184" fill="#EDEAE0" font-size="10.5" text-anchor="middle" opacity=".75">sin poblar · BE=0 toma el bus</text>
+  </g>
+  <line x1="570" y1="206" x2="570" y2="250" stroke="#C9A227" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+
+  <!-- FPGA-A -->
+  <g>
+    <rect x="60" y="352" width="290" height="120" fill="none" stroke="#E3C24D" stroke-width="2.5"/>
+    <text x="205" y="376" fill="#E3C24D" font-size="14" text-anchor="middle" font-weight="600">FPGA-A · iCE40HX4K</text>
+    <text x="205" y="394" fill="#EDEAE0" font-size="11" text-anchor="middle">MMU + TLB · caché · ABORT</text>
+    <text x="205" y="410" fill="#EDEAE0" font-size="11" text-anchor="middle">IRQ ctrl · timer · SPI-SD · DMA</text>
+    <text x="205" y="430" fill="#EDEAE0" font-size="10.5" text-anchor="middle" opacity=".7">93/107 pines</text>
+  </g>
+  <line x1="205" y1="298" x2="205" y2="350" stroke="#C9A227" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- memorias de A -->
+  <g font-size="10.5">
+    <rect x="30" y="500" width="150" height="42" fill="none" stroke="#EDEAE0" stroke-width="1.5"/>
+    <text x="105" y="518" fill="#EDEAE0" text-anchor="middle" font-weight="600">SRAM 512 KB</text>
+    <text x="105" y="533" fill="#EDEAE0" text-anchor="middle" opacity=".7">caché · líneas 256 B</text>
+    <rect x="200" y="500" width="150" height="42" fill="none" stroke="#EDEAE0" stroke-width="1.5"/>
+    <text x="275" y="518" fill="#EDEAE0" text-anchor="middle" font-weight="600">2× PSRAM 16 MB</text>
+    <text x="275" y="533" fill="#EDEAE0" text-anchor="middle" opacity=".7">dual QSPI · marcos 2 KB</text>
+    <line x1="120" y1="472" x2="105" y2="498" stroke="#C9A227" stroke-width="1.6" marker-end="url(#ar)"/>
+    <line x1="275" y1="472" x2="275" y2="498" stroke="#C9A227" stroke-width="1.6" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- FPGA-B -->
+  <g>
+    <rect x="420" y="352" width="290" height="120" fill="none" stroke="#E3C24D" stroke-width="2.5"/>
+    <text x="565" y="376" fill="#E3C24D" font-size="14" text-anchor="middle" font-weight="600">FPGA-B · iCE40HX4K</text>
+    <text x="565" y="394" fill="#EDEAE0" font-size="11" text-anchor="middle">vídeo 512×300/1024×600 · paleta</text>
+    <text x="565" y="410" fill="#EDEAE0" font-size="11" text-anchor="middle">audio DMA→I2S · FIFO VRAM</text>
+    <text x="565" y="430" fill="#EDEAE0" font-size="10.5" text-anchor="middle" opacity=".7">79/107 pines · VRAM_SEL/BWAIT</text>
+  </g>
+  <line x1="500" y1="298" x2="500" y2="350" stroke="#C9A227" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- salidas de B -->
+  <g font-size="10.5">
+    <rect x="392" y="500" width="130" height="42" fill="none" stroke="#EDEAE0" stroke-width="1.5"/>
+    <text x="457" y="518" fill="#EDEAE0" text-anchor="middle" font-weight="600">PSRAM 8 MB ×2</text>
+    <text x="457" y="533" fill="#EDEAE0" text-anchor="middle" opacity=".7">"chip RAM" · 1 poblada</text>
+    <rect x="542" y="500" width="130" height="42" fill="none" stroke="#EDEAE0" stroke-width="1.5"/>
+    <text x="607" y="518" fill="#EDEAE0" text-anchor="middle" font-weight="600">PANEL 10.1"</text>
+    <text x="607" y="533" fill="#EDEAE0" text-anchor="middle" opacity=".7">RGB TTL · FPC-50</text>
+    <rect x="692" y="500" width="130" height="42" fill="none" stroke="#EDEAE0" stroke-width="1.5"/>
+    <text x="757" y="518" fill="#EDEAE0" text-anchor="middle" font-weight="600">PCM5102A</text>
+    <text x="757" y="533" fill="#EDEAE0" text-anchor="middle" opacity=".7">I2S · jack + ampli opc.</text>
+    <line x1="480" y1="472" x2="457" y2="498" stroke="#C9A227" stroke-width="1.6" marker-end="url(#ar)"/>
+    <line x1="600" y1="472" x2="607" y2="498" stroke="#C9A227" stroke-width="1.6" marker-end="url(#ar)"/>
+    <line x1="700" y1="460" x2="757" y2="498" stroke="#C9A227" stroke-width="1.6" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- RP2040 EC -->
+  <g>
+    <rect x="700" y="60" width="140" height="330" fill="none" stroke="#B87333" stroke-width="2"/>
+    <text x="770" y="86" fill="#B87333" font-size="14" text-anchor="middle" font-weight="600">RP2040 · EC</text>
+    <text x="770" y="110" fill="#EDEAE0" font-size="10.5" text-anchor="middle">secuenciado power</text>
+    <text x="770" y="126" fill="#EDEAE0" font-size="10.5" text-anchor="middle">config 3× FPGA (SPI)</text>
+    <text x="770" y="142" fill="#EDEAE0" font-size="10.5" text-anchor="middle">USB-C consola/carga</text>
+    <text x="770" y="158" fill="#EDEAE0" font-size="10.5" text-anchor="middle">microSD + flash 16 MB</text>
+    <text x="770" y="174" fill="#EDEAE0" font-size="10.5" text-anchor="middle">hub HID: USB-A host</text>
+    <text x="770" y="190" fill="#EDEAE0" font-size="10.5" text-anchor="middle">táctil GT911 (I2C)</text>
+    <text x="770" y="206" fill="#EDEAE0" font-size="10.5" text-anchor="middle">telemetría ADC</text>
+    <text x="770" y="222" fill="#EDEAE0" font-size="10.5" text-anchor="middle">MCP23017 expander</text>
+    <text x="770" y="238" fill="#EDEAE0" font-size="10.5" text-anchor="middle">28/30 GPIO</text>
+    <line x1="700" y1="300" x2="662" y2="300" stroke="#B87333" stroke-width="1.8" marker-end="url(#ar)"/>
+    <text x="770" y="330" fill="#EDEAE0" font-size="10.5" text-anchor="middle" opacity=".7">I2C eventos HID</text>
+    <text x="770" y="346" fill="#EDEAE0" font-size="10.5" text-anchor="middle" opacity=".7">→ FPGA-A</text>
+    <text x="770" y="370" fill="#EDEAE0" font-size="10.5" text-anchor="middle" opacity=".7">UART puente</text>
+  </g>
+
+  <!-- Power corner -->
+  <g font-size="10.5">
+    <rect x="30" y="40" width="200" height="52" fill="none" stroke="#B87333" stroke-width="1.8"/>
+    <text x="130" y="60" fill="#B87333" text-anchor="middle" font-weight="600">POWER · LiPo 1S + USB-C</text>
+    <text x="130" y="78" fill="#EDEAE0" text-anchor="middle" opacity=".8">3V3 · 1V2 · 5V host · backlight</text>
+  </g>
+  <text x="360" y="235" fill="#EDEAE0" font-size="10" text-anchor="middle" opacity=".55">apertura VRAM banco $FE · MMIO banco $FF · un arbitraje (BE+RDY) para softcore y DMA</text>
+</svg>
+<figcaption>FIG. A — sistema completo · trazo discontinuo = sin poblar al inicio</figcaption>
+</figure>
+
+<p>La idea vertebral: <strong>un solo bus físico</strong> (estilo Amiga) donde conviven el CPU real, la MMU (FPGA-A), el vídeo/audio (FPGA-B) y un softcore futuro (FPGA-C). Un único mecanismo de arbitraje —BE=0 + RDY— sirve para que el softcore sustituya al CPU y para que FPGA-A haga DMA a VRAM. El RP2040 actúa como embedded controller de portátil real: enciende, configura, vigila y hace de hub HID. Todo el conjunto es soldable a mano (TQFP/QFN/SOIC; cero BGA).</p>
+</section>
+<section id="power">
+<div class="sechead"><span class="des">B</span><h2>Alimentación</h2><span class="aim">hoja 1.1 · diseñada</span></div>
+
+<figure>
+<svg viewBox="0 0 860 420" font-family="IBM Plex Mono,monospace">
+  <defs><marker id="ar2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L8,4L0,8z" fill="#C9A227"/></marker></defs>
+  <g font-size="11">
+    <!-- entradas -->
+    <rect x="20" y="30" width="130" height="50" fill="none" stroke="#EDEAE0" stroke-width="1.8"/>
+    <text x="85" y="50" fill="#EDEAE0" text-anchor="middle" font-weight="600">USB-C 5V</text>
+    <text x="85" y="66" fill="#EDEAE0" text-anchor="middle" opacity=".7">CC 5.1k · ESD</text>
+    <rect x="20" y="120" width="130" height="50" fill="none" stroke="#EDEAE0" stroke-width="1.8"/>
+    <text x="85" y="140" fill="#EDEAE0" text-anchor="middle" font-weight="600">LiPo 1S</text>
+    <text x="85" y="156" fill="#EDEAE0" text-anchor="middle" opacity=".7">JST-PH · NTC · MAX17048</text>
+    <!-- charger -->
+    <rect x="210" y="70" width="150" height="60" fill="none" stroke="#E3C24D" stroke-width="2.2"/>
+    <text x="285" y="94" fill="#E3C24D" text-anchor="middle" font-weight="600">MCP73871</text>
+    <text x="285" y="112" fill="#EDEAE0" text-anchor="middle" opacity=".8">carga + power-path</text>
+    <line x1="150" y1="55" x2="208" y2="85" stroke="#C9A227" stroke-width="1.8" marker-end="url(#ar2)"/>
+    <line x1="150" y1="145" x2="208" y2="115" stroke="#C9A227" stroke-width="1.8" marker-end="url(#ar2)"/>
+    <!-- SYS -->
+    <text x="410" y="94" fill="#E3C24D" font-size="13" font-weight="600">SYS</text>
+    <line x1="360" y1="100" x2="448" y2="100" stroke="#E3C24D" stroke-width="2.4"/>
+    <line x1="448" y1="40" x2="448" y2="330" stroke="#E3C24D" stroke-width="2.4"/>
+    <!-- ramas de SYS -->
+    <rect x="520" y="24" width="160" height="46" fill="none" stroke="#EDEAE0" stroke-width="1.8"/>
+    <text x="600" y="42" fill="#EDEAE0" text-anchor="middle" font-weight="600">TPS61023 → 5V</text>
+    <text x="600" y="58" fill="#EDEAE0" text-anchor="middle" opacity=".7">VBUS USB-A host · EN←EC</text>
+    <rect x="520" y="90" width="160" height="46" fill="none" stroke="#EDEAE0" stroke-width="1.8"/>
+    <text x="600" y="108" fill="#EDEAE0" text-anchor="middle" font-weight="600">PT4110 boost LED</text>
+    <text x="600" y="124" fill="#EDEAE0" text-anchor="middle" opacity=".7">backlight · PWM←EC · V TBD</text>
+    <rect x="520" y="156" width="160" height="46" fill="none" stroke="#E3C24D" stroke-width="2.2"/>
+    <text x="600" y="174" fill="#E3C24D" text-anchor="middle" font-weight="600">TPS63020 → 3V3</text>
+    <text x="600" y="190" fill="#EDEAE0" text-anchor="middle" opacity=".7">buck-boost · always-on</text>
+    <line x1="448" y1="47" x2="518" y2="47" stroke="#C9A227" stroke-width="1.8" marker-end="url(#ar2)"/>
+    <line x1="448" y1="113" x2="518" y2="113" stroke="#C9A227" stroke-width="1.8" marker-end="url(#ar2)"/>
+    <line x1="448" y1="179" x2="518" y2="179" stroke="#C9A227" stroke-width="1.8" marker-end="url(#ar2)"/>
+    <!-- del 3V3 -->
+    <line x1="600" y1="202" x2="600" y2="240" stroke="#E3C24D" stroke-width="2.2"/>
+    <line x1="180" y1="240" x2="800" y2="240" stroke="#E3C24D" stroke-width="2.2"/>
+    <text x="810" y="244" fill="#E3C24D" font-size="12" font-weight="600">3V3</text>
+    <g font-size="10.5">
+      <rect x="60" y="270" width="150" height="58" fill="none" stroke="#EDEAE0" stroke-width="1.8"/>
+      <text x="135" y="290" fill="#EDEAE0" text-anchor="middle" font-weight="600">LDO 1.2V (EN←EC)</text>
+      <text x="135" y="306" fill="#EDEAE0" text-anchor="middle" opacity=".7">cores iCE40 ×3</text>
+      <text x="135" y="320" fill="#EDEAE0" text-anchor="middle" opacity=".7">+RC→VCCPLL por chip</text>
+      <rect x="240" y="270" width="150" height="58" fill="none" stroke="#EDEAE0" stroke-width="1.8"/>
+      <text x="315" y="290" fill="#EDEAE0" text-anchor="middle" font-weight="600">BAT54 → VPP_2V5</text>
+      <text x="315" y="306" fill="#EDEAE0" text-anchor="middle" opacity=".7">×3 chips · sin rail 2V5</text>
+      <rect x="420" y="270" width="170" height="58" fill="none" stroke="#EDEAE0" stroke-width="1.8"/>
+      <text x="505" y="290" fill="#EDEAE0" text-anchor="middle" font-weight="600">Load switch panel</text>
+      <text x="505" y="306" fill="#EDEAE0" text-anchor="middle" opacity=".7">EN←EC · secuencia HX8282</text>
+      <rect x="620" y="270" width="180" height="58" fill="none" stroke="#EDEAE0" stroke-width="1.8"/>
+      <text x="710" y="290" fill="#EDEAE0" text-anchor="middle" font-weight="600">Cargas 3V3 directas</text>
+      <text x="710" y="306" fill="#EDEAE0" text-anchor="middle" opacity=".7">RP2040 · CPU · SRAM</text>
+      <text x="710" y="320" fill="#EDEAE0" text-anchor="middle" opacity=".7">PSRAM ×3 · DAC · IO FPGA</text>
+      <line x1="135" y1="240" x2="135" y2="268" stroke="#C9A227" stroke-width="1.6" marker-end="url(#ar2)"/>
+      <line x1="315" y1="240" x2="315" y2="268" stroke="#C9A227" stroke-width="1.6" marker-end="url(#ar2)"/>
+      <line x1="505" y1="240" x2="505" y2="268" stroke="#C9A227" stroke-width="1.6" marker-end="url(#ar2)"/>
+      <line x1="710" y1="240" x2="710" y2="268" stroke="#C9A227" stroke-width="1.6" marker-end="url(#ar2)"/>
+    </g>
+    <text x="430" y="386" fill="#EDEAE0" font-size="10.5" text-anchor="middle" opacity=".6">jumpers 0 Ω en cada rama → cada rail se prueba y se mide aislado (fase 3.1) · test point + LED por rail</text>
+  </g>
+</svg>
+<figcaption>FIG. B — árbol de alimentación · los boosts cuelgan de SYS: todo funciona por USB sin batería</figcaption>
+</figure>
+
+<h3>Secuenciado de arranque (gobernado por el EC)</h3>
+<div class="tscroll"><table>
+<tr><th>#</th><th>Acción</th><th>Condición previa</th></tr>
+<tr><td>0</td><td>3V3 sube solo (always-on)</td><td>VBAT o USB presentes</td></tr>
+<tr><td>1</td><td>RP2040 arranca · CRESET de los 3 FPGA en bajo</td><td>3V3 estable</td></tr>
+<tr><td>2</td><td>EN del LDO 1.2 V</td><td>EC vivo</td></tr>
+<tr><td>3</td><td>Configura FPGAs por SPI (SD → respaldo flash)</td><td>1V2 verificado por ADC</td></tr>
+<tr><td>4</td><td>Load switch del panel</td><td>FPGA-B con CDONE</td></tr>
+<tr><td>5</td><td>Backlight en rampa PWM</td><td>timing de vídeo activo</td></tr>
+<tr><td>6</td><td>Boost 5 V del puerto host</td><td>bajo demanda HID</td></tr>
+<tr><td>7</td><td>FPGA-A suelta RESB → el 65816 arranca</td><td>gateware A listo</td></tr>
+</table></div>
+</section>
+
+<section id="bus">
+<div class="sechead"><span class="des">C</span><h2>Bus compartido</h2><span class="aim">hoja 1.4 · net por net</span></div>
+
+<figure>
+<svg viewBox="0 0 860 330" font-family="IBM Plex Mono,monospace">
+  <g font-size="11">
+    <line x1="40" y1="165" x2="820" y2="165" stroke="#E3C24D" stroke-width="10" opacity=".9"/>
+    <text x="430" y="150" fill="#E3C24D" font-size="12" text-anchor="middle" font-weight="600">D/BA[7:0] · A[15:0] · RWB · PHI2 · RDY · control</text>
+    <!-- CPU -->
+    <rect x="60" y="40" width="160" height="70" fill="none" stroke="#EDEAE0" stroke-width="2"/>
+    <text x="140" y="66" fill="#EDEAE0" text-anchor="middle" font-weight="600">CPU físico</text>
+    <text x="140" y="84" fill="#EDEAE0" text-anchor="middle" opacity=".75">master por defecto</text>
+    <text x="140" y="99" fill="#EDEAE0" text-anchor="middle" opacity=".75">BE=1</text>
+    <line x1="140" y1="110" x2="140" y2="158" stroke="#C9A227" stroke-width="2"/>
+    <!-- FPGA-C -->
+    <g stroke-dasharray="6 5">
+      <rect x="640" y="40" width="160" height="70" fill="none" stroke="#EDEAE0" stroke-width="2"/>
+      <text x="720" y="66" fill="#EDEAE0" text-anchor="middle" font-weight="600">FPGA-C softcore</text>
+      <text x="720" y="84" fill="#EDEAE0" text-anchor="middle" opacity=".75">master alternativo</text>
+      <text x="720" y="99" fill="#EDEAE0" text-anchor="middle" opacity=".75">BE=0 · misma ISA</text>
+    </g>
+    <line x1="720" y1="110" x2="720" y2="158" stroke="#C9A227" stroke-width="2" stroke-dasharray="5 4"/>
+    <!-- FPGA-A -->
+    <rect x="180" y="215" width="220" height="80" fill="none" stroke="#E3C24D" stroke-width="2.2"/>
+    <text x="290" y="240" fill="#E3C24D" text-anchor="middle" font-weight="600">FPGA-A</text>
+    <text x="290" y="258" fill="#EDEAE0" text-anchor="middle" opacity=".8">árbitro: genera PHI2, RESB,</text>
+    <text x="290" y="273" fill="#EDEAE0" text-anchor="middle" opacity=".8">ABORTB, IRQ · DMA con BE=0</text>
+    <line x1="290" y1="172" x2="290" y2="213" stroke="#C9A227" stroke-width="2"/>
+    <!-- FPGA-B -->
+    <rect x="480" y="215" width="220" height="80" fill="none" stroke="#E3C24D" stroke-width="2.2"/>
+    <text x="590" y="240" fill="#E3C24D" text-anchor="middle" font-weight="600">FPGA-B</text>
+    <text x="590" y="258" fill="#EDEAE0" text-anchor="middle" opacity=".8">esclavo: apertura VRAM $FE</text>
+    <text x="590" y="273" fill="#EDEAE0" text-anchor="middle" opacity=".8">FIFO escritura · RDY en lecturas</text>
+    <line x1="590" y1="172" x2="590" y2="213" stroke="#C9A227" stroke-width="2"/>
+    <text x="452" y="200" fill="#B87333" font-size="10.5">VRAM_SEL→ · ←BWAIT</text>
+    <line x1="400" y1="255" x2="478" y2="255" stroke="#B87333" stroke-width="1.8"/>
+    <text x="430" y="320" fill="#EDEAE0" font-size="10" text-anchor="middle" opacity=".6">estado seguro sin bitstream: RESB pull-down (CPU parado) · resto en pull-up · la placa se alimenta sin gateware sin conflictos</text>
+  </g>
+</svg>
+<figcaption>FIG. C — cuatro habitantes, un arbitraje · la MMU asierta VRAM_SEL tras traducir: protección intacta</figcaption>
+</figure>
+
+<p class="dim">Tabla completa señal-por-señal (direcciones, pull-ups y estado de reposo) en <span class="mono">hoja-1-4-fpga-a-bus.md</span>. Nota de gateware: ABORTB debe resolverse durante PHI2 alto — con PHI2 a 1–4 MHz hay holgura de sobra.</p>
+</section>
+<section id="mem">
+<div class="sechead"><span class="des">D</span><h2>Memoria virtual</h2><span class="aim">3 niveles · páginas 2 KB</span></div>
+
+<figure>
+<svg viewBox="0 0 860 300" font-family="IBM Plex Mono,monospace">
+  <defs><marker id="ar3" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L8,4L0,8z" fill="#C9A227"/></marker></defs>
+  <g font-size="11">
+    <rect x="30" y="60" width="170" height="90" fill="none" stroke="#EDEAE0" stroke-width="1.8"/>
+    <text x="115" y="86" fill="#EDEAE0" text-anchor="middle" font-weight="600">microSD</text>
+    <text x="115" y="104" fill="#EDEAE0" text-anchor="middle" opacity=".75">swap</text>
+    <text x="115" y="120" fill="#EDEAE0" text-anchor="middle" opacity=".75">granularidad: página 2 KB</text>
+    <rect x="270" y="60" width="170" height="90" fill="none" stroke="#EDEAE0" stroke-width="1.8"/>
+    <text x="355" y="86" fill="#EDEAE0" text-anchor="middle" font-weight="600">PSRAM 16 MB</text>
+    <text x="355" y="104" fill="#EDEAE0" text-anchor="middle" opacity=".75">almacén principal</text>
+    <text x="355" y="120" fill="#EDEAE0" text-anchor="middle" opacity=".75">marcos 2 KB</text>
+    <rect x="510" y="60" width="170" height="90" fill="none" stroke="#E3C24D" stroke-width="2.2"/>
+    <text x="595" y="86" fill="#E3C24D" text-anchor="middle" font-weight="600">SRAM 512 KB</text>
+    <text x="595" y="104" fill="#EDEAE0" text-anchor="middle" opacity=".75">caché write-back</text>
+    <text x="595" y="120" fill="#EDEAE0" text-anchor="middle" opacity=".75">líneas 256 B · dirty bits</text>
+    <rect x="740" y="72" width="90" height="66" fill="none" stroke="#EDEAE0" stroke-width="2"/>
+    <text x="785" y="100" fill="#EDEAE0" text-anchor="middle" font-weight="600">CPU</text>
+    <text x="785" y="118" fill="#EDEAE0" text-anchor="middle" opacity=".75">virtual</text>
+    <line x1="200" y1="105" x2="268" y2="105" stroke="#C9A227" stroke-width="2" marker-end="url(#ar3)"/>
+    <line x1="440" y1="105" x2="508" y2="105" stroke="#C9A227" stroke-width="2" marker-end="url(#ar3)"/>
+    <line x1="680" y1="105" x2="738" y2="105" stroke="#C9A227" stroke-width="2" marker-end="url(#ar3)"/>
+    <text x="234" y="95" fill="#B87333" font-size="10">fault</text>
+    <text x="474" y="95" fill="#B87333" font-size="10">miss</text>
+    <rect x="270" y="185" width="410" height="52" fill="none" stroke="#B87333" stroke-width="1.8"/>
+    <text x="475" y="206" fill="#B87333" text-anchor="middle" font-weight="600">MMU: tabla de páginas en SRAM · TLB en BRAM · walk hardware</text>
+    <text x="475" y="224" fill="#EDEAE0" text-anchor="middle" opacity=".8">fallo/permiso → ABORTB · PTE: frame + R/W/X + P/D/A (formato pendiente)</text>
+    <g font-size="10.5">
+      <text x="115" y="270" fill="#EDEAE0" text-anchor="middle">banco $00: pinned en SRAM (stack · DP)</text>
+      <text x="415" y="270" fill="#EDEAE0" text-anchor="middle">$01–$FD: espacio paginado de procesos</text>
+      <text x="640" y="270" fill="#E3C24D" text-anchor="middle">$FE: apertura VRAM</text>
+      <text x="795" y="270" fill="#E3C24D" text-anchor="middle">$FF: MMIO priv.</text>
+    </g>
+  </g>
+</svg>
+<figcaption>FIG. D — jerarquía y mapa de bancos · banco $FF autoprotegido = clave del esquema de protección</figcaption>
+</figure>
+</section>
+
+<section id="etapas">
+<div class="sechead"><span class="des">E</span><h2>Plan por etapas</h2><span class="aim">pasos pequeños · tests verificables</span></div>
+
+<h3>E0 · Preparación</h3>
+<ol class="steps">
+<li><span class="pad"></span><div><span class="id">0.1</span> Toolchain: KiCad 8, oss-cad-suite (Yosys + nextpnr-ice40 + IceStorm), pico-sdk, simulador.<span class="test">blinky iCE40 simulado + "hello" RP2040 compilado.</span></div></li>
+<li><span class="pad"></span><div><span class="id">0.2</span> Elegir HDL (Verilog vs VHDL — condiciona el softcore de referencia: P65816 es VHDL).</div></li>
+<li><span class="pad"></span><div><span class="id">0.3</span> Librería KiCad del proyecto: símbolo y footprint de cada componente, verificados uno a uno.<span class="test">cada footprint impreso 1:1 y comparado con el componente físico.</span></div></li>
+<li><span class="pad part"></span><div><span class="id">0.4</span> Panel: candidato fijado (ER-TFT101-1, HX8282, modeline 51.2 MHz / 1344×635 → 60 Hz, BIST, latch en bajada). Falta datasheet del módulo (straps FPC, backlight, GT911).</div></li>
+<li><span class="pad done"></span><div><span class="id">0.5</span> Hoja de pines de los 3 TQ-144 → <strong>cabe</strong>: A 93/107 · B 79/107 · C 43/107 (<span class="mono">hoja-pines-ice40.md</span>).</div></li>
+<li><span class="pad"></span><div><span class="id">0.6</span> Actualizar el diagrama de bloques HTML/SVG a la arquitectura final.</div></li>
+</ol>
+
+<h3>E1 · Esquemático (diseño de bloque hecho — falta dibujar en KiCad)</h3>
+<ol class="steps">
+<li><span class="pad part"></span><div><span class="id">1.1</span> Alimentación (<span class="mono">hoja-1-1</span>): power-path, 3V3 always-on, 1V2 con EN, VPP vía BAT54, boosts de SYS, load switch, secuenciado EC.</div></li>
+<li><span class="pad part"></span><div><span class="id">1.2</span> RP2040/EC (<span class="mono">hoja-1-2</span>): 28/30 GPIO con expander MCP23017 · SWD · PIO-USB · táctil GT911.</div></li>
+<li><span class="pad part"></span><div><span class="id">1.3</span> Config FPGAs (<span class="mono">hoja-1-3</span>): SPI en estrella, CRESET individual, CDONE por expander.</div></li>
+<li><span class="pad part"></span><div><span class="id">1.4</span> FPGA-A + bus + memorias (<span class="mono">hoja-1-4</span>): tabla net-por-net, estado seguro sin bitstream, osc 25 MHz común.</div></li>
+<li><span class="pad part"></span><div><span class="id">1.5</span> FPGA-B + panel + audio (<span class="mono">hoja-1-5</span>): FPC-50 con 33 Ω, PCM5102A, ampli opcional, VGA por jumpers.</div></li>
+<li><span class="pad part"></span><div><span class="id">1.6</span> FPGA-C + conectores (<span class="mono">hoja-1-6</span>): jumpers de alimentación de C, botón-NMI de depuración.</div></li>
+<li><span class="pad"></span><div><span class="id">1.7</span> Revisión cruzada.<span class="test">ERC limpio + repaso manual de cada pin TQFP contra datasheet, dos pasadas en días distintos.</span></div></li>
+</ol>
+
+<h3>E2 · Layout</h3>
+<ol class="steps">
+<li><span class="pad"></span><div><span class="id">2.1</span> Stackup 2 capas (valorar 4 si el ruteo se enreda) · reglas del fabricante antes de rutear.</div></li>
+<li><span class="pad"></span><div><span class="id">2.2</span> Colocación: PLCC al centro, A/B/C alrededor (bus &lt;10 cm) · fanout TQFP/QFN · pads térmicos con vías a GND.</div></li>
+<li><span class="pad"></span><div><span class="id">2.3</span> Rutas críticas: QSPI &lt;3 cm agrupadas · RGB ordenado · boost de backlight lejos de señales.</div></li>
+<li><span class="pad"></span><div><span class="id">2.4</span> Plano de masa continuo · DRC limpio.</div></li>
+<li><span class="pad"></span><div><span class="id">2.5</span> Revisión final con ojos frescos.<span class="test">gerbers verificados en un visor externo.</span></div></li>
+</ol>
+
+<h3>E3 · Montaje y bring-up por fases <span style="color:var(--silk-dim)">— poblar solo lo que toca</span></h3>
+<ol class="steps">
+<li><span class="pad"></span><div><span class="id">3.1</span> Solo alimentación.<span class="test">3V3 ±2 % y 1V2 ±3 % con carga ficticia · carga de batería con STAT correctos · cada rama medida aislada por su jumper.</span></div></li>
+<li><span class="pad"></span><div><span class="id">3.2</span> RP2040.<span class="test">enumera USB-CDC · lee microSD FAT32 · telemetría I2C (MAX17048 + MCP23017) por consola · PWM medible.</span></div></li>
+<li><span class="pad"></span><div><span class="id">3.3</span> FPGAs.<span class="test">EC configura cada chip por separado (blinky) · CDONE ×3 en alto · reconfigurar B sin tocar A demostrado.</span></div></li>
+<li><span class="pad"></span><div><span class="id">3.4</span> Memorias.<span class="test">test de patrones SRAM y 2× PSRAM desde FPGA-A, resultado por UART.</span></div></li>
+<li><span class="pad"></span><div><span class="id">3.5</span> CPU vivo.<span class="test">PHI2 1 MHz · ROM de NOPs en BRAM, bus consistente al analizador · LED por dirección decodificada.</span></div></li>
+<li><span class="pad"></span><div><span class="id">3.6</span> Vídeo y audio.<span class="test">paso 0: BIST del panel sin gateware → luego VGA barras → barras 1024×600 por FPC → framebuffer 512×300 desde PSRAM → tono por el jack.</span></div></li>
+</ol>
+</section>
+<section id="gw">
+<div class="sechead"><span class="des">F</span><h2>Gateware incremental</h2><span class="aim">mismo hardware · bitstreams sucesivos</span></div>
+<ol class="steps">
+<li><span class="pad"></span><div><span class="id">4.1</span> Sistema plano: CPU + BRAM como ROM/RAM, sin MMU · UART como primer MMIO en $FF.<span class="test">"hola" del 65816 por la consola.</span></div></li>
+<li><span class="pad"></span><div><span class="id">4.2</span> SRAM en el mapa del CPU (acceso directo, sin caché).</div></li>
+<li><span class="pad"></span><div><span class="id">4.3</span> Caché SRAM↔PSRAM (líneas 256 B, write-back) con MMU en identity mapping.<span class="test">programa corre desde PSRAM con hit-rate visible en contadores.</span></div></li>
+<li><span class="pad"></span><div><span class="id">4.4</span> Paginación real: tabla en SRAM, TLB en BRAM, walk hardware · definir formato de PTE.</div></li>
+<li><span class="pad"></span><div><span class="id">4.5</span> ABORT: fallo de página → handler carga página desde SD.<span class="test">programa mayor que la RAM física corre correcto (swap demostrado).</span></div></li>
+<li><span class="pad"></span><div><span class="id">4.6</span> Periféricos: IRQ ctrl, timer, SPI-SD, I2C-HID · apertura VRAM $FE + FIFO + DMA A→VRAM · motor audio DMA→I2S.</div></li>
+<li><span class="pad opt"></span><div><span class="id">4.7</span> Softcore en FPGA-C: poblar el chip, BE=0, P65816/FT816 toma el bus.<span class="test">mismo binario corre con CPU físico extraído del zócalo.</span></div></li>
+</ol>
+</section>
+
+<section id="os1">
+<div class="sechead"><span class="des">G</span><h2>OS · hito «Apple II»</h2><span class="aim">arranca solo, con su pantalla y su teclado</span></div>
+<ol class="steps">
+<li><span class="pad"></span><div><span class="id">5.0</span> Toolchain cruzado (64tass o WDC) + cargador serie.<span class="test">editar en PC → un botón → corre en la máquina.</span></div></li>
+<li><span class="pad"></span><div><span class="id">5.1</span> Monitor/BIOS: peek/poke, volcados, ejecutar, cargar binarios por UART.</div></li>
+<li><span class="pad"></span><div><span class="id">5.2</span> Kernel mono-proceso: syscalls COP (putchar/getchar/read_sector) · usuario/privilegiado con ABORT + $FF.<span class="test">acceso ilegal desde usuario → ABORT capturado, kernel intacto.</span></div></li>
+<li><span class="pad"></span><div><span class="id">5.3</span> FAT32 solo-lectura (ficheros copiados desde el PC visibles).</div></li>
+<li><span class="pad"></span><div><span class="id">5.4</span> Formato de ejecutable relocatable + loader (un banco por proceso, DBR/PBR).</div></li>
+<li><span class="pad"></span><div><span class="id">5.5</span> Shell CLI como proceso de usuario: dir, type, run, free.</div></li>
+<li><span class="pad"></span><div><span class="id">5.6</span> Autonomía: teclado HID + modo texto nativo 1024×600 conectados a la consola.</div></li>
+</ol>
+<div class="milestone">◆ <b>HITO APPLE II</b> — enciendes la máquina, aparece el prompt en su pantalla, tecleas <span class="mono">run juego</span> y corre desde la SD. Sin PC.</div>
+<ol class="steps">
+<li><span class="pad"></span><div><span class="id">5.7</span> Escritura FAT32 + utilidades (copy, del, redirección).</div></li>
+<li><span class="pad"></span><div><span class="id">5.8</span> Editor de texto a pantalla completa.<span class="test">el mejor test de integración: teclado + vídeo + ficheros + syscalls a la vez.</span></div></li>
+</ol>
+</section>
+
+<section id="os2">
+<div class="sechead"><span class="des">H</span><h2>OS · hito «Amiga»</h2><span class="aim">multitarea visible + GUI con puntero</span></div>
+<ol class="steps">
+<li><span class="pad"></span><div><span class="id">6.1</span> Multitarea preemptiva: scheduler por timer, contexto completo, spawn/exit/yield.<span class="test">dos programas contando a la vez; uno ilegal muere por ABORT sin tumbar al resto (mejor que el Amiga real).</span></div></li>
+<li><span class="pad"></span><div><span class="id">6.2</span> IPC por mensajes (espejo del Exec de Amiga).</div></li>
+<li><span class="pad"></span><div><span class="id">6.3</span> API gráfica: el servidor mapea $FE vía MMU y dibuja directo · blits por DMA · doble buffer conmutando la base.</div></li>
+<li><span class="pad"></span><div><span class="id">6.4</span> Puntero: ratón/táctil por hub HID + cursor sprite por hardware en FPGA-B.</div></li>
+<li><span class="pad"></span><div><span class="id">6.5</span> Servidor de ventanas (espíritu Intuition): tiling primero, solapadas después.</div></li>
+<li><span class="pad"></span><div><span class="id">6.6</span> Escritorio mínimo: lanzador + reloj + apps en ventanas.</div></li>
+</ol>
+<div class="milestone">◆ <b>HITO AMIGA</b> — escritorio con ventanas, ratón, y procesos protegidos por MMU. 512×300 a 256 colores con paleta.</div>
+<ol class="steps">
+<li><span class="pad opt"></span><div><span class="id">6.7</span> Sonido: driver sobre el motor DMA · PSG chiptune en gateware · reproductor de módulos como homenaje.</div></li>
+<li><span class="pad opt"></span><div><span class="id">6.8</span> Self-hosting: ensamblador nativo — el día que ya no necesitas el PC.</div></li>
+</ol>
+</section>
+
+<section id="fis">
+<div class="sechead"><span class="des">I</span><h2>Integración física</h2><span class="aim">se abre al acercarse el hito Apple II</span></div>
+<ol class="steps">
+<li><span class="pad opt"></span><div><span class="id">7.x</span> Carcasa, teclado físico (matriz FPC escaneada por el EC), batería definitiva, altavoz (footprint PAM8302 ya reservado), bisagra del panel.</div></li>
+</ol>
+</section>
+
+<section id="pend">
+<div class="sechead"><span class="des">J</span><h2>Puntos pendientes</h2><span class="aim">bloqueantes marcados</span></div>
+<ul class="plain">
+<li><strong>⚠ Datasheet del módulo ER-TFT101-1</strong> (pedir variante capacitiva GT911): straps del FPC-50, tensión/corriente del backlight, extras de alimentación. Bloquea cerrar 1.5 y el bloque PT4110 en KiCad.</li>
+<li>Elegir HDL definitivo (0.2) — condiciona softcore de referencia y simulador.</li>
+<li>Formato de PTE: bits de frame + R/W/X + present/dirty/accessed (se decide en 4.4, no bloquea PCB).</li>
+<li>Ensamblador cruzado: 64tass vs herramientas WDC (5.0).</li>
+<li>Batería 1S concreta: capacidad/formato → fija R_PROG del cargador y autonomía.</li>
+<li>Verificar en datasheet Lattice: rango exacto de VPP_2V5 (BAT54 vs directo) y pines GBIN del TQ-144 al asignar pinout físico.</li>
+<li>GPIOs consecutivos para PIO-USB al fijar el pinout del RP2040.</li>
+<li>Opcional: ¿placa iCEBreaker para practicar el toolchain antes de tener PCB?</li>
+</ul>
+</section>
+
+<section id="log">
+<div class="sechead"><span class="des">K</span><h2>Registro de decisiones</h2><span class="aim">por qué las cosas son como son</span></div>
+<div class="tscroll"><table>
+<tr><th>Fecha</th><th>Decisión</th></tr>
+<tr><td>08-02</td><td>Sin BGA. QFN con pad térmico viable → todo chips desnudos salvo el FPGA.</td></tr>
+<tr><td>08-02</td><td>ECP5 (solo BGA) → <strong>3× iCE40HX4K TQ-144</strong> (die HX8K: ~7.680 LUTs con toolchain abierto). Consecuencia: tabla de páginas en SRAM + TLB en BRAM, walk hardware.</td></tr>
+<tr><td>08-02</td><td>Objetivo en dos hitos: «Apple II» (autonomía) y «Amiga» (multitarea + GUI).</td></tr>
+<tr><td>08-02</td><td>Audio: PCM5102 I2S en FPGA-B; su PSRAM = «chip RAM» (framebuffer + audio DMA, homenaje a Paula). Teclado matriz eliminado → RP2040 hub HID. Solo USB (PIO-USB), sin PS/2.</td></tr>
+<tr><td>08-02</td><td>Panel 10.1" 1024×600 <strong>RGB TTL directo</strong> → ANX6345 y eDP eliminados del proyecto.</td></tr>
+<tr><td>08-02</td><td><strong>Pixel doubling</strong>: panel siempre a 1024×600@60; framebuffer 512×300@8bpp ≈ 9.2 MB/s → cabe en 1 QSPI. Resolución/bpp = modos de gateware. 2º footprint PSRAM sin poblar.</td></tr>
+<tr><td>08-02</td><td>Panel candidato ER-TFT101-1 verificado (HX8282: modeline, BIST, 3.3 V, latch en bajada).</td></tr>
+<tr><td>08-02</td><td>Hoja de pines resuelta; SD en FPGA-A (el swap exige camino rápido); QSPI-CLK compartido por pareja.</td></tr>
+<tr><td>08-02</td><td><strong>Bus compartido estilo Amiga</strong>: fuera enlace inter-FPGA; CPU escribe VRAM ($FE) directo; MMU asierta VRAM_SEL → protección intacta; FIFO + RDY; DMA reutiliza el arbitraje del softcore. A: 93/107, B: 79/107.</td></tr>
+<tr><td>08-02</td><td>Hoja 1.1: boosts desde SYS (funciona por USB sin batería) · boost 5 V para USB-A host (descubierto) · VPP vía BAT54 · secuenciado EC de 7 pasos.</td></tr>
+<tr><td>08-02</td><td>Hoja 1.2: GPIO 28/30 con MCP23017 · SPI separados SD/config · CRESET individual · <strong>táctil capacitivo GT911</strong> (el resistivo exigía 4 ADC inexistentes).</td></tr>
+<tr><td>08-03</td><td>Hojas 1.3–1.6 diseñadas: estado seguro del bus sin bitstream · osc único 25 MHz · SRAM SOP-32 · PCM5102 sin MCLK · ampli opcional · botón-NMI de depuración.</td></tr>
+</table></div>
+</section>
+
+<section id="next">
+<div class="sechead"><span class="des">▶</span><h2>Próximos 3 movimientos</h2></div>
+<ol class="steps">
+<li><span class="pad"></span><div><span class="id">1</span> Pedir el panel (variante capacitiva) y conseguir el datasheet del módulo — única dependencia externa.</div></li>
+<li><span class="pad"></span><div><span class="id">2</span> Instalar toolchain (0.1) y decidir HDL (0.2) — permite empezar gateware en simulación en paralelo al KiCad.</div></li>
+<li><span class="pad"></span><div><span class="id">3</span> Abrir KiCad: proyecto + librería (0.3) y dibujar la hoja 1.1 siguiendo su documento.</div></li>
+</ol>
+</section>
+
+<footer><span>DANI-65816 · REV A · documento maestro</span><span>fuentes: plan + hojas 1.1–1.6 + hoja de pines</span></footer>
+</div></body></html>

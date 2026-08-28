@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DANI-65816 — Diagrama de bloques</title>
+<style>
+  html,body{margin:0;padding:0;background:#061E17;}
+  body{display:flex;justify-content:center;padding:12px 6px;}
+  svg{width:100%;max-width:980px;height:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .blk{fill:#0E3A2C;stroke:#F1ECD9;stroke-width:1.3;}
+  .opt{stroke-dasharray:5 4;opacity:.8;}
+  .t{fill:#F1ECD9;font-size:13px;font-weight:700;text-anchor:middle;}
+  .s{fill:rgba(241,236,217,.72);font-size:10px;text-anchor:middle;}
+  .li{fill:rgba(241,236,217,.85);font-size:11px;}
+  .eye{fill:rgba(241,236,217,.55);font-size:11px;letter-spacing:3px;font-weight:700;}
+  .lbl{fill:#7FD8BD;font-size:9px;text-anchor:middle;}
+  .plbl{fill:#D9A93F;font-size:9px;text-anchor:middle;}
+  .pw{stroke:#D9A93F;stroke-width:3;fill:none;}
+  .dt{stroke:#7FD8BD;stroke-width:2;fill:none;}
+  .dtb{stroke:#7FD8BD;stroke-width:5;fill:none;}
+  .dts{stroke:#7FD8BD;stroke-width:1.6;fill:none;stroke-dasharray:5 4;}
+  .op{stroke:rgba(241,236,217,.6);stroke-width:1.6;fill:none;stroke-dasharray:5 4;}
+</style>
+</head>
+<body>
+<svg viewBox="0 0 960 1430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de bloques del DANI-65816">
+
+  <!-- PCB -->
+  <rect x="16" y="16" width="928" height="1398" rx="18" fill="#0B3125" stroke="#D9A93F" stroke-width="2.5"/>
+  <circle cx="44" cy="44" r="9" fill="#061E17" stroke="rgba(241,236,217,.7)" stroke-width="1.5"/>
+  <circle cx="916" cy="44" r="9" fill="#061E17" stroke="rgba(241,236,217,.7)" stroke-width="1.5"/>
+  <circle cx="44" cy="1386" r="9" fill="#061E17" stroke="rgba(241,236,217,.7)" stroke-width="1.5"/>
+  <circle cx="916" cy="1386" r="9" fill="#061E17" stroke="rgba(241,236,217,.7)" stroke-width="1.5"/>
+
+  <!-- Cabecera -->
+  <text x="72" y="66" fill="#F1ECD9" font-size="24" font-weight="800" letter-spacing="2">DANI-65816</text>
+  <text x="890" y="64" fill="rgba(241,236,217,.6)" font-size="11" text-anchor="end">DIAGRAMA DE BLOQUES · REV B</text>
+  <line x1="48" y1="80" x2="912" y2="80" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
+
+  <!-- ══════ ALIMENTACIÓN ══════ -->
+  <text x="48" y="106" class="eye">ALIMENTACIÓN + GESTIÓN</text>
+
+  <rect x="48" y="124" width="104" height="56" class="blk"/>
+  <text x="100" y="147" class="t">USB-C</text>
+  <text x="100" y="163" class="s">5 V + datos</text>
+
+  <rect x="192" y="124" width="140" height="56" class="blk"/>
+  <text x="262" y="147" class="t">MCP73871</text>
+  <text x="262" y="163" class="s">carga + power-path</text>
+
+  <rect x="372" y="124" width="140" height="56" class="blk"/>
+  <text x="442" y="147" class="t">TPS63020</text>
+  <text x="442" y="163" class="s">buck-boost 3,3 V</text>
+
+  <rect x="552" y="116" width="120" height="30" class="blk"/>
+  <text x="612" y="136" class="s" font-weight="700">LDO 1,2 V core ×3</text>
+  <rect x="552" y="152" width="120" height="30" class="blk"/>
+  <text x="612" y="172" class="s" font-weight="700">boost 5V USB · BL</text>
+
+  <line x1="152" y1="152" x2="192" y2="152" class="pw"/>
+  <text x="172" y="146" class="plbl">VBUS</text>
+  <line x1="332" y1="152" x2="372" y2="152" class="pw"/>
+  <text x="352" y="146" class="plbl">VSYS</text>
+  <path d="M512 152 L532 152 L532 131 L552 131" class="pw"/>
+  <path d="M532 152 L532 167 L552 167" class="pw"/>
+  <text x="612" y="196" class="plbl" font-size="8">boosts desde VSYS · VPP 2,5 V: BAT54</text>
+  <path d="M442 180 L442 208" class="pw"/>
+  <path d="M436 202 L442 210 L448 202" fill="none" stroke="#D9A93F" stroke-width="3"/>
+  <text x="452" y="206" fill="#D9A93F" font-size="10" font-weight="700">3,3 V → todo el sistema</text>
+
+  <rect x="192" y="224" width="140" height="48" class="blk"/>
+  <text x="262" y="244" class="t">LiPo 1S</text>
+  <text x="262" y="260" class="s">3,7 V · 3000 mAh</text>
+  <line x1="262" y1="180" x2="262" y2="224" class="pw"/>
+
+  <rect x="372" y="224" width="140" height="48" class="blk"/>
+  <text x="442" y="244" class="t">MAX17048</text>
+  <text x="442" y="260" class="s">fuel gauge · SoC %</text>
+  <line x1="332" y1="248" x2="372" y2="248" class="pw" stroke-width="2"/>
+
+  <!-- RP2040 -->
+  <rect x="712" y="108" width="200" height="188" class="blk" stroke-width="1.8"/>
+  <text x="812" y="132" class="t" font-size="15">RP2040</text>
+  <text x="812" y="148" class="s">controlador de placa (EC)</text>
+  <text x="726" y="174" class="li">• USB-C: prog. + consola</text>
+  <text x="726" y="194" class="li">• PIO-USB host: HID</text>
+  <text x="726" y="214" class="li">• config SPI → 3× iCE40</text>
+  <text x="726" y="234" class="li">• BIOS desde SD → RAM</text>
+  <text x="726" y="254" class="li">• power · rails · batería</text>
+  <text x="726" y="274" class="li">• UF2: se actualiza x USB</text>
+
+  <rect x="760" y="312" width="152" height="32" class="blk"/>
+  <text x="836" y="332" class="s" font-weight="700">W25Q16 · firmware EC</text>
+  <line x1="836" y1="296" x2="836" y2="312" class="dt"/>
+
+  <path d="M100 180 L100 292 L692 292 L692 206 L712 206" class="dt"/>
+  <text x="396" y="286" class="lbl">USB D+ / D−</text>
+
+  <line x1="512" y1="248" x2="712" y2="248" class="dts"/>
+  <text x="612" y="242" class="lbl">I2C · SoC/estado</text>
+
+  <path d="M724 296 L724 410 L560 410 L560 440" class="dt"/>
+  <text x="646" y="404" class="lbl">config SPI (CRESET/CDONE) · UART · BIOS</text>
+  <text x="646" y="424" class="lbl" opacity=".7">a las tres FPGAs</text>
+
+  <!-- ══════ CÓMPUTO ══════ -->
+  <text x="48" y="404" class="eye">CÓMPUTO</text>
+
+  <rect x="48" y="470" width="200" height="100" fill="#0E3A2C" stroke="#D9A93F" stroke-width="2.2"/>
+  <text x="148" y="497" class="t" font-size="16">W65C816S</text>
+  <text x="148" y="515" class="s">CPU real · zócalo PLCC-44</text>
+  <text x="148" y="531" class="s">3,3 V · PHI2 desde FPGA-A</text>
+  <text x="148" y="549" class="s">BE=0 → cede bus a FPGA-C</text>
+
+  <rect x="48" y="590" width="200" height="64" class="blk opt"/>
+  <text x="148" y="612" class="t">FPGA-C · softcore</text>
+  <text x="148" y="628" class="s">65816 en iCE40 · opcional</text>
+  <text x="148" y="644" class="s">mismas pistas del bus</text>
+  <path d="M248 622 L289 622 L289 526" class="op"/>
+  <text x="309" y="586" class="lbl" font-size="8">BE=0</text>
+
+  <line x1="248" y1="520" x2="330" y2="520" class="dtb"/>
+  <text x="289" y="496" class="lbl">bus 65816</text>
+  <text x="289" y="508" class="lbl" opacity=".75">PHI2·RDY·ABORTB</text>
+
+  <!-- FPGA-A -->
+  <rect x="330" y="440" width="330" height="420" class="blk" stroke-width="1.8"/>
+  <text x="495" y="466" class="t" font-size="15">FPGA-A · iCE40HX4K</text>
+  <text x="495" y="482" class="s">TQ144 soldable · MMU + periféricos</text>
+  <text x="346" y="510" class="li">• MMU · pág. 2 KB · TLB en BRAM</text>
+  <text x="346" y="532" class="li">• ABORTB → mem. virtual real</text>
+  <text x="346" y="554" class="li">• caché SRAM ↔ SDRAM · bus comp.</text>
+  <text x="346" y="576" class="li">• latch de banco BA16-23</text>
+  <text x="346" y="598" class="li">• IRQ · timer · UART · SPI · I2C</text>
+  <text x="346" y="620" class="li">• VRAM_SEL: apertura $FE a vídeo</text>
+  <text x="346" y="642" class="li">• eventos HID desde RP2040</text>
+  <text x="346" y="664" class="li">• árbitro BE: CPU real ⇄ FPGA-C</text>
+
+  <!-- Memorias (columna derecha) -->
+  <rect x="712" y="452" width="200" height="56" class="blk"/>
+  <text x="812" y="474" class="t">SRAM 2 MB · caché+tablas</text>
+  <text x="812" y="490" class="s">IS61WV102416 · 16 b · 10 ns</text>
+  <line x1="660" y1="480" x2="712" y2="480" class="dt"/>
+
+  <rect x="712" y="528" width="200" height="56" class="blk"/>
+  <text x="812" y="550" class="t">W9825G6KH · 32 MB</text>
+  <text x="812" y="566" class="s">SDRAM ppal · comparte bus SRAM</text>
+  <line x1="660" y1="556" x2="712" y2="556" class="dt"/>
+
+  <!-- E/S (columna izquierda) -->
+  <rect x="48" y="674" width="200" height="52" class="blk"/>
+  <text x="148" y="695" class="t">microSD</text>
+  <text x="148" y="711" class="s">arranque + disco + swap</text>
+  <line x1="248" y1="700" x2="330" y2="700" class="dt"/>
+  <rect x="272" y="686" width="36" height="26" fill="#0B3125" stroke="#7FD8BD" stroke-width="1.4"/>
+  <text x="290" y="703" class="lbl" font-size="8">MUX</text>
+  <path d="M290 686 L290 668" class="dts"/>
+  <text x="290" y="662" class="lbl" opacity=".8">↑ RP2040 (arranque)</text>
+
+  <rect x="48" y="746" width="200" height="52" class="blk"/>
+  <text x="148" y="767" class="t">USB-A · teclado/ratón</text>
+  <text x="148" y="783" class="s">PIO-USB · boost 5 V</text>
+  <line x1="248" y1="772" x2="330" y2="772" class="dts"/>
+  <text x="289" y="765" class="lbl" font-size="8">vía RP2040</text>
+
+  <rect x="48" y="818" width="200" height="52" class="blk"/>
+  <text x="148" y="839" class="t">PCF8563 · RTC</text>
+  <text x="148" y="855" class="s">I2C + pila de backup</text>
+  <line x1="248" y1="844" x2="330" y2="844" class="dts"/>
+
+  <!-- ══════ VÍDEO + AUDIO ══════ -->
+  <text x="48" y="898" class="eye">VÍDEO + AUDIO</text>
+
+  <line x1="460" y1="860" x2="460" y2="920" class="dtb"/>
+  <text x="290" y="890" fill="#7FD8BD" font-size="10">bus compartido (tap) · VRAM $FE</text>
+  <path d="M540 920 L540 860" class="dts"/>
+  <text x="552" y="890" fill="#7FD8BD" font-size="10">IRQ VSync</text>
+
+  <rect x="330" y="920" width="330" height="170" class="blk" stroke-width="1.8"/>
+  <text x="495" y="946" class="t" font-size="15">FPGA-B · iCE40HX4K</text>
+  <text x="495" y="962" class="s">vídeo + audio</text>
+  <text x="346" y="990" class="li">• framebuffer 512×300 · doble búfer</text>
+  <text x="346" y="1012" class="li">• pixel doubling → 1024×600</text>
+  <text x="346" y="1034" class="li">• chip RAM: fb + búferes de audio</text>
+  <text x="346" y="1056" class="li">• I2S → PCM5102A · PWM backlight</text>
+  <text x="346" y="1078" class="li">• timing nativo HX8282, sin scaler</text>
+
+  <rect x="712" y="920" width="200" height="56" class="blk"/>
+  <text x="812" y="942" class="t">APS6404L · 8 MB</text>
+  <text x="812" y="958" class="s">PSRAM · chip RAM vídeo/audio</text>
+  <line x1="660" y1="948" x2="712" y2="948" class="dt"/>
+
+  <rect x="48" y="920" width="200" height="52" fill="#0E3A2C" stroke="#D9A93F" stroke-width="2.2"/>
+  <text x="148" y="941" class="t" font-size="12">Panel 10,1″ 1024×600</text>
+  <text x="148" y="957" class="s" font-size="9">ER-TFT101-1 · RGB-TTL FPC-50</text>
+  <line x1="248" y1="946" x2="330" y2="946" class="dt"/>
+  <text x="289" y="938" class="lbl" font-size="8">RGB+DE+PCLK</text>
+
+  <rect x="48" y="988" width="200" height="52" class="blk"/>
+  <text x="148" y="1009" class="t">GT911 · táctil</text>
+  <text x="148" y="1025" class="s">capacitivo · I2C → RP2040</text>
+  <path d="M148 972 L148 988" class="dts"/>
+
+  <rect x="48" y="1056" width="200" height="52" class="blk"/>
+  <text x="148" y="1077" class="t">PCM5102A · audio</text>
+  <text x="148" y="1093" class="s">DAC I2S + jack</text>
+  <line x1="248" y1="1082" x2="330" y2="1082" class="dt"/>
+  <text x="289" y="1074" class="lbl" font-size="8">I2S</text>
+
+  <!-- ══════ PIE ══════ -->
+  <line x1="48" y1="1128" x2="912" y2="1128" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
+
+  <text x="48" y="1156" class="eye">LEYENDA</text>
+  <line x1="48" y1="1176" x2="98" y2="1176" class="pw"/>
+  <text x="108" y="1180" class="li">alimentación</text>
+  <line x1="48" y1="1200" x2="98" y2="1200" class="dt"/>
+  <text x="108" y="1204" class="li">datos / buses</text>
+  <line x1="48" y1="1224" x2="98" y2="1224" class="op"/>
+  <text x="108" y="1228" class="li">opcional o futuro</text>
+  <rect x="48" y="1240" width="50" height="18" fill="#0E3A2C" stroke="#D9A93F" stroke-width="2"/>
+  <text x="108" y="1253" class="li">piezas clave: CPU y panel</text>
+
+  <text x="48" y="1292" class="eye">BOM PRINCIPAL</text>
+  <text x="48" y="1314" class="li">1× W65C816S · 3× iCE40HX4K TQ144</text>
+  <text x="48" y="1334" class="li">SDRAM 32 MB · SRAM 2 MB · APS6404L (vídeo)</text>
+  <text x="48" y="1354" class="li">RP2040 · MCP73871 · TPS63020 · MAX17048</text>
+  <text x="48" y="1374" class="li">PCF8563 · GT911 · PCM5102A</text>
+
+  <rect x="560" y="1148" width="352" height="236" fill="none" stroke="rgba(241,236,217,.7)" stroke-width="1.4"/>
+  <line x1="560" y1="1186" x2="912" y2="1186" stroke="rgba(241,236,217,.4)" stroke-width="1"/>
+  <line x1="560" y1="1216" x2="912" y2="1216" stroke="rgba(241,236,217,.4)" stroke-width="1"/>
+  <line x1="560" y1="1246" x2="912" y2="1246" stroke="rgba(241,236,217,.4)" stroke-width="1"/>
+  <line x1="560" y1="1276" x2="912" y2="1276" stroke="rgba(241,236,217,.4)" stroke-width="1"/>
+  <line x1="560" y1="1306" x2="912" y2="1306" stroke="rgba(241,236,217,.4)" stroke-width="1"/>
+  <line x1="560" y1="1344" x2="912" y2="1344" stroke="rgba(241,236,217,.4)" stroke-width="1"/>
+  <text x="576" y="1174" fill="#F1ECD9" font-size="15" font-weight="800" letter-spacing="1">DANI-65816</text>
+  <text x="576" y="1206" class="li">Diagrama de bloques · Hoja 1/1</text>
+  <text x="576" y="1236" class="li">CPU: W65C816S · todo 3,3 V soldable</text>
+  <text x="576" y="1266" class="li">RAM: 32 MB SDRAM · SRAM 2 MB · 8 MB víd.</text>
+  <text x="576" y="1296" class="li">PTE: marco de 16 b → hasta 128 MB fís.</text>
+  <text x="576" y="1330" class="li">Prog. USB: FPGAs, BIOS y firmware</text>
+  <text x="576" y="1370" fill="#D9A93F" font-size="13" font-weight="700">REV B · AGO 2026</text>
+</svg>
+</body>
+</html>
