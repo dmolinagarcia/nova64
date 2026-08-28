@@ -1,0 +1,47 @@
+{%- comment -%}
+  A series is the reading order the date does not give. The global pager sends
+  a reader from part 2 of a series to whatever happened to be written next;
+  this block is the way through the series itself.
+{%- endcomment -%}
+{%- if page.series -%}
+{%- assign s = site.data.series | where: "id", page.series | first -%}
+{%- assign parts = site.posts | where: "series", page.series | sort: "part" -%}
+{%- assign total = parts | size -%}
+{%- assign idx = 0 -%}
+{%- for p in parts -%}{%- if p.url == page.url -%}{%- assign idx = forloop.index0 -%}{%- endif -%}{%- endfor -%}
+{%- assign previdx = idx | minus: 1 -%}
+{%- assign nextidx = idx | plus: 1 -%}
+
+<aside class="serie" aria-label="Series">
+  <div class="cap">
+    <a href="{{ '/series/' | append: page.series | append: '/' | relative_url }}">{{ s.name | default: page.series | upcase }}</a>
+    <span class="fg">PART {{ page.part }} OF {{ total }}</span>
+  </div>
+  <ol>
+    {%- for p in parts -%}
+    <li class="{% if p.url == page.url %}here{% endif %}">
+      <span class="no">{{ p.part }}</span>
+      {%- if p.url == page.url -%}
+      <span>{{ p.title | escape }}</span>
+      {%- else -%}
+      <a href="{{ p.url | relative_url }}">{{ p.title | escape }}</a>
+      {%- endif -%}
+      <span class="fg">{{ p.date | date: "%b %-d, %Y" }}</span>
+    </li>
+    {%- endfor -%}
+  </ol>
+</aside>
+
+{%- if total > 1 -%}
+<nav class="pager">
+  {%- if idx > 0 -%}
+  {%- assign sprev = parts[previdx] -%}
+  <div class="pv"><b>Previous in series</b><a href="{{ sprev.url | relative_url }}">⇠ {{ sprev.title | escape }}</a></div>
+  {%- endif -%}
+  {%- if nextidx < total -%}
+  {%- assign snext = parts[nextidx] -%}
+  <div class="nx"><b>Next in series</b><a href="{{ snext.url | relative_url }}">{{ snext.title | escape }} ⇢</a></div>
+  {%- endif -%}
+</nav>
+{%- endif -%}
+{%- endif -%}

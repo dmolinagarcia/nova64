@@ -28,6 +28,11 @@ url: "https://dmolinagarcia.github.io"
 baseurl : "/nova64"
 rss: rss
 
+# The track lives in the front matter, not in the path: an entry can be
+# refiled without breaking its permalink. Old paths are kept alive by the
+# redirect_from entries on each post.
+permalink: /:year/:month/:day/:title/
+
 kramdown:
   syntax_highlighter_opts:
     disable: true
@@ -36,6 +41,7 @@ plugins:
   - jekyll-feed
   - jekyll-sitemap
   - jekyll-titles-from-headings
+  - jekyll-redirect-from
 
 titles_from_headings:
   strip_title: true
@@ -43,13 +49,12 @@ titles_from_headings:
 
 defaults:
   # Posts and pages carry no layout of their own: the layout is set here, so a
-  # new entry needs nothing but its category.
+  # new entry needs nothing but its track.
   - scope:
       path: ""
       type: "posts"
     values:
       layout: "post"
-      tags: Other
   - scope:
       path: ""
       type: "pages"

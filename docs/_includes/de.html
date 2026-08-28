@@ -1,0 +1,6 @@
+{%- comment -%}
+  The designator for a track: two letters, looked up in _data/tracks.yml.
+  Called as {% include de.html track=some_track_id %}. Deriving it from the
+  name is what collided — architecture and audio both began with A.
+{%- endcomment -%}
+{%- assign _t = site.data.tracks | where: "id", include.track | first -%}{{ _t.de | default: "··" }}

@@ -24,9 +24,9 @@ layout: default
       {%- assign last_year = year -%}
       {%- endif -%}
       <tr>
-        <td class="de">{{ cat | slice: 0 | upcase }}</td>
+        <td class="de">{% include de.html track=cat %}</td>
         <td><a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a></td>
-        <td class="fg"><a href="{{ '/categories/' | append: cat | relative_url }}">{{ cat }}</a> · {{ post.date | date: date_format }}</td>
+        <td class="fg"><a href="{{ '/tracks/' | append: cat | append: '/' | relative_url }}">{{ cat }}</a> · {{ post.date | date: date_format }}</td>
       </tr>
       {%- if site.show_excerpts and post.excerpt != blank -%}
       <tr class="exr"><td></td><td class="ex" colspan="2">{{ post.excerpt | strip_html | normalize_whitespace | truncate: 180 }}</td></tr>

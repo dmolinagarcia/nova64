@@ -6,19 +6,27 @@ layout: default
 <article class="hoja h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="sechead">
-    <span class="des">{{ cat | slice: 0 | upcase | default: '·' }}</span>
+    <span class="des">{%- if cat -%}{% include de.html track=cat %}{%- else -%}··{%- endif -%}</span>
     <h2 class="p-name" itemprop="name headline">{{ page.title | upcase | escape }}</h2>
     <span class="aim">
       <time class="dt-published" datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">{{ page.date | date: date_format }}</time>
       {%- assign author = page.author | default: site.author.name -%}
       {%- if author %} · <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">{{ author }}</span></span>{%- endif -%}
     </span>
-    {%- if cat %}<span class="sheet"><a class="chip g" href="{{ '/categories/' | append: cat | relative_url }}">{{ cat | upcase }}</a></span>{%- endif %}
+    <span class="sheet">
+      {%- if page.series -%}
+      {%- assign ser = site.data.series | where: "id", page.series | first -%}
+      <a class="chip" href="{{ '/series/' | append: page.series | append: '/' | relative_url }}">{{ ser.name | default: page.series | upcase }} · PART {{ page.part }}</a>
+      {%- endif -%}
+      {%- if cat %}<a class="chip g" href="{{ '/tracks/' | append: cat | append: '/' | relative_url }}">{{ cat | upcase }}</a>{%- endif -%}
+    </span>
   </header>
 
   <div class="prosa e-content" itemprop="articleBody">
     {{ content }}
   </div>
+
+  {% include seriesnav.html %}
 
   {% include sharelinks.html %}
 

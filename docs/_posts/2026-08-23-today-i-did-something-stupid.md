@@ -1,5 +1,6 @@
 ---
 categories: general
+redirect_from: /general/2026/08/23/today-i-did-something-stupid.html
 ---
 
 ## Today I did something stupid

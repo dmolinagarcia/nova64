@@ -1,5 +1,6 @@
 ---
 categories: general
+redirect_from: /general/2022/12/20/so-whats-the-plan.html
 ---
 
 ## So.. what's the plan?

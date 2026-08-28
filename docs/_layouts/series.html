@@ -1,0 +1,44 @@
+---
+layout: default
+---
+{%- comment -%}
+  One series' index: the parts in reading order, which is `part`, not date.
+{%- endcomment -%}
+{%- assign s = site.data.series | where: "id", page.series_id | first -%}
+{%- assign parts = site.posts | where: "series", page.series_id | sort: "part" -%}
+{%- assign count = parts | size -%}
+{%- assign t = site.data.tracks | where: "id", s.track | first -%}
+
+<article class="hoja">
+  <header class="sechead">
+    <span class="des">{{ t.de | default: "··" }}</span>
+    <h2>{{ s.name | default: page.series_id | upcase | escape }}</h2>
+    <span class="aim">Series</span>
+    {%- if s.track %}
+    <span class="sheet"><a class="chip g" href="{{ '/tracks/' | append: s.track | append: '/' | relative_url }}">{{ t.name | upcase }}</a></span>
+    {%- endif %}
+  </header>
+
+  <div class="prosa">
+    <p class="lead">{{ s.blurb }}</p>
+    {{ content }}
+  </div>
+</article>
+
+<section class="idx">
+  <div class="cap">{{ count }} PART{% if count != 1 %}S{% endif %} · IN READING ORDER</div>
+  <table>
+    {%- for post in parts -%}
+    <tr>
+      <td class="de">{{ post.part }}</td>
+      <td><a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a></td>
+      <td class="fg">{{ post.date | date: "%b %-d, %Y" }}</td>
+    </tr>
+    {%- if site.show_excerpts and post.excerpt != blank -%}
+    <tr class="exr"><td></td><td class="ex" colspan="2">{{ post.excerpt | strip_html | normalize_whitespace | truncate: 180 }}</td></tr>
+    {%- endif -%}
+    {%- else -%}
+    <tr><td class="ex">No parts published yet.</td></tr>
+    {%- endfor -%}
+  </table>
+</section>

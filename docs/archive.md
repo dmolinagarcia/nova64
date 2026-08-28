@@ -18,7 +18,8 @@ Every entry, newest first.
       {%- assign last_year = year -%}
       {%- endif -%}
       <tr>
-        <td class="de">{{ post.categories | first | slice: 0 | upcase }}</td>
+        {%- assign cat = post.categories | first | default: "general" -%}
+        <td class="de">{% include de.html track=cat %}</td>
         <td><a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a></td>
         <td class="fg">{{ post.date | date: "%b %-d, %Y" }}</td>
       </tr>

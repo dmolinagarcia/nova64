@@ -1,3 +1,7 @@
+---
+categories: firmware
+---
+
 Boot sequence for the nova
 
 Bootloader is BIOS? Maybe it's the same

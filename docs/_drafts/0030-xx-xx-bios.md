@@ -1,5 +1,5 @@
 ---
-categories: cpu
+categories: firmware
 ---
 
 En este paso, vamos a necesitar un pequeño core en la fpga. Y algo de memoria también (podemos usar parte de la FPGA?)

@@ -1,3 +1,7 @@
+---
+categories: system
+---
+
 OS Ideas
 --------------------------
 

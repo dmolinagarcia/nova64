@@ -1,0 +1,60 @@
+---
+layout: default
+---
+{%- comment -%}
+  One track's index. The stub in tracks/ carries nothing but the id, so a new
+  track is a row in _data/tracks.yml and five lines of front matter — not
+  another copy of this Liquid.
+{%- endcomment -%}
+{%- assign t = site.data.tracks | where: "id", page.track | first -%}
+{%- assign entries = site.categories[page.track] -%}
+{%- assign count = entries | size -%}
+{%- assign serieses = site.data.series | where: "track", page.track -%}
+
+<article class="hoja">
+  <header class="sechead">
+    <span class="des">{{ t.de }}</span>
+    <h2>{{ t.name | default: page.track | upcase | escape }}</h2>
+    <span class="aim">Track</span>
+    <span class="sheet"><a class="chip g" href="{{ '/tracks/' | relative_url }}">ALL TRACKS</a></span>
+  </header>
+
+  <div class="prosa">
+    <p class="lead">{{ t.blurb }}</p>
+    {{ content }}
+  </div>
+</article>
+
+{%- if serieses.size > 0 -%}
+<section class="idx">
+  <div class="cap">SERIES IN THIS TRACK</div>
+  <table>
+    {%- for s in serieses -%}
+    {%- assign parts = site.posts | where: "series", s.id -%}
+    <tr>
+      <td class="de">→</td>
+      <td><a href="{{ '/series/' | append: s.id | append: '/' | relative_url }}">{{ s.name | escape }}</a></td>
+      <td class="fg">{{ parts | size }} part{% if parts.size != 1 %}s{% endif %}</td>
+    </tr>
+    {%- endfor -%}
+  </table>
+</section>
+{%- endif -%}
+
+<section class="idx">
+  <div class="cap">{{ t.name | default: page.track | upcase }} · {{ count }} ENTR{% if count == 1 %}Y{% else %}IES{% endif %}</div>
+  <table>
+    {%- for post in entries -%}
+    <tr>
+      <td class="de">{{ t.de }}</td>
+      <td>
+        <a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
+        {%- if post.series %} <span class="pt">· part {{ post.part }}</span>{%- endif -%}
+      </td>
+      <td class="fg">{{ post.date | date: "%b %-d, %Y" }}</td>
+    </tr>
+    {%- else -%}
+    <tr><td class="ex">Nothing filed under this track yet.</td></tr>
+    {%- endfor -%}
+  </table>
+</section>

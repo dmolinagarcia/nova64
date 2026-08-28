@@ -1,5 +1,6 @@
 ---
 categories: architecture
+redirect_from: /architecture/2022/12/16/some-random-thoughts.html
 ---
 
 ## Some random thoughts on the noVa architecture

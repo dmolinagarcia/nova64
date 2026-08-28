@@ -1,5 +1,6 @@
 ---
 categories: general
+redirect_from: /general/2022/12/15/how-did-we-get-here.html
 ---
 
 ## How did we get here?

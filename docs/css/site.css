@@ -44,7 +44,7 @@ img{max-width:100%;height:auto}
         color:rgba(var(--ink-rgb),.72);border-left:2px solid transparent;}
 .side a:hover{color:var(--mint);text-decoration:none;border-left-color:rgba(var(--mint-rgb),.45);}
 .side a.here{color:var(--mint);border-left-color:var(--mint);}
-.side .de{color:var(--gold);font-weight:700;flex:none;width:11px;}
+.side .de{color:var(--gold);font-weight:700;flex:none;width:19px;}
 .side a.here .de{color:var(--mint)}
 .side .fg{margin-left:auto;color:rgba(var(--ink-rgb),.3);font-size:9.5px;flex:none;padding-left:8px}
 .side li.grp{margin-top:15px;padding:0 0 3px 12px;font-size:9.5px;letter-spacing:2.5px;
@@ -84,6 +84,7 @@ a.tag:hover{border-color:var(--mint);color:var(--mint);text-decoration:none}
 .idx tr.exr td{border-top:0;padding-top:0}
 .idx .ex{color:rgba(var(--ink-rgb),.55);font-size:11.5px;}
 .idx .ex p{margin:0}
+.idx .pt{color:rgba(var(--ink-rgb),.4);font-size:11px}
 
 /* ── hoja: el marco que envuelve una página o una entrada ─────────────── */
 .hoja{border:1.3px solid rgba(var(--ink-rgb),.55);margin-top:26px;padding:16px 20px 20px;}
@@ -94,6 +95,24 @@ a.tag:hover{border-color:var(--mint);color:var(--mint);text-decoration:none}
 .aim{color:rgba(var(--ink-rgb),.55);font-size:10px;letter-spacing:2px;text-transform:uppercase;}
 .sheet{margin-left:auto;color:rgba(var(--ink-rgb),.4);font-size:10px;letter-spacing:2px;}
 .lead{margin:0 0 12px;color:rgba(var(--ink-rgb),.85);}
+
+/* ── serie: el orden de lectura que la fecha no da ────────────────────── */
+.serie{margin-top:24px;border:1.3px solid rgba(var(--gold-rgb),.5);}
+.serie .cap{display:flex;gap:10px;align-items:baseline;padding:9px 16px;
+            border-bottom:1px solid rgba(var(--gold-rgb),.35);font-weight:700;
+            font-size:10px;letter-spacing:2.5px;color:var(--gold);}
+.serie .cap a{color:inherit}
+.serie .cap .fg{margin-left:auto;color:rgba(var(--ink-rgb),.5);letter-spacing:2px;}
+.serie ol{list-style:none;margin:0;padding:0}
+.serie li{display:flex;gap:12px;align-items:baseline;padding:6px 16px;font-size:12px;
+          border-top:1px solid rgba(var(--ink-rgb),.14);}
+.serie li:first-child{border-top:0}
+.serie li .no{color:var(--gold);font-weight:700;flex:none;width:20px}
+.serie li .fg{margin-left:auto;color:rgba(var(--ink-rgb),.35);font-size:10px;
+              flex:none;padding-left:10px;white-space:nowrap}
+.serie li.here{background:rgba(var(--mint-rgb),.07)}
+.serie li.here .no{color:var(--mint)}
+.serie li.here > span:nth-child(2){color:var(--mint);font-weight:700}
 
 /* ── prosa: lo que el documento no tiene y una entrada sí ─────────────── */
 .prosa{color:rgba(var(--ink-rgb),.88);line-height:1.7;}
@@ -145,6 +164,7 @@ table.simple td:first-child,.prosa > table td:first-child{color:var(--ink);font-
 a.chip:hover{text-decoration:none;background:rgba(var(--mint-rgb),.1)}
 .chip.g{border-color:var(--gold);color:var(--gold);}
 a.chip.g:hover{background:rgba(var(--gold-rgb),.1)}
+.chip + .chip{margin-left:6px}
 
 /* ── pie de entrada: fecha, autor, compartir ──────────────────────────── */
 .postmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:10px;
@@ -212,7 +232,10 @@ a.chip.g:hover{background:rgba(var(--gold-rgb),.1)}
   a,.lead,.prosa,.aim,.sheet,.masthead .sub,.idx .cap,.idx .no,.idx td,.idx .ex,
   .postmeta,.cj>div,.cj .big,table.simple th,table.simple td,.prosa > table th,.prosa > table td{ color:#000; }
   a{ text-decoration:none; }
-  .masthead,.idx,.hoja,.cajetin{ border-color:#000; }
+  .masthead,.idx,.hoja,.cajetin,.serie{ border-color:#000; }
+  .serie .cap{ border-bottom-color:#000; }
+  .serie li{ border-top-color:rgba(0,0,0,.35); color:#000; }
+  .serie li.here{ background:transparent; }
   .idx .cap,.sechead,table.simple th,.prosa h2{ border-bottom-color:#000; }
   .idx tr.grp td{ background:transparent; color:#000; border-top-color:#000; }
   .idx td{ border-top-color:rgba(0,0,0,.35); }
@@ -226,7 +249,7 @@ a.chip.g:hover{background:rgba(var(--gold-rgb),.1)}
   code{ background:transparent; }
   .prosa blockquote{ border-left-color:#000; color:#000; }
   /* el color que significa algo se oscurece, no se aplana */
-  .idx .de,.tag.g,.chip.g,.cj .gold,.prosa h3{ color:#6b4a00; }
+  .idx .de,.tag.g,.chip.g,.cj .gold,.prosa h3,.serie .cap,.serie li .no{ color:#6b4a00; }
   .tag.g,.chip.g{ border-color:#6b4a00; }
   .idx .fg,code,.tag.m,.chip,.prosa ul li::before,.prosa ol li::before{ color:#004a3a; }
   .tag.m,.chip{ border-color:#004a3a; }

@@ -1,0 +1,20 @@
+# ── Series ────────────────────────────────────────────────────────────────
+# A track says what an entry is about; a series says in what order it is read.
+# Optional, and orthogonal to the track — a series normally sits inside one
+# track, but nothing enforces that.
+#
+# A post joins a series with two lines of front matter:
+#
+#   series: filesystem
+#   part: 3
+#
+# Parts are ordered by `part`, not by date, so an entry can be slotted in
+# later. Gaps are fine; duplicates are not.
+
+- id: filesystem
+  name: Building a filesystem
+  track: storage
+  blurb: >-
+    From a raw block device to something the noVa64 can boot from and write
+    to — the on-disk format, block allocation, directories, and the driver
+    that hands it all to the OS.

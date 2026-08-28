@@ -27,7 +27,7 @@
 
     <li class="grp">Entries</li>
     {%- for post in site.posts limit: 12 -%}
-      <li><a href="{{ post.url | relative_url }}" class="{% if page.url == post.url %}here{% endif %}"><span class="de">{{ post.categories | first | slice: 0 | upcase | default: '·' }}</span><span>{{ post.title | escape }}</span><span class="fg">{{ post.date | date: "%Y-%m" }}</span></a></li>
+      <li><a href="{{ post.url | relative_url }}" class="{% if page.url == post.url %}here{% endif %}"><span class="de">{% include de.html track=post.categories.first %}</span><span>{{ post.title | escape }}</span><span class="fg">{{ post.date | date: "%Y-%m" }}</span></a></li>
     {%- endfor -%}
     {%- if site.posts.size > 12 -%}
       <li><a href="{{ '/archive' | relative_url }}"><span class="de">·</span><span>All entries…</span></a></li>

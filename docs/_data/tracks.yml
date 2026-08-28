@@ -1,0 +1,69 @@
+# ── Tracks ────────────────────────────────────────────────────────────────
+# The axes the diary is filed under. One track per entry, set as the post's
+# `categories:` — the name Jekyll insists on; what the site calls it is a
+# track. Tracks are meant to be few and disjoint: if you have to think about
+# which one an entry belongs to, the split is wrong.
+#
+# Adding a track is a row here plus a five-line stub in tracks/.
+#
+#   id     the value written in a post's `categories:`
+#   de     the designator: two letters, shown in every index. Unique — the
+#          old one-letter form derived from the name collided (architecture
+#          and audio were both "A").
+#   name   how it is written out
+#   blurb  one line, shown on the track's own page and on /tracks/
+
+- id: architecture
+  de: AR
+  name: Architecture
+  blurb: The shape of the machine as a whole — block diagram, buses, and how the parts meet.
+
+- id: power
+  de: PO
+  name: Power
+  blurb: Batteries, regulation and the power button — keeping a laptop alive off a cell.
+
+- id: cpu
+  de: CP
+  name: CPU
+  blurb: The 65816 itself — bring-up, clocking, bus behaviour, the prototype board.
+
+- id: memory
+  de: ME
+  name: Memory
+  blurb: DRAM, SRAM and cache, and the MMU that maps them into the CPU's 24-bit space.
+
+- id: video
+  de: VI
+  name: Video
+  blurb: The video processor, its own memory, and everything on the path to the panel.
+
+- id: audio
+  de: AU
+  name: Audio
+  blurb: Sound generation and the path from the machine to a speaker.
+
+- id: hid
+  de: HI
+  name: HID
+  blurb: Keyboard, pointing and the serial console — how a human reaches the machine.
+
+- id: storage
+  de: ST
+  name: Storage
+  blurb: The medium and the filesystem written on it — on-disk format, allocation, drivers.
+
+- id: firmware
+  de: FW
+  name: Firmware
+  blurb: What runs before the OS — the bootloader, the BIOS, the ROM the FPGA lifts into RAM.
+
+- id: system
+  de: SY
+  name: System
+  blurb: The operating system proper — kernel, scheduling, memory management, the hardware API.
+
+- id: general
+  de: GE
+  name: General
+  blurb: Plans, detours, and the entries that are about the project rather than a part of it.
