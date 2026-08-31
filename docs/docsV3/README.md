@@ -17,6 +17,8 @@ manifest.json       the parts registry, and the sheet list: letter, part, area, 
                     and index titles, figure
 tools/prerender.js  assembles the printable edition ahead of time, for a PDF
                     formatter — page numbers live there, see Printing
+tools/links.js      the cross-reference listing: source sheet -> linked section,
+                    per sheet or whole-document, and the broken links, see Routes
 style.css           docsV2's stylesheet, plus the few rules these two pages add
 content/*.md        the prose — one file per sheet
 figures/*.svg       the diagrams, one file each
@@ -150,6 +152,33 @@ explicitly in both the print block and the light theme.
 of its items. Inside the markdown you write the target the way docsV2 wrote
 filenames — `[sheet E](sec_e)`, `[F.4](sec_f#f4)`, `[Sheet index](index)` — and
 the renderer turns it into the route.
+
+`tools/links.js` lists them. It reads every sheet the way `md.js` does, resolves
+each target against `manifest.json` and the items the target sheet actually
+defines, and prints one line per link — source file, then the section it points
+at:
+
+```
+node tools/links.js              # the listing, grouped by source sheet
+node tools/links.js --reverse    # the same links, grouped by target
+node tools/links.js --broken     # only the ones that resolve to nothing
+node tools/links.js --csv        # source,line,text,target,anchor,item,status
+node tools/links.js --summary    # links out and in per sheet, and the orphans
+```
+
+Name a sheet — as `sec_q` or as `content/sec_q.md` — and the listing narrows to
+it: what it links out to, then what links in, with the item on each end. That is
+what to run before moving a sheet or rewriting one of its items, since the IN
+list is exactly what would have to be corrected.
+
+```
+node tools/links.js sec_q             # both directions for sheet Q
+node tools/links.js sec_q --broken    # only the broken ones, either way
+node tools/links.js sec_q --csv       # the same rows, as CSV
+```
+
+A link to a sheet that does not exist, or to an item id no sheet defines, is
+reported as broken and the exit status is 1, so it also stands as a check.
 
 ## The dialect
 
