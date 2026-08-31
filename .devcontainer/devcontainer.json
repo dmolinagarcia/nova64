@@ -1,0 +1,12 @@
+{
+  "name": "nova64",
+  "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
+  "postStartCommand": "bash .devcontainer/serve-docs.sh",
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "docsV3",
+      "onAutoForward": "notify"
+    }
+  }
+}
