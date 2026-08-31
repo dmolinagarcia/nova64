@@ -54,7 +54,7 @@
   },
   "sheets": [
     {
-      "file": "sec_a",
+      "file": "sec_ai_a",
       "letter": "A",
       "part": "ai",
       "area": "Introduction",
@@ -63,7 +63,7 @@
       "fig": "—"
     },
     {
-      "file": "sec_b",
+      "file": "sec_ai_b",
       "letter": "B",
       "part": "ai",
       "area": "Architecture",
@@ -72,7 +72,7 @@
       "fig": "Fig. 1"
     },
     {
-      "file": "sec_h",
+      "file": "sec_ai_h",
       "letter": "H",
       "part": "ai",
       "area": "Architecture",
@@ -81,7 +81,7 @@
       "fig": "table"
     },
     {
-      "file": "sec_x",
+      "file": "sec_ai_x",
       "letter": "X",
       "part": "ai",
       "area": "Architecture",
@@ -90,7 +90,7 @@
       "fig": "tables"
     },
     {
-      "file": "sec_c",
+      "file": "sec_ai_c",
       "letter": "C",
       "part": "ai",
       "area": "Power",
@@ -99,7 +99,7 @@
       "fig": "Fig. 2"
     },
     {
-      "file": "sec_s",
+      "file": "sec_ai_s",
       "letter": "S",
       "part": "ai",
       "area": "Power",
@@ -108,7 +108,7 @@
       "fig": "Fig. 9"
     },
     {
-      "file": "sec_d",
+      "file": "sec_ai_d",
       "letter": "D",
       "part": "ai",
       "area": "Embedded control and boot",
@@ -117,7 +117,7 @@
       "fig": "Fig. 3"
     },
     {
-      "file": "sec_r",
+      "file": "sec_ai_r",
       "letter": "R",
       "part": "ai",
       "area": "Embedded control and boot",
@@ -126,7 +126,7 @@
       "fig": "Fig. 8"
     },
     {
-      "file": "sec_e",
+      "file": "sec_ai_e",
       "letter": "E",
       "part": "ai",
       "area": "CPU and system",
@@ -135,7 +135,7 @@
       "fig": "table"
     },
     {
-      "file": "sec_m",
+      "file": "sec_ai_m",
       "letter": "M",
       "part": "ai",
       "area": "CPU and system",
@@ -144,7 +144,7 @@
       "fig": "tables"
     },
     {
-      "file": "sec_f",
+      "file": "sec_ai_f",
       "letter": "F",
       "part": "ai",
       "area": "Memory and storage",
@@ -153,7 +153,7 @@
       "fig": "Fig. 4"
     },
     {
-      "file": "sec_k",
+      "file": "sec_ai_k",
       "letter": "K",
       "part": "ai",
       "area": "Memory and storage",
@@ -162,7 +162,7 @@
       "fig": "Fig. 5"
     },
     {
-      "file": "sec_l",
+      "file": "sec_ai_l",
       "letter": "L",
       "part": "ai",
       "area": "Memory and storage",
@@ -171,7 +171,7 @@
       "fig": "Fig. 6"
     },
     {
-      "file": "sec_g",
+      "file": "sec_ai_g",
       "letter": "G",
       "part": "ai",
       "area": "Memory and storage",
@@ -180,7 +180,7 @@
       "fig": "—"
     },
     {
-      "file": "sec_y1",
+      "file": "sec_ai_y1",
       "letter": "Y1",
       "part": "ai",
       "area": "Memory and storage",
@@ -189,7 +189,7 @@
       "fig": "tables"
     },
     {
-      "file": "sec_y2",
+      "file": "sec_ai_y2",
       "letter": "Y2",
       "part": "ai",
       "area": "Memory and storage",
@@ -198,7 +198,7 @@
       "fig": "tables"
     },
     {
-      "file": "sec_y3",
+      "file": "sec_ai_y3",
       "letter": "Y3",
       "part": "ai",
       "area": "Memory and storage",
@@ -207,7 +207,7 @@
       "fig": "tables"
     },
     {
-      "file": "sec_t",
+      "file": "sec_ai_t",
       "letter": "T",
       "part": "ai",
       "area": "Video + audio",
@@ -216,7 +216,7 @@
       "fig": "Fig. 10"
     },
     {
-      "file": "sec_u",
+      "file": "sec_ai_u",
       "letter": "U",
       "part": "ai",
       "area": "Video + audio",
@@ -225,7 +225,7 @@
       "fig": "Fig. 11"
     },
     {
-      "file": "sec_w",
+      "file": "sec_ai_w",
       "letter": "W",
       "part": "ai",
       "area": "Video + audio",
@@ -234,7 +234,7 @@
       "fig": "tables"
     },
     {
-      "file": "sec_i",
+      "file": "sec_ai_i",
       "letter": "I",
       "part": "ai",
       "area": "Software",
@@ -243,7 +243,7 @@
       "fig": "—"
     },
     {
-      "file": "sec_j",
+      "file": "sec_ai_j",
       "letter": "J",
       "part": "ai",
       "area": "Software",
@@ -252,7 +252,7 @@
       "fig": "—"
     },
     {
-      "file": "sec_n",
+      "file": "sec_ai_n",
       "letter": "N",
       "part": "ai",
       "area": "Software",
@@ -261,7 +261,7 @@
       "fig": "—"
     },
     {
-      "file": "sec_o",
+      "file": "sec_ai_o",
       "letter": "O",
       "part": "ai",
       "area": "Software",
@@ -270,7 +270,7 @@
       "fig": "—"
     },
     {
-      "file": "sec_v",
+      "file": "sec_ai_v",
       "letter": "V",
       "part": "ai",
       "area": "Software",
@@ -279,7 +279,7 @@
       "fig": "Fig. 12"
     },
     {
-      "file": "sec_p",
+      "file": "sec_ai_p",
       "letter": "P",
       "part": "ai",
       "area": "Project and build",
@@ -288,7 +288,7 @@
       "fig": "Fig. 7"
     },
     {
-      "file": "sec_q",
+      "file": "sec_ai_q",
       "letter": "Q",
       "part": "ai",
       "area": "Project and build",
@@ -297,7 +297,7 @@
       "fig": "—"
     },
     {
-      "file": "sec_z1",
+      "file": "sec_ai_z1",
       "letter": "Z1",
       "part": "ai",
       "area": "Appendix",
@@ -306,7 +306,7 @@
       "fig": "tables"
     },
     {
-      "file": "sec_z2",
+      "file": "sec_ai_z2",
       "letter": "Z2",
       "part": "ai",
       "area": "Appendix",
