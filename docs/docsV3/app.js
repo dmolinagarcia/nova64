@@ -2,9 +2,12 @@
  *
  * Everything around the prose — sidebar, masthead, sheet index, pager and
  * title block — is generated from manifest.json, so a sheet's .md file only
- * ever carries its own content. Sheets are grouped by area: the manifest's
- * order is the reading order, and a run of sheets sharing an `area` gets one
- * heading in the sidebar and one band in the index.
+ * ever carries its own content. Sheets sit three levels deep: a **part** from
+ * the manifest's `parts` registry, an **area** within it, then the sheet. The
+ * registry fixes the order of the parts and lets an empty one still show;
+ * the sheet array's order is the order within a part, and a run of sheets
+ * sharing an `area` gets one heading. Positions are derived, never stored —
+ * `NovaShell.prepare` resolves all of it before anything here runs.
  *
  * Routes are hashes: #/ is the index, #/sec_a a sheet, #/sec_a/a3 a sheet
  * scrolled to one of its items.
@@ -48,12 +51,17 @@
   function sidebar(r) {
     var h = '<div class="cap">' + M.title + ' · SHEETS</div><ol>' +
       '<li><a href="#/"' + (r.isIndex ? ' class="here"' : '') + '><span class="de">·</span>Sheet index</a></li>';
-    var area = '';
-    M.sheets.forEach(function (s) {
-      if (s.area && s.area !== area) { area = s.area; h += '<li class="grp">' + area + '</li>'; }
-      h += '<li><a href="#/' + s.file + '"' + (s.file === r.file ? ' class="here"' : '') + '>' +
-           '<span class="de">' + s.letter + '</span>' + s.nav +
-           '<span class="fg">' + s.num + '</span></a></li>';
+    M.groups.forEach(function (g) {
+      h += '<li class="part"><span class="pn">' + g.part.num + '</span>' + g.part.name + '</li>';
+      if (!g.sheets.length) { h += '<li class="none">no sheets yet</li>'; return; }
+      g.areas.forEach(function (a) {
+        if (a.name) h += '<li class="grp">' + a.name + '</li>';
+        a.sheets.forEach(function (s) {
+          h += '<li><a href="#/' + s.file + '"' + (s.file === r.file ? ' class="here"' : '') + '>' +
+               '<span class="de">' + s.letter + '</span>' + s.nav +
+               '<span class="fg">' + s.num + '</span></a></li>';
+        });
+      });
     });
     /* the printable edition sits at the end of the list, off the numbering */
     h += '<li><a href="full.html"><span class="de">≡</span>All sheets · one page' +
@@ -73,23 +81,35 @@
     }
     var s = sheetOf(r.file);
     return '<h1><a href="#/">' + M.title + '</a></h1>' +
-           '<div class="sub">' + (s.area ? s.area + ' · ' : '') +
+           '<div class="sub">' + (s.partName ? s.partName + ' · ' : '') +
+           (s.area ? s.area + ' · ' : '') +
            'Sheet ' + s.num + ' · ' + s.letter + ' — ' + doc.title + '</div>';
   }
 
   function indexTable() {
     var h = '<nav class="idx" aria-label="Sheet index"><div class="cap">SHEET INDEX</div><table><tbody>';
-    var area = '';
-    M.sheets.forEach(function (s) {
-      if (s.area && s.area !== area) {
-        area = s.area;
-        h += '<tr class="grp"><td colspan="4">' + area + '</td></tr>';
-      }
-      h += '<tr><td class="no">' + s.num + '</td><td class="de">' + s.letter + '</td>' +
-           '<td><a href="#/' + s.file + '">' + s.index + '</a></td>' +
-           '<td class="fg">' + s.fig + '</td></tr>';
+    M.groups.forEach(function (g) {
+      h += partRow(g);
+      g.areas.forEach(function (a) {
+        if (a.name) h += '<tr class="grp"><td colspan="4">' + a.name + '</td></tr>';
+        a.sheets.forEach(function (s) {
+          h += '<tr><td class="no">' + s.num + '</td><td class="de">' + s.letter + '</td>' +
+               '<td><a href="#/' + s.file + '">' + s.index + '</a></td>' +
+               '<td class="fg">' + s.fig + '</td></tr>';
+        });
+      });
     });
     return h + '</tbody></table></nav>';
+  }
+
+  /* A part always shows, empty or not: while sheets are being migrated into
+     their parts, the empty ones are the part of the picture worth seeing. */
+  function partRow(g) {
+    return '<tr class="part"><td class="no">' + g.part.num + '</td>' +
+           '<td colspan="3">' + g.part.name +
+           (g.part.note ? '<span class="pnote">' + g.part.note + '</span>' : '') +
+           (g.sheets.length ? '' : '<span class="pnote">no sheets yet</span>') +
+           '</td></tr>';
   }
 
   function content(r, doc) {

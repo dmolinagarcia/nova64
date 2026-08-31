@@ -8,7 +8,7 @@
 
   <!-- EC -->
   <rect x="24" y="124" width="180" height="120" class="blk"/>
-  <text x="114" y="148" class="t">RP2040 · EC</text>
+  <text x="114" y="148" class="t">RP2354B · EC</text>
   <text x="114" y="168" class="s">polls at 1 Hz, converts</text>
   <text x="114" y="184" class="s">to human units</text>
   <text x="114" y="204" class="s">10 s watchdog</text>

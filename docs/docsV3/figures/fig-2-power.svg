@@ -47,7 +47,7 @@
   <line x1="722" y1="84" x2="782" y2="84" class="pw"/>
   <text x="752" y="74" class="plbl">3V3_AON</text>
   <rect x="782" y="46" width="164" height="80" class="blk"/>
-  <text x="864" y="66" class="s">RP2040 + W25Q16</text>
+  <text x="864" y="66" class="s">RP2354B (flash in pkg)</text>
   <text x="864" y="82" class="s">CH224K VDD</text>
   <text x="864" y="98" class="s">I2C-AON + pull-ups</text>
   <text x="864" y="114" class="s">power button</text>
@@ -100,7 +100,7 @@
 
   <!-- EC -->
   <rect x="24" y="300" width="150" height="76" class="blk"/>
-  <text x="99" y="324" class="t">RP2040 · EC</text>
+  <text x="99" y="324" class="t">RP2354B · EC</text>
   <text x="99" y="342" class="s">runs on 3V3_AON</text>
   <text x="99" y="358" class="s">sequencer · supervisor</text>
   <text x="99" y="372" class="s">button on AON GPIO</text>

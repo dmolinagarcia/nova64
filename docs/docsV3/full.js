@@ -27,25 +27,38 @@
 
   function indexTable() {
     var h = '<nav class="idx" aria-label="Sheet index"><div class="cap">SHEET INDEX</div><table><tbody>';
-    var area = '';
-    M.sheets.forEach(function (s) {
-      if (s.area && s.area !== area) {
-        area = s.area;
-        h += '<tr class="grp"><td colspan="4"><a href="#area-' + slug(area) + '">' + area + '</a></td></tr>';
-      }
-      h += '<tr><td class="no">' + s.num + '</td><td class="de">' + s.letter + '</td>' +
-           '<td><a href="#' + s.file + '">' + s.index + '</a></td>' +
-           '<td class="fg">' + s.fig + '</td></tr>';
+    M.groups.forEach(function (g) {
+      h += '<tr class="part"><td class="no">' + g.part.num + '</td><td colspan="3">' +
+           (g.sheets.length ? '<a href="#part-' + slug(g.part.id || g.part.name) + '">' + g.part.name + '</a>'
+                            : g.part.name) +
+           (g.part.note ? '<span class="pnote">' + g.part.note + '</span>' : '') +
+           (g.sheets.length ? '' : '<span class="pnote">no sheets yet</span>') + '</td></tr>';
+      g.areas.forEach(function (a) {
+        if (a.name) {
+          h += '<tr class="grp"><td colspan="4"><a href="#area-' + slug(a.name) + '">' + a.name + '</a></td></tr>';
+        }
+        a.sheets.forEach(function (s) {
+          h += '<tr><td class="no">' + s.num + '</td><td class="de">' + s.letter + '</td>' +
+               '<td><a href="#' + s.file + '">' + s.index + '</a></td>' +
+               '<td class="fg">' + s.fig + '</td></tr>';
+        });
+      });
     });
     return h + '</tbody></table></nav>';
   }
 
-  function slug(area) {
-    return area.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  function slug(name) {
+    return String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-');
   }
 
-  /* Each area opens with a band, so the printed document reads as ten parts
-     rather than twenty-three sheets, and the index's area rows have a target. */
+  /* Three levels, three targets for the index to jump to. A part opens a page
+     of its own and carries its name across the top; an area opens with a band
+     under it; a sheet is a framed section. */
+  function partBand(part) {
+    return '<div class="partband" id="part-' + slug(part.id || part.name) + '">' +
+           '<span class="pn">Part ' + part.num + '</span>' + part.name + '</div>';
+  }
+
   function areaBand(area) {
     return '<div class="areaband" id="area-' + slug(area) + '">' + area + '</div>';
   }
@@ -91,16 +104,18 @@
       var index = docs[0];
       el.mast.innerHTML = masthead(index);
       el.body.className = '';
+      var docOf = {};
+      M.sheets.forEach(function (s, i) { docOf[s.file] = docs[i + 1]; });
       el.body.innerHTML =
         index.html.replace('<div data-index></div>', index.hasIndex ? indexTable() : '') +
-        (function () {
-          var area = '';
-          return M.sheets.map(function (s, i) {
-            var band = '';
-            if (s.area && s.area !== area) { area = s.area; band = areaBand(area); }
-            return band + section(s, docs[i + 1]);
+        M.groups.map(function (g) {
+          if (!g.sheets.length) return '';
+          return partBand(g.part) + g.areas.map(function (a) {
+            return (a.name ? areaBand(a.name) : '') + a.sheets.map(function (s) {
+              return section(s, docOf[s.file]);
+            }).join('');
           }).join('');
-        })();
+        }).join('');
       el.foot.innerHTML = titleBlock();
       NovaShell.inlineFigures(el.body);
 

@@ -35,6 +35,15 @@
   .idx tr.grp td{background:rgba(var(--ink-rgb),.05);color:rgba(var(--ink-rgb),.6);font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:700;padding:7.5px 16px;border-top:1px solid rgba(var(--ink-rgb),.35);}
   .idx tr.grp:hover td{background:rgba(var(--ink-rgb),.05);}
   .idx tr.grp a{color:inherit}
+  /* the part row sits a level above the area row and says so with weight, not
+     with a colour of its own: same band, heavier rule, its number in gold. */
+  .idx tr.part td{background:rgba(var(--ink-rgb),.11);color:rgba(var(--ink-rgb),.85);font-size:11px;letter-spacing:4px;text-transform:uppercase;font-weight:800;padding:9.5px 16px;border-top:1.6px solid rgba(var(--ink-rgb),.55);}
+  .idx tr.part:hover td{background:rgba(var(--ink-rgb),.11);}
+  .idx tr.part a{color:inherit}
+  .idx tr.part .no{color:var(--gold)}
+  .idx tr.part:first-child td{border-top:0}
+  /* a part with no sheets in it yet, or one carrying a standing note */
+  .pnote{display:block;margin-top:3px;font-size:9.5px;letter-spacing:0;text-transform:none;font-weight:400;color:rgba(var(--ink-rgb),.45);}
   .idx .no{color:rgba(var(--ink-rgb),.5);width:46px}
   .idx .de{color:var(--gold);width:34px;font-weight:700}
   .idx .fg{color:var(--mint);text-align:right;width:120px}
@@ -43,6 +52,15 @@
   .areaband{margin-top:30px;border-bottom:1.6px solid rgba(var(--ink-rgb),.55);padding-bottom:6px;
             font-size:12px;letter-spacing:5px;text-transform:uppercase;font-weight:800;color:var(--gold);}
   .areaband + .hoja{margin-top:14px;}
+  /* A part is a framed bar rather than a rule under a word: it has to read as
+     a level above the area band that follows it, and the two are adjacent. */
+  .partband{margin-top:44px;padding:11px 16px;background:var(--panel);
+            border:1.3px solid rgba(var(--ink-rgb),.55);
+            display:flex;align-items:baseline;gap:14px;
+            font-size:14px;letter-spacing:6px;text-transform:uppercase;font-weight:800;}
+  .partband .pn{font-size:9.5px;letter-spacing:3px;font-weight:700;color:var(--gold);flex:none;}
+  .partband + .areaband{margin-top:22px;}
+  .partband + .hoja{margin-top:14px;}
   .sechead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:1px solid rgba(var(--ink-rgb),.3);padding-bottom:10px;margin-bottom:12px;}
   .des{background:var(--panel);border:1.3px solid var(--ink);padding:2px 9px;font-weight:800;font-size:14px;}
   .sechead h2{margin:0;font-size:16px;letter-spacing:2px;font-weight:800;}
@@ -143,6 +161,18 @@
   .side .fg{margin-left:auto;color:rgba(var(--ink-rgb),.3);font-size:9.5px;flex:none}
   .side li.grp{margin-top:15px;padding:0 0 3px 12px;font-size:9.5px;letter-spacing:2.5px;
                text-transform:uppercase;font-weight:700;color:rgba(var(--ink-rgb),.42);}
+  /* the part heading carries the rule; the area heading under it does not, so
+     the two levels stay distinguishable in a list eleven pixels wide */
+  .side li.part{display:flex;gap:8px;margin-top:24px;padding:0 0 5px 0;
+                border-bottom:1px solid rgba(var(--ink-rgb),.25);
+                font-size:10px;letter-spacing:3px;text-transform:uppercase;
+                font-weight:800;color:rgba(var(--ink-rgb),.75);}
+  .side .pn{color:var(--gold);font-weight:700;flex:none;width:11px;}
+  .side li.part + li.grp{margin-top:9px;}
+  /* an empty part is still worth a line: while sheets are being migrated into
+     their parts, the empty ones are the state of the migration */
+  .side li.none{padding:4px 0 0 12px;font-size:9.5px;font-style:italic;
+                color:rgba(var(--ink-rgb),.3);}
   .side li:last-child{margin-top:15px;}
 
   .masthead h1 a{color:inherit}
@@ -162,6 +192,8 @@
     .side ol{max-height:none;display:flex;flex-wrap:wrap;column-gap:6px}
     .side li{flex:0 1 auto}
     .side li.grp{flex:1 0 100%;margin-top:12px;padding-left:0}
+    .side li.part{flex:1 0 100%;margin-top:18px}
+    .side li.none{flex:1 0 100%;padding-left:0}
     .side li:last-child{margin-top:0}
     .side a{padding:3.5px 8px;border-left:0;border-bottom:2px solid transparent}
     .side a:hover{border-bottom-color:rgba(var(--mint-rgb),.45)}
@@ -187,7 +219,12 @@
     .masthead,.idx,.hoja,.cajetin{ border-color:#000; }
     .idx .cap,.sechead,table.simple th{ border-bottom-color:#000; }
     .idx tr.grp td{ background:transparent; color:#000; border-top-color:#000; }
+    .idx tr.part td{ background:transparent; color:#000; border-top-color:#000; }
+    .idx tr.part .no{ color:#6b4a00; }
+    .pnote{ color:#000; }
     .areaband{ color:#000; border-bottom-color:#000; break-after:avoid; }
+    .partband{ background:transparent; color:#000; border-color:#000; break-after:avoid; }
+    .partband .pn{ color:#6b4a00; }
     .cj,.cj>div+div{ border-color:rgba(0,0,0,.6); }
     .idx td{ border-top-color:rgba(0,0,0,.35); }
     table.simple td{ border-bottom-color:rgba(0,0,0,.35); }
@@ -227,11 +264,11 @@
     svg [stroke="#D9A93F"]{ stroke:#6b4a00; }
     svg [stroke="rgba(241,236,217,.35)"],svg [stroke="rgba(241,236,217,.4)"]{ stroke:rgba(0,0,0,.45); }
 
-    /* full.html prints in parts: the masthead is the cover and has the first
+    /* full.html prints in sections: the masthead is the cover and has the first
        page to itself, page two is left blank behind it the way a title page's
-       verso is, the sheet index takes page three, and every area opens on a
-       fresh page. Within an area the sheets still run on — the break marks the
-       document's structure, it is not one page per sheet, with the one
+       verso is, the sheet index takes page three, and every part and every area
+       opens on a fresh page. Within an area the sheets still run on — the break
+       marks the document's structure, it is not one page per sheet, with the one
        exception noted below. */
     /* the cover's air is padding on the column, not a margin on the masthead:
        a margin against the top of a page box is the one browsers are entitled
@@ -239,7 +276,11 @@
     body.full .main{ padding-top:80mm; }
     body.full .coverback{ display:block;height:1px;break-before:page; }
     body.full .idx{ break-before:page; }
+    body.full .partband{ break-before:page; }
     body.full .areaband{ break-before:page; }
+    /* a part opens a page and its first area follows on the same one: a band
+       alone on a leaf is a page spent on six words */
+    body.full .partband + .areaband{ break-before:auto; }
 
     /* seven sheets ask for a page of their own on top of that rule, all for the
        same reason: none of them opens its area, so no band precedes them and
@@ -248,7 +289,8 @@
        G behind L in the same area, W behind U in Video + audio, Q behind P in
        Project and build, and Z2 behind Z1 in the Appendix. Full edition only;
        the paged edition gives every sheet its own screen already. */
-    body.full #sec_zx{ break-before:page; }
+    body.full #sec_x,body.full #sec_s,body.full #sec_k,body.full #sec_g,
+    body.full #sec_w,body.full #sec_q,body.full #sec_z2{ break-before:page; }
 
     /* the title block closes the document on a page of its own, sitting low on
        it. The drop is a spacer block rather than a margin, because a margin
@@ -260,6 +302,51 @@
     /* keep rows, steps and figures from splitting across pages */
     .sechead{ break-after:avoid; }
     ol.steps li,figure,.hito,table.simple tr{ break-inside:avoid; }
+
+    /* ── page numbers ──────────────────────────────────────────────────
+       Two pieces of CSS paged media, and **no browser implements either**:
+       the print path in Chrome and Firefox has neither `@page` margin boxes
+       nor `target-counter()`, and drops both rules without complaint — so
+       printing straight from the browser is exactly what it always was. They
+       come alive when a formatter is in the loop, against the static file
+       `tools/prerender.js` writes. */
+
+    /* the running number, in the bottom margin of every page */
+    @page{
+      @bottom-center{
+        content: counter(page);
+        font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+        font-size:8pt; letter-spacing:2px; color:#000;
+        vertical-align:top; padding-top:5mm;
+      }
+    }
+    /* the cover is page 1 and does not say so — which keeps every printed
+       number equal to the page number a PDF reader shows — and neither does
+       the verso behind it, because a number alone on a blank leaf reads as a
+       mistake rather than as a folio */
+    @page:first{ @bottom-center{ content:none; } }
+    @page:nth(2){ @bottom-center{ content:none; } }
+
+    /* the index's right-hand column gives room back to the leader: its
+       widest value is seven characters, and it was sized for a screen */
+    .idx .fg{ width:24mm; white-space:nowrap; }
+
+    /* In the sheet index, and only there, the page a sheet opens on. **Only
+       the sheet rows**: a part or an area opens on the sheet immediately
+       below it, so numbering those rows would print the same number twice.
+       `tr.part` and `tr.grp` are what tells them apart, and the `attr(href)`
+       the counter resolves is the same in-page link full.js already writes
+       for every cross-reference. */
+    .idx tr:not(.part):not(.grp) td a::after{
+      content:" · p. " target-counter(attr(href), page);
+      color:#000; white-space:nowrap;
+    }
+    /* …and with dot leaders where the formatter has them. A declaration it
+       cannot parse is dropped whole, so the plain form above is what
+       survives rather than nothing at all. */
+    .idx tr:not(.part):not(.grp) td a::after{
+      content: leader('.') " " target-counter(attr(href), page);
+    }
   }
 
   /* ── docsV3 additions ───────────────────────────────────────────────

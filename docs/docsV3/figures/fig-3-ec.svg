@@ -8,7 +8,7 @@
   <circle cx="176" cy="62" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
   <text x="176" y="66" class="s">1</text>
   <rect x="200" y="40" width="560" height="44" class="blk"/>
-  <text x="480" y="67" class="t">Power button → RP2040 (3V3 always-on)</text>
+  <text x="480" y="67" class="t">Power button → RP2354B (3V3 always-on)</text>
   <line x1="480" y1="84" x2="480" y2="94" class="dt"/>
 
   <circle cx="176" cy="116" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
@@ -32,7 +32,7 @@
   <circle cx="176" cy="278" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>
   <text x="176" y="282" class="s">5</text>
   <rect x="200" y="256" width="560" height="44" class="blk"/>
-  <text x="480" y="283" class="t">RP2040 reads the microSD (FAT): BIOS.BIN → pinned SRAM</text>
+  <text x="480" y="283" class="t">The EC reads the microSD: BIOS.BIN → pinned SRAM</text>
   <line x1="480" y1="300" x2="480" y2="310" class="dt"/>
 
   <circle cx="176" cy="332" r="11" fill="#0E3A2C" stroke="#D9A93F" stroke-width="1.5"/>

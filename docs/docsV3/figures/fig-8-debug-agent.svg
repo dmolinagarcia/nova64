@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Debug agent inside Helium, commanded by the RP2040 over SPI">
-  <text x="40" y="52" class="eye">RP2040 — CONSOLE</text>
+<svg viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Debug agent inside Helium, commanded by the EC over SPI">
+  <text x="40" y="52" class="eye">RP2354B — CONSOLE</text>
   <rect x="40" y="64" width="230" height="86" class="blk"/>
   <text x="155" y="90" class="t">MONITOR</text>
-  <text x="155" y="110" class="s">USB-CDC + UART 115200 · mirrored</text>
+  <text x="155" y="110" class="s">UART 115200 on J-DBG</text>
   <text x="155" y="128" class="s">md · mw · mt · halt · step · trace</text>
   <text x="155" y="144" class="s">never drives the bus</text>
 

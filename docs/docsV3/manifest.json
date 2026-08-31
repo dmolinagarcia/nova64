@@ -1,18 +1,62 @@
 {
   "title": "noVa64",
   "documentName": "Synthesis document — index and content outline",
+  "parts": [
+    {
+      "id": "introduction",
+      "num": "1",
+      "name": "Introduction",
+      "note": ""
+    },
+    {
+      "id": "hardware",
+      "num": "2",
+      "name": "Hardware",
+      "note": ""
+    },
+    {
+      "id": "software",
+      "num": "3",
+      "name": "Software",
+      "note": ""
+    },
+    {
+      "id": "project",
+      "num": "4",
+      "name": "Project",
+      "note": ""
+    },
+    {
+      "id": "specifications",
+      "num": "5",
+      "name": "Specifications",
+      "note": ""
+    },
+    {
+      "id": "appendices",
+      "num": "6",
+      "name": "Appendices",
+      "note": ""
+    },
+    {
+      "id": "ai",
+      "num": "7",
+      "name": "AI",
+      "note": "Assembled by AI and not yet reviewed. Every sheet starts here and moves to its part once it has been read."
+    }
+  ],
   "footer": {
-    "referenceIndex": "Ten areas · sheets A–X · Figs. 1–12 · appendix Z1–Z2",
-    "referenceSheet": "Synthesis document · sheets A–X + appendix Z1–Z2 · index at index.html",
-    "detail": "Self-contained: every sheet is the specification of what it covers, not a summary of one held elsewhere — power in C and S, the kernel–hardware interface in M, the debug agent in R, Neon in T, U and W, the windowing OS in V, the expansion bus in X, the build in P",
+    "referenceIndex": "Seven parts · ten areas · sheets A–X and Y1–Y3 · Figs. 1–12 · appendix Z1–Z2",
+    "referenceSheet": "Synthesis document · sheets A–X and Y1–Y3 + appendix Z1–Z2 · index at index.html",
+    "detail": "Self-contained: every sheet is the specification of what it covers, not a summary of one held elsewhere — power in C and S, the embedded controller, USB and the recovery paths in D, the kernel–hardware interface in M, the debug agent in R, the filesystem stack in Y1, Y2 and Y3, Neon in T, U and W, the windowing OS in V, the expansion bus in X, the build in P",
     "rules": "All 3.3V · hand-solderable · open toolchain",
-    "rev": "DOC v0.1 · ARCHITECTURE REV A · POWER REV C · EC REV A · CPU REV A · MEMORY REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · PROTOTYPE REV A · AUG 2026"
+    "rev": "DOC v0.2 · ARCHITECTURE REV A · POWER REV C · EC REV B · CPU REV A · MEMORY REV A · FS REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · PROTOTYPE REV A · AUG 2026"
   },
   "sheets": [
     {
       "file": "sec_a",
       "letter": "A",
-      "num": "01",
+      "part": "ai",
       "area": "Introduction",
       "nav": "Vision and philosophy",
       "index": "Project vision and philosophy · how to read this document",
@@ -21,7 +65,7 @@
     {
       "file": "sec_b",
       "letter": "B",
-      "num": "02",
+      "part": "ai",
       "area": "Architecture",
       "nav": "Global architecture",
       "index": "Global architecture",
@@ -30,7 +74,7 @@
     {
       "file": "sec_h",
       "letter": "H",
-      "num": "03",
+      "part": "ai",
       "area": "Architecture",
       "nav": "Peripherals and their location",
       "index": "Peripherals and their location",
@@ -39,7 +83,7 @@
     {
       "file": "sec_x",
       "letter": "X",
-      "num": "04",
+      "part": "ai",
       "area": "Architecture",
       "nav": "The expansion bus",
       "index": "The expansion bus · parallel slot and the slow I2C tier",
@@ -48,7 +92,7 @@
     {
       "file": "sec_c",
       "letter": "C",
-      "num": "05",
+      "part": "ai",
       "area": "Power",
       "nav": "Power supply",
       "index": "Power supply",
@@ -57,7 +101,7 @@
     {
       "file": "sec_s",
       "letter": "S",
-      "num": "06",
+      "part": "ai",
       "area": "Power",
       "nav": "Power control and telemetry",
       "index": "Power control, shutdown and telemetry · $FF power block",
@@ -66,16 +110,16 @@
     {
       "file": "sec_d",
       "letter": "D",
-      "num": "07",
+      "part": "ai",
       "area": "Embedded control and boot",
-      "nav": "RP2040 — embedded controller",
-      "index": "RP2040 — embedded controller",
+      "nav": "RP2354B — embedded controller",
+      "index": "Embedded controller · boot, USB topology, on-board hub and the recovery paths",
       "fig": "Fig. 3"
     },
     {
       "file": "sec_r",
       "letter": "R",
-      "num": "08",
+      "part": "ai",
       "area": "Embedded control and boot",
       "nav": "Debug agent and console",
       "index": "Debug agent and console · SPI register map",
@@ -84,7 +128,7 @@
     {
       "file": "sec_e",
       "letter": "E",
-      "num": "09",
+      "part": "ai",
       "area": "CPU and system",
       "nav": "CPU — W65C816S and softcore",
       "index": "CPU — W65C816S and the softcore option",
@@ -93,7 +137,7 @@
     {
       "file": "sec_m",
       "letter": "M",
-      "num": "10",
+      "part": "ai",
       "area": "CPU and system",
       "nav": "Kernel–hardware interface",
       "index": "Kernel–hardware interface · Helium control registers",
@@ -102,7 +146,7 @@
     {
       "file": "sec_f",
       "letter": "F",
-      "num": "11",
+      "part": "ai",
       "area": "Memory and storage",
       "nav": "Physical memory structure",
       "index": "Physical memory structure",
@@ -111,7 +155,7 @@
     {
       "file": "sec_k",
       "letter": "K",
-      "num": "12",
+      "part": "ai",
       "area": "Memory and storage",
       "nav": "Virtual memory — concepts",
       "index": "Virtual memory — concepts and glossary",
@@ -120,7 +164,7 @@
     {
       "file": "sec_l",
       "letter": "L",
-      "num": "13",
+      "part": "ai",
       "area": "Memory and storage",
       "nav": "Virtual memory management",
       "index": "Virtual memory management",
@@ -129,16 +173,43 @@
     {
       "file": "sec_g",
       "letter": "G",
-      "num": "14",
+      "part": "ai",
       "area": "Memory and storage",
       "nav": "Persistent storage — microSD",
       "index": "Persistent storage — microSD",
       "fig": "—"
     },
     {
+      "file": "sec_y1",
+      "letter": "Y1",
+      "part": "ai",
+      "area": "Memory and storage",
+      "nav": "Filesystems — the VFS layer",
+      "index": "Filesystems · the VFS layer, vnode model and mount table",
+      "fig": "tables"
+    },
+    {
+      "file": "sec_y2",
+      "letter": "Y2",
+      "part": "ai",
+      "area": "Memory and storage",
+      "nav": "Filesystems — NVFS",
+      "index": "Filesystems · NVFS, the native volume and its journal",
+      "fig": "tables"
+    },
+    {
+      "file": "sec_y3",
+      "letter": "Y3",
+      "part": "ai",
+      "area": "Memory and storage",
+      "nav": "Filesystems — ext2",
+      "index": "Filesystems · ext2, the transfer medium",
+      "fig": "tables"
+    },
+    {
       "file": "sec_t",
       "letter": "T",
-      "num": "15",
+      "part": "ai",
       "area": "Video + audio",
       "nav": "Neon — the GPU",
       "index": "Neon — the GPU · text, graphics, blitter and command lists",
@@ -147,7 +218,7 @@
     {
       "file": "sec_u",
       "letter": "U",
-      "num": "16",
+      "part": "ai",
       "area": "Video + audio",
       "nav": "Neon — blitter and compositor",
       "index": "Neon — blitter, arbitration and the window compositor",
@@ -156,7 +227,7 @@
     {
       "file": "sec_w",
       "letter": "W",
-      "num": "17",
+      "part": "ai",
       "area": "Video + audio",
       "nav": "Audio — DAC, mixer and driver",
       "index": "Audio · PCM5102A, four channels, hardware mixer and /dev/audio",
@@ -165,7 +236,7 @@
     {
       "file": "sec_i",
       "letter": "I",
-      "num": "18",
+      "part": "ai",
       "area": "Software",
       "nav": "BIOS — what it provides",
       "index": "BIOS — what it provides",
@@ -174,7 +245,7 @@
     {
       "file": "sec_j",
       "letter": "J",
-      "num": "19",
+      "part": "ai",
       "area": "Software",
       "nav": "Operating system",
       "index": "Operating system",
@@ -183,7 +254,7 @@
     {
       "file": "sec_n",
       "letter": "N",
-      "num": "20",
+      "part": "ai",
       "area": "Software",
       "nav": "Process management",
       "index": "Process management",
@@ -192,7 +263,7 @@
     {
       "file": "sec_o",
       "letter": "O",
-      "num": "21",
+      "part": "ai",
       "area": "Software",
       "nav": "Programming and toolchain",
       "index": "Programming and toolchain",
@@ -201,7 +272,7 @@
     {
       "file": "sec_v",
       "letter": "V",
-      "num": "22",
+      "part": "ai",
       "area": "Software",
       "nav": "The windowing OS",
       "index": "The windowing OS · window server, client protocol and toolkit",
@@ -210,16 +281,16 @@
     {
       "file": "sec_p",
       "letter": "P",
-      "num": "23",
+      "part": "ai",
       "area": "Project and build",
-      "nav": "Step-by-step build · P0–P5 · E0–E8 · L1–L8",
-      "index": "Step-by-step build · prototype P0–P5 · target E0–E8 · laptop L1–L8",
+      "nav": "Step-by-step build · P0–P5 · E0–E8 · L1–L8 · F0–F9",
+      "index": "Step-by-step build · prototype P0–P5 · target E0–E8 · laptop L1–L8 · host filesystem track F0–F9",
       "fig": "Fig. 7"
     },
     {
       "file": "sec_q",
       "letter": "Q",
-      "num": "24",
+      "part": "ai",
       "area": "Project and build",
       "nav": "Decision log · open questions",
       "index": "Decision log · open questions",
@@ -228,7 +299,7 @@
     {
       "file": "sec_z1",
       "letter": "Z1",
-      "num": "25",
+      "part": "ai",
       "area": "Appendix",
       "nav": "Appendix — glossary",
       "index": "Appendix · glossary of terms and acronyms",
@@ -237,7 +308,7 @@
     {
       "file": "sec_z2",
       "letter": "Z2",
-      "num": "26",
+      "part": "ai",
       "area": "Appendix",
       "nav": "Appendix — index of figures",
       "index": "Appendix · index of figures",

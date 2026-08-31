@@ -13,30 +13,60 @@ md.js               markdown → HTML for the dialect below
 shell.js            figure inlining and the failure state, shared by both pages
 app.js              sidebar, masthead, sheet index, pager, title block, routing
 full.js             the same pieces, assembled as one continuous document
-manifest.json       the sheet list: letter, number, area, nav and index titles, figure
+manifest.json       the parts registry, and the sheet list: letter, part, area, nav
+                    and index titles, figure
+tools/prerender.js  assembles the printable edition ahead of time, for a PDF
+                    formatter — page numbers live there, see Printing
 style.css           docsV2's stylesheet, plus the few rules these two pages add
 content/*.md        the prose — one file per sheet
 figures/*.svg       the diagrams, one file each
 ```
 
-## Areas
+## Parts, areas, sheets
 
-The sheets are grouped into ten areas — Introduction, Architecture, Power,
-Embedded control and boot, CPU and system, Memory and storage, Video + audio,
-Software, Project and build, Appendix — and the grouping lives entirely in
-`manifest.json`: **the order of the array is the reading order**, and a run of
-consecutive sheets carrying the same `area` gets one heading in the sidebar, one
-band in the sheet index, and, on `full.html`, one rule across the page before
-the first sheet of the area. Nothing else knows areas exist; there is no second
-structure to keep in step, and moving a sheet between areas means moving its row
-and fixing the `num` fields.
+Three levels, and only `manifest.json` knows about any of them.
 
-**The letters do not follow the areas, and are never renumbered.** A letter is a
-sheet's identity — the file name (`sec_r.md`), the route (`#/sec_r`), and every
-cross-reference in the prose — while `num` is its position in the reading order.
-The two stopped agreeing when the areas were introduced, and that is the point:
+**A part** comes from the `parts` array, which is a *registry* rather than a run:
+it fixes the order of the parts and their display names, and it is why a part
+holding no sheets still appears in the sidebar and the index. Each sheet names
+one with a `part` field.
+
+```json
+"parts": [
+  { "id": "hardware", "num": "2", "name": "Hardware", "note": "" }
+],
+"sheets": [
+  { "file": "sec_c", "letter": "C", "part": "ai", "area": "Power", … }
+]
+```
+
+**An area** is still a run: consecutive sheets *within a part* carrying the same
+`area` get one heading in the sidebar, one band in the sheet index, and one rule
+across the page on `full.html`. A part gets the same treatment one level up — a
+framed bar, and its own page in print, with its first area following on it.
+
+**The order is: parts as the registry lists them, sheets as the array lists them
+within each part.** So moving a sheet to another part is a **one-field edit** —
+change its `part`, and the sidebar, the index, the numbering and the printed
+page breaks all follow. Moving a sheet within its part still means moving its
+row. A sheet naming a part that is not in the registry is not dropped: it lands
+in a trailing "Unassigned" group that says so.
+
+**Positions are derived, never stored.** There is no `num` field: `NovaShell.prepare`
+resolves parts and areas into one reading order and numbers the sheets from it,
+so inserting a sheet anywhere renumbers the rest by itself.
+
+**The letters follow neither, and are never reissued.** A letter is a sheet's
+identity — the file name (`sec_r.md`), the route (`#/sec_r`), and every
+cross-reference in the prose — while its number is only its position. The two
+stopped agreeing when the areas were introduced, and that is the point:
 reordering the document costs a manifest edit instead of several hundred link
 rewrites.
+
+**Everything currently sits in the `ai` part**, which is where a sheet lives
+until a human has read it; it moves to its real part when it has been reviewed.
+Six of the seven parts are therefore empty, and that is the state of the review
+rather than a hole in the design.
 
 ## Running it
 
@@ -53,18 +83,51 @@ carry no YAML front matter, so Jekyll copies them through untouched.
 ## Printing
 
 `full.html` is the same content with the sheets chained one after another —
-masthead, sheet index, then the ten areas in order — and it is what to send to
-the printer or save as PDF. It prints in parts: the masthead is the cover and has the
-first page to itself, page two is left blank behind it, the sheet index takes
-page three, and every area opens on a fresh page, while within an area the
-sheets run on rather than each claiming one. The cover's drop — how far down the
-page the title block sits — is `body.full .main{ padding-top }` in the print
-block, in millimetres. The print stylesheet drops the sidebar and the navigation the way it always
-did. The sheet index becomes a
-working table of contents, because on that page every cross-reference is an
-in-page jump: ids are prefixed with their sheet (`#sec_p-e2`) so that E.2 in
-sheet E and E2 in sheet P stop colliding. The sidebar of the paged edition links
-to it at the bottom of the sheet list.
+masthead, sheet index, then the parts and their areas in order — and it is what
+to send to the printer or save as PDF. It prints in sections: the masthead is
+the cover and has the first page to itself, page two is left blank behind it,
+the sheet index takes page three, and every part and every area opens on a fresh
+page, while within an area the sheets run on rather than each claiming one. The
+cover's drop — how far down the page the title block sits — is
+`body.full .main{ padding-top }` in the print block, in millimetres. The print
+stylesheet drops the sidebar and the navigation the way it always did. The sheet
+index becomes a working table of contents, because on that page every
+cross-reference is an in-page jump: ids are prefixed with their sheet
+(`#sec_p-e2`) so that E.2 in sheet E and E2 in sheet P stop colliding. The
+sidebar of the paged edition links to it at the bottom of the sheet list.
+
+### Page numbers
+
+Two things the browser cannot do: a running page number in the bottom margin,
+and the page a sheet opens on beside its row in the index. Both are CSS paged
+media — `@page` margin boxes and `target-counter()` — and **no browser
+implements either**, so Chrome and Firefox drop those rules and print exactly
+what they printed before. They need a formatter, and a formatter needs a static
+file, because `full.html` assembles itself in JavaScript and WeasyPrint and
+Prince do not run any.
+
+```
+node tools/prerender.js          # -> print.html, beside index.html
+weasyprint print.html nova64.pdf
+```
+
+`tools/prerender.js` does not reimplement anything: it runs the real `md.js`,
+`shell.js` and `full.js` under Node against the real manifest and markdown,
+captures what they would have written into the page, inlines the figures the way
+`shell.js` does in the browser, and writes one static file that links the same
+stylesheet. Change a sheet or the manifest and it follows. `print.html` is a
+build artefact and is not committed.
+
+Any formatter that implements paged media will do — `npx @vivliostyle/cli build
+print.html -o nova64.pdf` is the other open one, and Prince is the best output if
+its licence suits. WeasyPrint prints a column of warnings about screen-only rules
+it cannot parse (`::-webkit-scrollbar`, `position:sticky`, `fill` inside the SVG
+rules); all of them are screen or SVG presentation and none affects the PDF.
+
+**Only the sheet rows carry a number.** A part or an area opens on the sheet
+immediately below it, so numbering those rows would print the same number twice.
+The cover and the blank verso behind it carry none either, which keeps every
+printed folio equal to the page number a PDF reader shows.
 
 ## Light and dark
 
@@ -148,13 +211,16 @@ also work under a paragraph or a `##` sub-heading.
 ## Adding a sheet
 
 Write `content/sec_s.md`, add its row to `manifest.json` (`file`, `letter`,
-`num`, `nav` for the sidebar, `index` for the index table, `fig` for the index's
-right-hand column). Sidebar, index, pager and title block follow from that; no
-HTML to edit.
+`part`, `area`, `nav` for the sidebar, `index` for the index table, `fig` for
+the index's right-hand column). Sidebar, index, pager, numbering and title block
+follow from that; no HTML to edit.
 
-Give it an `area` too, and put its row next to the other sheets of that area —
-the array's order is what the reader sees. Adding a sheet in the middle shifts
-the `num` of everything after it, and nothing else.
+Put its row next to the other sheets of the same area **inside its part** — the
+array's order is what the reader sees within a part. There is nothing to
+renumber: positions are derived from the resolved order.
+
+A new sheet starts in the `ai` part unless it was written by a human, in which
+case it goes straight to the part it belongs to.
 
 The appendix is deliberately the **last** thing in the document and deliberately
 lettered **Z**, and it is two sheets: the glossary in `content/sec_z1.md` and the
@@ -164,3 +230,11 @@ or any letter having to be reissued — which is also why splitting the appendix
 took a suffix rather than the next free letter. Letters and file names are kept
 in step — sheet R lives in `sec_r.md`, appendix sheet Z2 in `sec_z2.md` —
 because every cross-reference in the prose points at the file name.
+
+**A numeric suffix means one subject too large for one sheet**, and there are two
+such runs. `Z1`/`Z2` is the appendix. `Y1`/`Y2`/`Y3` is the filesystem stack —
+the VFS layer, NVFS and ext2 — which is one subject three ways rather than three
+subjects, and which took a suffix for the same reason the appendix did rather
+than because the alphabet had run short. Item ids inside a suffixed sheet carry
+the whole letter: `Y2.15` anchors at `#y215`, and cross-references are written
+`[Y2.15](sec_y2#y215)`.

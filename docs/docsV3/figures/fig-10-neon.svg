@@ -3,7 +3,7 @@
 
   <!-- EC -->
   <rect x="20" y="60" width="190" height="84" class="blk"/>
-  <text x="115" y="84" class="t">RP2040 · EC</text>
+  <text x="115" y="84" class="t">RP2354B · EC</text>
   <text x="115" y="104" class="s">service port — the four</text>
   <text x="115" y="120" class="s">SPI pins, reused after</text>
   <text x="115" y="136" class="s">configuration</text>

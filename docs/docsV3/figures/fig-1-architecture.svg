@@ -2,10 +2,10 @@
 <svg viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Global architecture block diagram">
   <text x="40" y="26" class="eye">EC / BOOT</text>
   <rect x="40" y="40" width="230" height="110" class="blk"/>
-  <text x="155" y="62" class="t">RP2040 — EC</text>
-  <text x="56" y="84" class="li">USB-C dev · CDC console</text>
-  <text x="56" y="100" class="li">PIO-USB host + HID hub</text>
-  <text x="56" y="116" class="li">W25Q16 · SSPI cfg · batt.</text>
+  <text x="155" y="62" class="t">RP2354B — EC</text>
+  <text x="56" y="84" class="li">USB-C power · UART console</text>
+  <text x="56" y="100" class="li">USB host + on-board hub</text>
+  <text x="56" y="116" class="li">2 MB flash · SSPI · batt.</text>
   <text x="56" y="136" class="li">rail sequencing</text>
 
   <rect x="300" y="40" width="130" height="60" class="blk"/>
