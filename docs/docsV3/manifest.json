@@ -54,6 +54,22 @@
   },
   "sheets": [
     {
+      "file": "sc_a1",
+      "letter": "A1",
+      "part": "introduction",
+      "nav": "Disclaimer",
+      "index": "Read this before you read this document",
+      "fig": "—"
+    },
+    {
+      "file": "sc_z1",
+      "letter": "Z1",
+      "part": "appendices",
+      "nav": "Changelog",
+      "index": "History of changes to these document",
+      "fig": "—"
+    },
+    {
       "file": "sec_ai_a",
       "letter": "A",
       "part": "ai",
