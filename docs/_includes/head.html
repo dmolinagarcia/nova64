@@ -37,4 +37,15 @@
   {%- feed_meta -%}
 
   <meta name="google-site-verification" content="JJd1CQCDcTxV3aOz3FUFsEOrYGDTR3PDGf0-Ani8CC4" />
+
+  {%- if site.google_analytics %}
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ site.google_analytics }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ site.google_analytics }}');
+  </script>
+  {%- endif %}
 </head>

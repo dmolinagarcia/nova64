@@ -19,6 +19,10 @@ show_excerpts: "yes"
 #youtube_username: username
 #googleplus_username: +username
 
+# Google Analytics 4 Measurement ID (e.g. "G-XXXXXXXXXX").
+# Leave blank/commented to keep analytics disabled, e.g. on local builds.
+google_analytics: "G-FYHDC00BC1"
+
 #########################################################################################
 ######### Nothing below needs to be changed (unless you know what you're doing) #########
 #########################################################################################
