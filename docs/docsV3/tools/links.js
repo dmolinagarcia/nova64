@@ -188,6 +188,7 @@ if (MODE === 'csv') {
   const out = only(shown.filter(r => r.from === FOCUS));
   const inn = only(shown.filter(r => r.to === FOCUS && r.from !== FOCUS));
   const self = only(shown.filter(r => r.from === FOCUS && r.to === FOCUS));
+  const innAll = [...inn, ...self].sort((a, b) => a.from.localeCompare(b.from) || a.line - b.line);
   const reach = l => new Set(l.map(r => r.from === FOCUS ? r.to : r.from)).size;
   const n = (c, w) => c + ' ' + w + (c === 1 ? '' : 's');
 
@@ -197,13 +198,13 @@ if (MODE === 'csv') {
   out.forEach(r => console.log('  ' + pad('L' + r.line, 7) + '-> ' + describe(r) +
     '   \u201c' + r.text + '\u201d'));
 
-  console.log('\nIN — ' + n(inn.length, 'link') + ' from ' + n(reach(inn), 'sheet'));
-  inn.sort((a, b) => a.from.localeCompare(b.from) || a.line - b.line)
-    .forEach(r => console.log('  ' + pad('content/' + r.file + ':' + r.line, 24) +
-      pad(r.anchor ? '#' + r.anchor : '', 8) +
-      pad(r.item ? 'item ' + r.item : '', 12) + '\u201c' + r.text + '\u201d'));
+  console.log('\nIN — ' + n(innAll.length, 'link') + ' from ' + n(reach(innAll), 'sheet'));
+  innAll.forEach(r => console.log('  ' + pad('content/' + r.file + ':' + r.line, 24) +
+    pad(r.anchor ? '#' + r.anchor : '', 8) +
+    pad(r.item ? 'item ' + r.item : '', 12) + '\u201c' + r.text + '\u201d' +
+    (r.status !== 'ok' ? '   [' + r.status + ']' : '')));
 
-  console.log('\n' + out.length + ' out · ' + inn.length + ' in' +
+  console.log('\n' + out.length + ' out · ' + innAll.length + ' in' +
     (self.length ? ' · ' + self.length + ' within the sheet' : '') +
     ' · ' + broken.length + ' broken');
 
@@ -217,7 +218,8 @@ if (MODE === 'csv') {
     console.log('\n' + to + '   ' + sheetName(to) + '   ← ' + by.get(to).length + ' links');
     by.get(to).sort((a, b) => a.from.localeCompare(b.from) || a.line - b.line)
       .forEach(r => console.log('  ' + pad('content/' + r.file + ':' + r.line, 24) +
-        pad(r.anchor ? '#' + r.anchor : '', 8) + r.text));
+        pad(r.anchor ? '#' + r.anchor : '', 8) + r.text +
+        (r.status !== 'ok' ? '   [' + r.status + ']' : '')));
   });
 
 } else if (MODE === 'summary') {
