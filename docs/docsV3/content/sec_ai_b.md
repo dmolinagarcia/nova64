@@ -11,7 +11,7 @@ An Amiga-style shared bus with four inhabitants: the physical CPU, two always-pr
   NOTE: **Neon is the one subsystem on this board that is useful before anything else works.** Its text mode lives entirely in the FPGA's own block RAM, initialised from the bitstream, and depends on no SDRAM, no arbiter and no bus: a correct screen exists the moment `CDONE` rises, with Helium unconfigured and the 65816 still in reset (→ [T.1](sec_ai_t#t1), [T.53](sec_ai_t#t53)). That ordering is deliberate and should be preserved as the design evolves.
 - B.4 — FPGA-C (Argon) — optional, unpopulated at first: a 65816 softcore (P65816 reference) that takes the same bus with BE=0. Allows switching from the real CPU to a softcore without touching the rest.
   NOTE: Whether that is worth doing is a live question — on this platform the win is CPI and features, not clock (→ [sheet E](sec_ai_e), [Q13](sec_ai_q#q13)).
-- B.5 — RP2354B — embedded controller off the bus: configures, boots, and watches over the system (→ sheet D). **Its 2 MB of flash is in the package**, and it is the board's only mandatory non-volatile storage ([D.8](sec_ai_d#d8)).
+- B.5 — RP2354B — embedded controller off the bus: configures, boots, and watches over the system (→ sheet D1). **Its 2 MB of flash is in the package**, and it is the board's only mandatory non-volatile storage ([D1.8](sec_ai_d1#d18)).
 - B.6 — Interconnect: a single shared A/D/control bus. The dedicated *data* link between FPGAs was removed, but **three** control lines survive it, and the naming says what they are for: **we select Neon's bus, and while Neon's bus is busy Helium holds the CPU.**
 
 | Net | Direction | Asserted means | Idle / pulled state |

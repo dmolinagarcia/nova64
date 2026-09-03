@@ -88,11 +88,11 @@ The document's terminology in one place. Every acronym is also expanded on first
 | Window (slow bus) | A copy of a device's registers in Helium's block RAM, refreshed by a sequencer and read by the CPU at bus speed. A **mirror, not a proxy** — a byte over I2C is ~90 µs and nothing may stall PHI2 for that ([X.23](sec_ai_x#x23)). |
 
 ## Board, power and configuration
-  NOTE: → [sheet C](sec_ai_c) · [sheet D](sec_ai_d) · [sheet S](sec_ai_s)
+  NOTE: → [sheet C](sec_ai_c) · [sheet D1](sec_ai_d1) · [sheet S](sec_ai_s)
 
 | Term | Meaning |
 |---|---|
-| EC | Embedded Controller — the always-on microcontroller handling power, boot and housekeeping. Here, the RP2354B in QFN-80. It stays off the shared bus entirely, and its in-package 2 MB flash is the board's only mandatory non-volatile storage ([D.8](sec_ai_d#d8)). |
+| EC | Embedded Controller — the always-on microcontroller handling power, boot and housekeeping. Here, the RP2354B in QFN-80. It stays off the shared bus entirely, and its in-package 2 MB flash is the board's only mandatory non-volatile storage ([D1.8](sec_ai_d1#d18)). |
 | Rail | A supply voltage distributed across the board (3V3_AON, 3V3_MAIN, 1V2, VPP…). "Sequencing" is the order they come up in. Every logic rail here is 3.3V, which is what keeps level shifters off the board. |
 | SYS | The node after the charger, fed by USB or battery indifferently. Everything hangs off it rather than off the battery. |
 | Power-path | Charger topology that powers the system and charges the cell at once, so the machine runs on USB with a flat or absent battery. |
@@ -174,12 +174,12 @@ The document's terminology in one place. Every acronym is also expanded on first
 | Underrun | A DMA buffer running dry before software refills it. Here the channel **holds its last sample** rather than emitting zero — a step to zero is a click — and sets a sticky flag, because an underrun that cannot be observed is a bug report that says "it crackles sometimes" ([W.22](sec_ai_w#w22)). |
 | QSPI | Quad SPI — 4-bit-wide serial bus. Historical here: it went with the PSRAM ([D13](sec_ai_q#d13)) and no longer appears on the board. |
 | HID | Human Interface Device — the USB class covering keyboards and mice. |
-| USB host controller | The EC's native USB, assigned to host mode in hardware — it handles hub enumeration, the `PRE` packets Low Speed devices need, and bulk transfers in silicon. The assignment is one-way: there is no device port and therefore no USB recovery path ([D.9](sec_ai_d#d9)). |
+| USB host controller | The EC's native USB, assigned to host mode in hardware — it handles hub enumeration, the `PRE` packets Low Speed devices need, and bulk transfers in silicon. The assignment is one-way: there is no device port and therefore no USB recovery path ([D1.9](sec_ai_d1#d19)). |
 | `PRE` packet | The Full Speed preamble a host must emit before every transaction with a Low Speed device behind a hub. Historically the most fragile path in this family's host stack, which is why [Q102](sec_ai_q#q102) is a bring-up gate rather than an assumption. |
-| Hub cascade | A second hub level, created whenever a user plugs a hub into a downstream port. The on-board hub already consumes the one level guaranteed to work ([D.10](sec_ai_d#d10)). |
-| `J-DBG` · `J-QSPI` | The EC's two headers. The first carries SWD and the console UART, serviced by one probe over one cable; the second carries the bootrom UART and direct access to the flash die ([D.12](sec_ai_d#d12)). |
-| Rescue debug port | An access point in the EC's debug architecture that can reset the chip even when its firmware is hostile to debugging — a tight loop, a routine that reconfigures the debug pins, a crashed power sequencer. The reason SWD is the primary path rather than the convenient one ([D.13](sec_ai_d#d13)). |
-| Bootrom UART boot | The EC's second recovery tier: two straps at reset put the bootrom on a 1 Mbaud UART carried on flash-interface pins. **It writes SRAM only**, which is why the RAM flash-writer stub exists ([D.14](sec_ai_d#d14)). |
+| Hub cascade | A second hub level, created whenever a user plugs a hub into a downstream port. The on-board hub already consumes the one level guaranteed to work ([D1.10](sec_ai_d1#d110)). |
+| `J-DBG` · `J-QSPI` | The EC's two headers. The first carries SWD and the console UART, serviced by one probe over one cable; the second carries the bootrom UART and direct access to the flash die ([D1.12](sec_ai_d1#d112)). |
+| Rescue debug port | An access point in the EC's debug architecture that can reset the chip even when its firmware is hostile to debugging — a tight loop, a routine that reconfigures the debug pins, a crashed power sequencer. The reason SWD is the primary path rather than the convenient one ([D1.13](sec_ai_d1#d113)). |
+| Bootrom UART boot | The EC's second recovery tier: two straps at reset put the bootrom on a 1 Mbaud UART carried on flash-interface pins. **It writes SRAM only**, which is why the RAM flash-writer stub exists ([D1.14](sec_ai_d1#d114)). |
 | Mux | Multiplexer — switch routing one set of signals to one of several destinations. The '3257 gives the microSD two possible owners. |
 | DMA | Direct Memory Access — a device reading or writing memory itself, without the CPU moving each byte. The SPI-SD engine is the only one on this board, and it is the whole reason `CACHE_INVAL_FRAME` exists ([M.12](sec_ai_m#m12)). |
 

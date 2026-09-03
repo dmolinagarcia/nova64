@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The integrated debug port: an RP2040 probe on its own supply domain, six nets to the RP2354B embedded controller">
+
+  <rect x="44" y="16" width="210" height="68" class="blk"/>
+  <text x="149" y="40" class="t">DEVELOPMENT HOST</text>
+  <text x="149" y="58" class="s">OpenOCD · cmsis-dap.cfg</text>
+  <text x="149" y="76" class="s">rp2350.cfg · CDC console</text>
+  <polyline points="149,84 149,100 109,100 109,148" class="dt"/>
+  <text x="252" y="98" class="lbl">USB 2.0 FS · one cable</text>
+
+  <rect x="706" y="16" width="230" height="68" class="blk"/>
+  <text x="821" y="40" class="t">USB-C · PD CHARGING</text>
+  <text x="821" y="58" class="s">a different receptacle — CH224K</text>
+  <text x="821" y="76" class="s">power only · D+/D− not connected</text>
+  <line x1="821" y1="84" x2="821" y2="110" class="pw"/>
+  <text x="874" y="102" class="plbl">VBUS 9 V</text>
+
+  <rect x="24" y="110" width="380" height="300" fill="rgba(217,169,63,.07)" stroke="#D9A93F" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="40" y="132" class="eye">PROBE DOMAIN · 3V3_PROBE</text>
+
+  <rect x="44" y="148" width="130" height="138" class="blk"/>
+  <text x="109" y="178" class="t">USB-C</text>
+  <text x="109" y="200" class="s">DEVICE (UFP)</text>
+  <text x="109" y="220" class="s">CC1·CC2 → 5.1 kΩ</text>
+  <text x="109" y="240" class="s">ESD on D+/D−</text>
+  <text x="109" y="260" class="s">VBUS in, never out</text>
+
+  <line x1="174" y1="214" x2="224" y2="214" class="dt"/>
+  <text x="199" y="206" class="lbl">D+/D−</text>
+
+  <rect x="224" y="148" width="160" height="138" class="blk"/>
+  <text x="304" y="178" class="t">RP2040</text>
+  <text x="304" y="200" class="s">CMSIS-DAP probe</text>
+  <text x="304" y="220" class="s">debugprobe fork</text>
+  <text x="304" y="240" class="s">2 MB QSPI flash</text>
+  <text x="304" y="260" class="s">own SWD test pads</text>
+
+  <rect x="44" y="330" width="130" height="70" class="blk"/>
+  <text x="109" y="356" class="t">LDO 3V3</text>
+  <text x="109" y="376" class="s">≥150 mA</text>
+  <text x="109" y="392" class="s">AP2112K-class</text>
+  <line x1="109" y1="286" x2="109" y2="330" class="pw"/>
+  <text x="152" y="312" class="plbl">VBUS 5 V</text>
+  <polyline points="174,360 199,360 199,270 224,270" class="pw"/>
+  <text transform="rotate(-90 190 322)" x="190" y="322" class="plbl">3V3_PROBE</text>
+
+  <rect x="224" y="330" width="160" height="70" class="blk"/>
+  <text x="304" y="356" class="t">BOOTSEL</text>
+  <text x="304" y="376" class="s">chassis pinhole · 1 kΩ</text>
+  <text x="304" y="392" class="s">mask ROM — always</text>
+  <line x1="304" y1="286" x2="304" y2="330" class="dts"/>
+  <text x="346" y="312" class="lbl">QSPI_SS</text>
+
+  <rect x="556" y="110" width="384" height="300" fill="rgba(217,169,63,.07)" stroke="#D9A93F" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="572" y="132" class="eye">MACHINE DOMAIN · 3V3_AON</text>
+
+  <rect x="572" y="148" width="352" height="138" class="blk"/>
+  <text x="748" y="178" class="t">RP2354B — EMBEDDED CONTROLLER</text>
+  <text x="748" y="202" class="s">QFN-80 · 48 GPIO · 2 MB flash in package</text>
+  <text x="748" y="222" class="s">SWCLK · SWDIO · RUN are dedicated pins</text>
+  <text x="748" y="242" class="s">UART0 on GPIO0/GPIO1 (proposed)</text>
+  <text x="748" y="262" class="s">TX Hi-Z until DBG_VBUS_SENSE reads high</text>
+
+  <rect x="572" y="330" width="160" height="70" class="blk opt"/>
+  <text x="652" y="356" class="t">TIER-3 PADS</text>
+  <text x="652" y="376" class="s">QSPI_SS·SCK·SD0–SD3</text>
+  <text x="652" y="392" class="s">clip only · no cable</text>
+  <line x1="652" y1="286" x2="652" y2="330" class="dts"/>
+  <text x="700" y="312" class="lbl">RUN low</text>
+
+  <rect x="764" y="330" width="160" height="70" class="blk"/>
+  <text x="844" y="356" class="t">THE MACHINE</text>
+  <text x="844" y="376" class="s">hub → USB-A ×2</text>
+  <text x="844" y="392" class="s">microSD · Helium SPI</text>
+  <line x1="844" y1="286" x2="844" y2="330" class="dt"/>
+
+  <line x1="384" y1="168" x2="572" y2="168" class="dt"/>
+  <text x="478" y="162" class="lbl">SWCLK →</text>
+  <rect x="392" y="164" width="12" height="8" class="blk"/>
+  <rect x="552" y="164" width="12" height="8" class="blk"/>
+
+  <line x1="384" y1="190" x2="572" y2="190" class="dt"/>
+  <text x="478" y="184" class="lbl">SWDIO ↔ buffered read</text>
+  <rect x="392" y="186" width="12" height="8" class="blk"/>
+  <rect x="552" y="186" width="12" height="8" class="blk"/>
+
+  <line x1="384" y1="212" x2="572" y2="212" class="dt"/>
+  <text x="478" y="206" class="lbl">UART RX →</text>
+  <rect x="392" y="208" width="12" height="8" class="blk"/>
+  <rect x="552" y="208" width="12" height="8" class="blk"/>
+
+  <line x1="384" y1="234" x2="572" y2="234" class="dts"/>
+  <text x="478" y="228" class="lbl">← UART TX · gated</text>
+  <rect x="392" y="230" width="12" height="8" class="blk"/>
+  <rect x="552" y="230" width="12" height="8" class="blk"/>
+
+  <line x1="384" y1="256" x2="572" y2="256" class="dt"/>
+  <text x="478" y="250" class="lbl">RUN → open-drain</text>
+  <rect x="392" y="252" width="12" height="8" class="blk"/>
+
+  <line x1="404" y1="278" x2="572" y2="278" class="op"/>
+  <text x="488" y="272" class="lbl">DBG_VBUS_SENSE → divider</text>
+
+  <line x1="44" y1="452" x2="940" y2="452" class="dtb"/>
+  <line x1="214" y1="410" x2="214" y2="452" class="dt"/>
+  <line x1="748" y1="410" x2="748" y2="452" class="dt"/>
+  <text x="44" y="480" class="gtx">Six nets cross. No supply rail does.</text>
+  <text x="330" y="480" class="li10">GND — one continuous pour under both domains, never split</text>
+</svg>
