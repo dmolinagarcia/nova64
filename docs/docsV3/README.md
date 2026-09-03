@@ -226,6 +226,15 @@ lowercased with the dots dropped, which is what every cross-reference points at.
 `TEST:` renders as the gold *TEST ▸* line, `NOTE:` as the dimmed aside. Both
 also work under a paragraph or a `##` sub-heading.
 
+Any other indented line attaches the same way, but as a further paragraph of the
+block at full weight — one line, one paragraph — so an item that needs to run on
+does so without leaving its number:
+
+```markdown
+- A1.1 — v0.2 of this documentation is the result of a very long dialogue…
+  noVa64 is an amateur project. There will be lots of errors…
+```
+
 ### Inline
 
 | You write | You get |

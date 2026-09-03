@@ -73,6 +73,7 @@
   ol.steps li:first-child{border-top:0}
   .id{color:var(--mint);font-weight:700;min-width:38px;}
   .itx{flex:1;color:rgba(var(--ink-rgb),.88);}
+  .itx .cont,.lead .cont{display:block;margin-top:8px;}
   .itx .test{display:block;margin-top:3px;color:var(--gold);font-size:11.5px;}
   .itx .note{display:block;margin-top:2px;color:rgba(var(--ink-rgb),.55);font-size:11.5px;}
   .pad{width:13px;height:13px;border:1.4px solid var(--ink);margin-top:3px;flex:none;background:transparent;}
@@ -210,7 +211,7 @@
     .wrap{ max-width:none; }
 
     /* text → pure black */
-    a,.lead,.itx,.itx .note,.aim,.sheet,.masthead .sub,.idx .cap,.idx .no,.idx td,
+    a,.lead,.itx,.itx .cont,.itx .note,.aim,.sheet,.masthead .sub,.idx .cap,.idx .no,.idx td,
     figcaption,.legend,.cj>div,.cj .big,table.simple th,table.simple td,
     table.simple td:first-child{ color:#000; }
     a{ text-decoration:none; }

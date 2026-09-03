@@ -71,20 +71,24 @@
   var PAD = { '[ ]': '', '[x]': ' done', '[~]': ' half', '[?]': ' optl' };
   var ID = /^(?:[A-Z][A-Za-z0-9.]{0,7}|\+)$/;
 
-  /* NOTE:/TEST: continuation lines belonging to the block just parsed. */
+  /* Lines belonging to the block just parsed: NOTE:, TEST:, and any other
+     indented line, which continues the block as a further paragraph at the
+     same weight — the way A1.1 carries its second and third paragraphs. */
   function trailers(lines, k) {
-    var notes = [], test = null;
+    var conts = [], notes = [], test = null;
     while (k < lines.length) {
-      var t = lines[k].trim();
+      var raw = lines[k], t = raw.trim();
       if (/^NOTE:/.test(t)) { notes.push(t.slice(5).trim()); k++; }
       else if (/^TEST:/.test(t)) { test = t.slice(5).trim(); k++; }
+      else if (/^\s{2,}\S/.test(raw)) { conts.push(t); k++; }
       else break;
     }
-    return { notes: notes, test: test, next: k };
+    return { conts: conts, notes: notes, test: test, next: k };
   }
 
   function tail(tr) {
-    var out = tr.notes.map(function (n) { return ' <span class="note">' + inline(n) + '</span>'; }).join('');
+    var out = tr.conts.map(function (c) { return '<span class="cont">' + inline(c) + '</span>'; }).join('');
+    out += tr.notes.map(function (n) { return ' <span class="note">' + inline(n) + '</span>'; }).join('');
     if (tr.test) out += '<span class="test">TEST ▸ ' + inline(tr.test) + '</span>';
     return out;
   }
@@ -191,7 +195,8 @@
       }
 
       var para = [];                                                // paragraph
-      while (i < lines.length && lines[i].trim() && !/^(NOTE:|TEST:)/.test(lines[i].trim())) {
+      while (i < lines.length && lines[i].trim() && !/^(NOTE:|TEST:)/.test(lines[i].trim()) &&
+             !(para.length && /^\s{2,}\S/.test(lines[i]))) {
         para.push(lines[i].trim()); i++;
       }
       var trp = trailers(lines, i);
