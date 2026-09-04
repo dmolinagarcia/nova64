@@ -63,12 +63,12 @@ REV C, and the revision that changes the shape of the sheet rather than its part
 | 4 | I2C-AON up; charger configured, gauge read. Below the operating threshold with no adapter, the EC **stops here and signals the fault** rather than browning out mid-configuration | 4 | Both FPGAs held in reset via `CRESET_B` |
 | 5 | **1V2 EN** → wait for `PG` | 5 | **R1 tri-state pass** over every crossing pin |
 | 6 | **3V3_MAIN EN** → wait for `PG`; VPP_2V5 follows through the BAT54 | 6 | 3V3_MAIN `EN` de-asserted; VPP_2V5 falls with it |
-| 7 | `CRESET_B` released, bitstreams loaded over SPI | 7 | 1V2 `EN` de-asserted |
+| 7 | `CRESET_B` released, bitstreams loaded over SPI **from EC flash — Neon first** ([D1.22](sec_ai_d1#d122)) | 7 | 1V2 `EN` de-asserted |
 | 8 | `CDONE` verified on both devices | 8 | EC enters dormant mode, or commands **ship mode** over I2C for a true off |
 | 8b | EC reads gauge and charger and **commits an initial telemetry snapshot** into Helium, so the kernel's first read is not zeros (→ [S.16](sec_ai_s#s16)) | | |
 | 9 | I2C-SW up, GT911 initialised | | |
 | 10 | Backlight, then the USB-A 5 V boost | | |
-| 11 | BIOS preloaded into SRAM, 65816 released from reset | | |
+| 11 | BIOS preloaded into SRAM **from EC flash over the mailbox** ([D60](sec_ai_q#d60)), 65816 released from reset | | |
 
 - C.15 — Power-down step 5 sits between 4 and 6 deliberately: **after** the FPGAs are quiescent, **before** their rails vanish. The datasheet specifies no power-down order, so reverse is taken as the conservative choice, and it costs nothing.
 - C.16 — **The button is one switch wired to two destinations**: the charger's `QON` pin, which gives wake-from-ship-mode and a firmware-independent hardware reset intrinsic to the silicon, and an AON GPIO, which gives the EC press-duration discrimination. The charger is the floor of last resort; the EC is the graceful path. Three levels of shutdown fall out of that, in [S.6](sec_ai_s#s6).

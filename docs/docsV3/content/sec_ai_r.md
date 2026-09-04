@@ -136,7 +136,7 @@ LEGEND: Trace legend: <span class="m">mint = command and data path</span> · <sp
 
 | Stage | Debug agent capability | What it validates |
 |---|---|---|
-| E1.6 · RP2354B alone | Console up on the `J-DBG` UART; microSD; bitstream load | EC firmware, SD stack, the console transport |
+| E1.6 · RP2354B alone | Console up on the debug-port UART; **bitstream and `bios.bin` read out of EC flash** | EC firmware, the flash layout of [D1.21](sec_ai_d1#d121), the console transport. **No SD stack — there is none in EC firmware** ([D60](sec_ai_q#d60)) |
 | E1.7 · the three FPGAs | `DBG_ID` reads `$6516`; and on Neon's side, **a correct text screen plus glyphs written over the service port** — Neon stage N0 ([T.64](sec_ai_t#t64)) | SPI link, Helium clock, bitstream actually loaded — and, on Neon, the PLL, the timing generator, block-RAM initialisation, the panel and the FPC |
 | E2 · SRAM + monitor | Physical peek/poke; `mt` march test; byte-write check | SRAM controller, shared-net timing, `md`/`mw` end to end |
 | E3 · SDRAM | Physical SDRAM access; `CMD_CACHE_FLUSH`/`INVAL`; `cache stats` | SDRAM controller, refresh under load, cache coherence |

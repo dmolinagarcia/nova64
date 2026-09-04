@@ -113,12 +113,16 @@ The document's terminology in one place. Every acronym is also expanded on first
 | Watchdog | Here, the EC's 10-second bound on how long a kernel may take to acknowledge a shutdown request. Without one, a hung kernel hides itself as a machine that will not turn off. |
 | Staging · live · shadow | The three copies of the telemetry bank. The EC dribbles bytes into staging, one commit publishes them to live, one latch snapshots live into shadow — so an 8-bit CPU can read a 16-bit value without it changing underneath ([S.16](sec_ai_s#s16)). |
 | Tearing | Reading a multi-byte value while it is being updated, and getting halves from two different samples. The reason for the snapshot mechanism above. |
-| SSPI | Slave SPI — the iCE40 configuration mode in which an external master (the RP2354B) clocks the bitstream in. |
+| SSPI | Slave SPI — the iCE40 configuration mode in which an external master (the RP2354B) clocks the bitstream in. **The only usable mode on this board**: iCE40 LP/HX has no JTAG, and NVCM is one-time-programmable ([D61](sec_ai_q#d61), [D62](sec_ai_q#d62)). |
+| NVCM | Non-Volatile Configuration Memory — the iCE40's on-die one-time-programmable configuration store. **Fuses, not flash**: a part programmed with it carries that bitstream permanently. Rejected for a design that will iterate ([D62](sec_ai_q#d62)). |
+| Mailbox | The SPI channel between the EC and Helium, selected by `MBX_CSN` — `MEM_WRITE` at boot, HID events at runtime, firmware payloads during an update. **The whole of the data plane between the two** ([sheet D3](sec_ai_d3)). |
+| `IN_SPACE` | The four-bit free-slot count in the mailbox status byte. Flow control: it is what lets the EC throttle a burst of keystrokes rather than overrun a 65816 that is busy elsewhere ([D3.11](sec_ai_d3#d311)). |
+| XIP | Execute In Place — running code directly out of flash rather than from RAM. Why the EC goes deaf for 30–50 ms while erasing a sector: it cannot execute flash-resident code, interrupt handlers included, while the erase is in progress ([D1.25](sec_ai_d1#d125)). |
 | Bitstream | The compiled gateware file loaded into an FPGA at every power-up. iCE40s are SRAM-based: they forget on power-off. |
 | CRESET_B / CDONE | The iCE40's configuration handshake: held low to start loading, raised by the FPGA when configuration succeeded. |
 | Bring-up | First powering of a new board, block by block, verifying each before enabling the next. Each stage of [sheet P](sec_ai_p) closes on an explicit `TEST ▸`, not on a judgement. |
 | Free-run | Diagnostic where the CPU is fed a constant NOP so it just counts through addresses — proves clock, reset and address bus without any memory. |
-| Handoff | Transfer of a shared resource between two owners — here the microSD passing from the RP2354B to Helium through the '3257 mux. The RP2354B releases the card before Helium's controller claims it — nothing arbitrates it in hardware. |
+| Handoff | Transfer of a shared resource between two owners. **The design no longer contains one**: the microSD handoff was this document's only example and [D60](sec_ai_q#d60) removed it, leaving every peripheral with a single permanent owner ([H.1](sec_ai_h#h1)). |
 | TQFP · PLCC · TSOP · BGA | Chip packages. The first three have accessible leads and can be hand-soldered; BGA hides its balls underneath and cannot, which is why it is excluded ([D01](sec_ai_q#d01)). |
 
 ## Video, audio and peripherals
@@ -180,7 +184,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | `J-DBG` · `J-QSPI` | The EC's two headers. The first carries SWD and the console UART, serviced by one probe over one cable; the second carries the bootrom UART and direct access to the flash die ([D1.12](sec_ai_d1#d112)). |
 | Rescue debug port | An access point in the EC's debug architecture that can reset the chip even when its firmware is hostile to debugging — a tight loop, a routine that reconfigures the debug pins, a crashed power sequencer. The reason SWD is the primary path rather than the convenient one ([D1.13](sec_ai_d1#d113)). |
 | Bootrom UART boot | The EC's second recovery tier: two straps at reset put the bootrom on a 1 Mbaud UART carried on flash-interface pins. **It writes SRAM only**, which is why the RAM flash-writer stub exists ([D1.14](sec_ai_d1#d114)). |
-| Mux | Multiplexer — switch routing one set of signals to one of several destinations. The '3257 gives the microSD two possible owners. |
+| Mux | Multiplexer — switch routing one set of signals to one of several destinations. **No signal mux remains in the design**; the '3257 that gave the microSD two possible owners was removed with the SD handoff ([G.1](sec_ai_g#g1)). |
 | DMA | Direct Memory Access — a device reading or writing memory itself, without the CPU moving each byte. The SPI-SD engine is the only one on this board, and it is the whole reason `CACHE_INVAL_FRAME` exists ([M.12](sec_ai_m#m12)). |
 
 ## Operating system and toolchain

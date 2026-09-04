@@ -7,7 +7,7 @@ The thirteen figures are numbered across the whole document rather than per shee
 |---|---|---|
 | Fig. 1 | [B — Global architecture](sec_ai_b) | The four inhabitants of the shared bus, with the RP2354B governing configuration and reset from outside it |
 | Fig. 2 | [C — Power supply](sec_ai_c) | Power tree REV C: USB-C and CH224K into the BQ25896 power-path, SYS, and the five converters hanging off it |
-| Fig. 3 | [D1 — Embedded controller](sec_ai_d1) | The nine-step boot sequence — steps 1–6 the EC's, from step 7 the 65816's |
+| Fig. 3 | [D1 — Embedded controller](sec_ai_d1) | The boot state machine `S0`–`S7` — `S0`–`S6` the EC's, from `S6` the 65816's, and nothing outside the EC's own package read before the CPU runs |
 | Fig. 4 | [F — Physical memory](sec_ai_f) | Memory structure: the SRAM on the CPU's own nets, Helium driving the translated half and owning the SDRAM alone |
 | Fig. 5 | [K — Virtual memory concepts](sec_ai_k) | Field-width asymmetry — the virtual split falls out of the CPU's 24 bits, the physical one is the MMU's choice |
 | Fig. 6 | [L — Virtual memory management](sec_ai_l) | Address translation: TLB with ASID, the hardware walker over the flat table in SRAM, and the ABORTB fault path |

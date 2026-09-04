@@ -18,6 +18,7 @@
  * links in — which is what to run before moving or rewriting one:
  *
  *   node tools/links.js sec_q        both directions for sheet Q
+ *   node tools/links.js sec_q#q3     just item Q.3 within sheet Q, both directions
  *   node tools/links.js content/sec_q.md --csv   the same rows, as CSV
  *
  * Exit status is 1 when a link is broken — among the ones shown, when a sheet
@@ -34,9 +35,12 @@ const CONTENT = path.join(ROOT, 'content');
 const argv = process.argv.slice(2);
 const flags = new Set(argv.filter(a => a.startsWith('--')));
 
-/* A sheet can be named as `sec_q`, `content/sec_q.md` or anything between. */
+/* A sheet can be named as `sec_q`, `content/sec_q.md` or anything between,
+   and narrowed further to one item with `sec_q#q3`. */
 const named = argv.filter(a => !a.startsWith('--'));
-const FOCUS = named.length ? path.basename(named[0]).replace(/\.md$/, '') : '';
+const [FOCUS_SHEET_RAW, FOCUS_ITEM_RAW] = (named[0] || '').split('#');
+const FOCUS = named.length ? path.basename(FOCUS_SHEET_RAW).replace(/\.md$/, '') : '';
+const FOCUS_ITEM = (FOCUS_ITEM_RAW || '').toLowerCase();
 
 const MODE = flags.has('--csv') ? 'csv'
   : FOCUS ? 'sheet'
@@ -65,22 +69,40 @@ function sheetName(file) {
    an anchor this script accepts is one the page can actually reach. */
 const ID = /^(?:[A-Z][A-Za-z0-9.]{0,7}|\+)$/;
 
-function anchorsOf(src) {
-  const found = new Map();                      // anchor -> item id
+/* Every item, in document order, with the line its bullet starts on — so a
+   link line can be traced back to the item it falls under. */
+function itemsOf(src) {
+  const items = [];
   let fenced = false;
-  for (const raw of src.replace(/\r/g, '').split('\n')) {
-    if (/^```/.test(raw)) { fenced = !fenced; continue; }
-    if (fenced || !/^-\s+/.test(raw)) continue;
+  src.replace(/\r/g, '').split('\n').forEach((raw, i) => {
+    if (/^```/.test(raw)) { fenced = !fenced; return; }
+    if (fenced || !/^-\s+/.test(raw)) return;
     let body = raw.replace(/^-\s+/, '');
     const box = /^(\[[ x~?]\])\s+/.exec(body);
     if (box) body = body.slice(box[0].length);
     const cut = body.indexOf(' — ');
-    if (cut <= 0) continue;
+    if (cut <= 0) return;
     const id = body.slice(0, cut);
-    if (!ID.test(id) || !/^[A-Za-z]/.test(id)) continue;
-    found.set(id.toLowerCase().replace(/\./g, ''), id);
-  }
+    if (!ID.test(id) || !/^[A-Za-z]/.test(id)) return;
+    items.push({ line: i + 1, id, anchor: id.toLowerCase().replace(/\./g, '') });
+  });
+  return items;
+}
+
+function anchorsOf(items) {
+  const found = new Map();                      // anchor -> item id
+  items.forEach(it => found.set(it.anchor, it.id));
   return found;
+}
+
+/* The item a given line falls under: the last bullet at or before it. */
+function itemAt(items, line) {
+  let cur = '';
+  for (const it of items) {
+    if (it.line > line) break;
+    cur = it.anchor;
+  }
+  return cur;
 }
 
 // ── the links each sheet makes ────────────────────────────────────────────
@@ -115,12 +137,23 @@ function linksOf(src) {
 
 const files = fs.readdirSync(CONTENT).filter(f => f.endsWith('.md')).sort();
 const anchors = new Map();                      // file (no .md) -> anchor map
-files.forEach(f => anchors.set(f.replace(/\.md$/, ''),
-  anchorsOf(fs.readFileSync(path.join(CONTENT, f), 'utf8'))));
+const itemLines = new Map();                    // file (no .md) -> items, in line order
+files.forEach(f => {
+  const name = f.replace(/\.md$/, '');
+  const items = itemsOf(fs.readFileSync(path.join(CONTENT, f), 'utf8'));
+  itemLines.set(name, items);
+  anchors.set(name, anchorsOf(items));
+});
 
 if (FOCUS && !anchors.has(FOCUS)) {
   console.error('no such sheet: ' + FOCUS + '\nsheets: ' +
     [...anchors.keys()].sort().join(', '));
+  process.exit(2);
+}
+
+if (FOCUS && FOCUS_ITEM && !anchors.get(FOCUS).has(FOCUS_ITEM)) {
+  console.error('no such item: ' + FOCUS + '#' + FOCUS_ITEM + '\nitems: ' +
+    itemLines.get(FOCUS).map(it => it.id).join(', '));
   process.exit(2);
 }
 
@@ -183,16 +216,25 @@ if (MODE === 'csv') {
   ].map(q).join(',')));
 
 } else if (MODE === 'sheet') {
-  /* `--broken` narrows the two lists the same way it narrows the whole run. */
+  /* `--broken` narrows the two lists the same way it narrows the whole run.
+     With an item named, OUT keeps only links whose source line falls under
+     it, and IN only links whose target anchor is exactly that item. */
   const only = flags.has('--broken') ? l => l.filter(r => r.status !== 'ok') : l => l;
-  const out = only(shown.filter(r => r.from === FOCUS));
-  const inn = only(shown.filter(r => r.to === FOCUS && r.from !== FOCUS));
-  const self = only(shown.filter(r => r.from === FOCUS && r.to === FOCUS));
-  const innAll = [...inn, ...self].sort((a, b) => a.from.localeCompare(b.from) || a.line - b.line);
+  const fromItem = r => itemAt(itemLines.get(FOCUS), r.line);
+  const out = only(shown.filter(r => r.from === FOCUS &&
+    (!FOCUS_ITEM || fromItem(r) === FOCUS_ITEM)));
+  const inn = only(shown.filter(r => r.to === FOCUS && r.from !== FOCUS &&
+    (!FOCUS_ITEM || r.anchor === FOCUS_ITEM)));
+  const self = only(shown.filter(r => r.from === FOCUS && r.to === FOCUS &&
+    (!FOCUS_ITEM || fromItem(r) === FOCUS_ITEM || r.anchor === FOCUS_ITEM)));
+  const innAll = [...inn, ...self.filter(r => !FOCUS_ITEM || r.anchor === FOCUS_ITEM)]
+    .sort((a, b) => a.from.localeCompare(b.from) || a.line - b.line);
   const reach = l => new Set(l.map(r => r.from === FOCUS ? r.to : r.from)).size;
   const n = (c, w) => c + ' ' + w + (c === 1 ? '' : 's');
 
-  console.log('\n' + FOCUS + '   ' + sheetName(FOCUS));
+  console.log('\n' + FOCUS + (FOCUS_ITEM ? '#' + FOCUS_ITEM + '   item ' +
+    anchors.get(FOCUS).get(FOCUS_ITEM) + ' · ' + sheetName(FOCUS)
+    : '   ' + sheetName(FOCUS)));
 
   console.log('\nOUT — ' + n(out.length, 'link') + ' to ' + n(reach(out), 'sheet'));
   out.forEach(r => console.log('  ' + pad('L' + r.line, 7) + '-> ' + describe(r) +

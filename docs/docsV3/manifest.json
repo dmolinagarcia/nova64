@@ -46,9 +46,9 @@
     }
   ],
   "footer": {
-    "referenceIndex": "Seven parts · ten areas · sheets A–X — D as D1 and D2 — and Y1–Y3 · Figs. 1–13 · appendix Z1–Z2",
-    "referenceSheet": "Synthesis document · sheets A–X — D as D1 and D2 — and Y1–Y3 + appendix Z1–Z2 · index at index.html",
-    "detail": "Self-contained: every sheet is the specification of what it covers, not a summary of one held elsewhere — power in C and S, the embedded controller, USB and the recovery paths in D1, the integrated debug and programming port in D2, the kernel–hardware interface in M, the debug agent in R, the filesystem stack in Y1, Y2 and Y3, Neon in T, U and W, the windowing OS in V, the expansion bus in X, the build in P",
+    "referenceIndex": "Seven parts · ten areas · sheets A–X — D as D1, D2 and D3 — and Y1–Y3 · Figs. 1–13 · appendix Z1–Z2",
+    "referenceSheet": "Synthesis document · sheets A–X — D as D1, D2 and D3 — and Y1–Y3 + appendix Z1–Z2 · index at index.html",
+    "detail": "Self-contained: every sheet is the specification of what it covers, not a summary of one held elsewhere — power in C and S, the embedded controller, USB and the recovery paths in D1, the integrated debug and programming port in D2, the EC boundary contract and the mailbox in D3, the kernel–hardware interface in M, the debug agent in R, the filesystem stack in Y1, Y2 and Y3, Neon in T, U and W, the windowing OS in V, the expansion bus in X, the build in P",
     "rules": "All 3.3V · hand-solderable · open toolchain",
     "rev": "DOC v0.2 · ARCHITECTURE REV A · POWER REV C · EC REV B · CPU REV A · MEMORY REV A · FS REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · PROTOTYPE REV A · AUG 2026"
   },
@@ -140,6 +140,15 @@
       "nav": "Debug and programming port",
       "index": "Integrated debug and programming port · on-board probe, USB-C and domain isolation",
       "fig": "Fig. 13"
+    },
+    {
+      "file": "sec_ai_d3",
+      "letter": "D3",
+      "part": "ai",
+      "area": "Embedded control and boot",
+      "nav": "The EC boundary and mailbox",
+      "index": "EC boundary contract · signals, FPGA configuration and the SPI mailbox",
+      "fig": "tables"
     },
     {
       "file": "sec_ai_r",
