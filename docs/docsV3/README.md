@@ -249,9 +249,8 @@ does so without leaving its number:
 ## Adding a sheet
 
 Write `content/sec_s.md`, add its row to `manifest.json` (`file`, `letter`,
-`part`, `area`, `nav` for the sidebar, `index` for the index table, `fig` for
-the index's right-hand column). Sidebar, index, pager, numbering and title block
-follow from that; no HTML to edit.
+`part`, `area`, `nav` for the sidebar, `index` for the index table). Sidebar,
+index, pager, numbering and title block follow from that; no HTML to edit.
 
 Put its row next to the other sheets of the same area **inside its part** — the
 array's order is what the reader sees within a part. There is nothing to

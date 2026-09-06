@@ -1,2 +1,4 @@
 /kicad/*/*backups
 /books/*
+nohup.out
+web.sh

@@ -14,8 +14,12 @@
  * does in the browser, and writes one static file. Nothing here knows the
  * document's structure — change the manifest or a sheet and this follows.
  *
- *   node tools/prerender.js            -> writes print.html beside index.html
- *   node tools/prerender.js out.html   -> writes it somewhere else
+ *   node tools/prerender.js               -> writes print.html beside index.html
+ *   node tools/prerender.js out.html      -> writes it somewhere else
+ *   node tools/prerender.js --head trim.css   -> with that CSS in the head
+ *
+ * For the four trims the document is published at, run tools/pdfs.js, which
+ * drives this script and the formatter once per trim.
  *
  * Then hand that file to a formatter that implements paged media:
  *
@@ -31,7 +35,14 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const out = path.resolve(process.argv[2] || path.join(root, 'print.html'));
+
+/* `--head <file>` inlines that file as a stylesheet in the head, after
+   style.css and so on top of it: it is how tools/pdfs.js states a trim
+   without a second copy of the stylesheet. Anything else is the output path. */
+const argv = process.argv.slice(2);
+const flag = argv.indexOf('--head');
+const head = flag === -1 ? '' : fs.readFileSync(argv.splice(flag, 2)[1], 'utf8');
+const out = path.resolve(argv[0] || path.join(root, 'print.html'));
 
 /* ── the browser, reduced to what full.js actually touches ───────────────
    Three elements get written to and nothing gets read back, so an element is
@@ -118,7 +129,7 @@ const page = (parts) => `<!DOCTYPE html>
 <meta charset="UTF-8">
 <title>noVa64 — Synthesis document · printable</title>
 <link rel="stylesheet" href="style.css">
-</head>
+${parts.head}</head>
 <body class="full paged">
 <div class="shell">
   <div class="main">
@@ -137,6 +148,7 @@ done.then(() => {
   const content = inlineFigures(written['#content'] || '');
   if (!content) { console.error('assembly produced no content'); process.exit(1); }
   fs.writeFileSync(out, page({
+    head: head ? '<style>\n' + head.trim() + '\n</style>\n' : '',
     masthead: written['.masthead'] || '',
     content: content,
     cajetin: written['.cajetin'] || '',

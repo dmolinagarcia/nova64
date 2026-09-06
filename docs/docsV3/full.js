@@ -28,19 +28,18 @@
   function indexTable() {
     var h = '<nav class="idx" aria-label="Sheet index"><div class="cap">SHEET INDEX</div><table><tbody>';
     M.groups.forEach(function (g) {
-      h += '<tr class="part"><td class="no">' + g.part.num + '</td><td colspan="3">' +
+      h += '<tr class="part"><td class="no">' + g.part.num + '</td><td colspan="2">' +
            (g.sheets.length ? '<a href="#part-' + slug(g.part.id || g.part.name) + '">' + g.part.name + '</a>'
                             : g.part.name) +
            (g.part.note ? '<span class="pnote">' + g.part.note + '</span>' : '') +
            (g.sheets.length ? '' : '<span class="pnote">no sheets yet</span>') + '</td></tr>';
       g.areas.forEach(function (a) {
         if (a.name) {
-          h += '<tr class="grp"><td colspan="4"><a href="#area-' + slug(a.name) + '">' + a.name + '</a></td></tr>';
+          h += '<tr class="grp"><td colspan="3"><a href="#area-' + slug(a.name) + '">' + a.name + '</a></td></tr>';
         }
         a.sheets.forEach(function (s) {
           h += '<tr><td class="no">' + s.num + '</td><td class="de">' + s.letter + '</td>' +
-               '<td><a href="#' + s.file + '">' + s.index + '</a></td>' +
-               '<td class="fg">' + s.fig + '</td></tr>';
+               '<td><a href="#' + s.file + '">' + s.index + '</a></td></tr>';
         });
       });
     });
@@ -84,10 +83,10 @@
 
   function titleBlock() {
     var f = M.footer, last = M.sheets[M.sheets.length - 1];
-    return '<div class="cj"><div class="big">' + M.title + '</div>' +
+    return '<div class="cj"><div class="big">' + M.title + ' — ' + M.documentShortName + '</div>' +
            '<div>' + M.documentName.toUpperCase() + ' — COMPLETE, SHEETS ' +
            M.sheets[0].letter + '–' + last.letter + '</div></div>' +
-           '<div class="cj"><div>' + f.referenceIndex + '</div><div>' + f.detail + '</div></div>' +
+           '<div class="cj"><div>' + f.referenceIndex + '</div></div>' +
            '<div class="cj"><div>' + f.rules + '</div><div class="gold">' + f.rev + '</div></div>';
   }
 

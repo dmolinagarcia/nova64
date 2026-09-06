@@ -46,7 +46,6 @@
   .pnote{display:block;margin-top:3px;font-size:9.5px;letter-spacing:0;text-transform:none;font-weight:400;color:rgba(var(--ink-rgb),.45);}
   .idx .no{color:rgba(var(--ink-rgb),.5);width:46px}
   .idx .de{color:var(--gold);width:34px;font-weight:700}
-  .idx .fg{color:var(--mint);text-align:right;width:120px}
 
   .hoja{border:1.3px solid rgba(var(--ink-rgb),.55);margin-top:26px;padding:16px 20px 20px;}
   .areaband{margin-top:30px;border-bottom:1.6px solid rgba(var(--ink-rgb),.55);padding-bottom:6px;
@@ -100,9 +99,10 @@
   .cajetin{margin-top:30px;border:1.6px solid rgba(var(--ink-rgb),.75);}
   .cj{display:flex;border-top:1px solid rgba(var(--ink-rgb),.35);flex-wrap:wrap;}
   .cj:first-child{border-top:0}
-  .cj>div{padding:9px 14px;font-size:11px;letter-spacing:1px;color:rgba(var(--ink-rgb),.8);}
-  .cj>div+div{border-left:1px solid rgba(var(--ink-rgb),.35);flex:1;min-width:220px}
-  .cj .big{font-size:16px;font-weight:800;letter-spacing:3px;color:var(--ink);min-width:250px}
+  .cj>div{padding:9px 14px;font-size:11px;letter-spacing:1px;color:rgba(var(--ink-rgb),.8);
+          flex:1 1 0;min-width:220px}
+  .cj>div+div{border-left:1px solid rgba(var(--ink-rgb),.35);}
+  .cj .big{font-size:16px;font-weight:800;letter-spacing:3px;color:var(--ink);}
   .cj .gold{color:var(--gold);font-weight:700}
 
   svg .blk{fill:var(--panel);stroke:var(--ink);stroke-width:1.3;}
@@ -206,6 +206,29 @@
     .shell{display:block}
     .main{max-width:none}
     @page{ margin:14mm; }
+
+    /* ── the trim knobs ──────────────────────────────────────────────────
+       Everything below is measured in ems off the body size and follows the
+       page on its own. These six lengths do not: two measure against the
+       height of the leaf, four against its width. The defaults are the A4 /
+       Letter leaf a browser prints on, which is the only case that has to
+       work without anyone choosing a trim.
+
+       `tools/pdfs.js` restates them per trim, next to the `@page size` for
+       that trim, and its table is where the reasoning for each value lives.
+       Nothing else has to change to print on a different leaf. */
+    :root{
+      --cover-air:80mm;       /* the drop above the masthead on the cover  */
+      --cajetin-drop:195mm;   /* the drop above the closing title block    */
+      --cj-cell:220px;        /* title block: floor under every cell       */
+      --tbl-head:10px;        /* table heads: size, and the tracking below */
+      --tbl-head-track:2px;
+      --tbl-cell:12px;        /* table cells: size, and the padding below  */
+      --tbl-pad:6px 8px;
+    }
+    .cj>div{ min-width:var(--cj-cell); }
+    table.simple th{ font-size:var(--tbl-head); letter-spacing:var(--tbl-head-track); padding:var(--tbl-pad); }
+    table.simple td{ font-size:var(--tbl-cell); padding:var(--tbl-pad); }
     html,body{ background:#fff; color:#000; }
     body{ font-size:9.5pt; line-height:1.45; padding:0; }
     .wrap{ max-width:none; }
@@ -242,7 +265,7 @@
     /* colour that carries meaning → darkened, not flattened */
     .idx .de,.itx .test,.tag.g,.chip.g,.cj .gold,.legend .g{ color:#6b4a00; }
     .tag.g,.chip.g{ border-color:#6b4a00; }
-    .idx .fg,.id,code,.tag.m,.chip,.legend .m{ color:#004a3a; }
+    .id,code,.tag.m,.chip,.legend .m{ color:#004a3a; }
     .tag.m,.chip{ border-color:#004a3a; }
 
     /* diagrams — class-driven */
@@ -274,7 +297,7 @@
     /* the cover's air is padding on the column, not a margin on the masthead:
        a margin against the top of a page box is the one browsers are entitled
        to drop */
-    body.full .main{ padding-top:80mm; }
+    body.full .main{ padding-top:var(--cover-air); }
     body.full .coverback{ display:block;height:1px;break-before:page; }
     body.full .idx{ break-before:page; }
     body.full .partband{ break-before:page; }
@@ -297,7 +320,7 @@
        it. The drop is a spacer block rather than a margin, because a margin
        against the top of a page box is the one browsers may drop — the same
        reason the cover's air is padding on .main. Tune the height here. */
-    body.full #content::after{ content:""; display:block; break-before:page; height:195mm; }
+    body.full #content::after{ content:""; display:block; break-before:page; height:var(--cajetin-drop); }
     body.full .cajetin{ break-inside:avoid; }
 
     /* keep rows, steps and figures from splitting across pages */
@@ -327,10 +350,6 @@
        mistake rather than as a folio */
     @page:first{ @bottom-center{ content:none; } }
     @page:nth(2){ @bottom-center{ content:none; } }
-
-    /* the index's right-hand column gives room back to the leader: its
-       widest value is seven characters, and it was sized for a screen */
-    .idx .fg{ width:24mm; white-space:nowrap; }
 
     /* In the sheet index, and only there, the page a sheet opens on. **Only
        the sheet rows**: a part or an area opens on the sheet immediately

@@ -91,11 +91,10 @@
     M.groups.forEach(function (g) {
       h += partRow(g);
       g.areas.forEach(function (a) {
-        if (a.name) h += '<tr class="grp"><td colspan="4">' + a.name + '</td></tr>';
+        if (a.name) h += '<tr class="grp"><td colspan="3">' + a.name + '</td></tr>';
         a.sheets.forEach(function (s) {
           h += '<tr><td class="no">' + s.num + '</td><td class="de">' + s.letter + '</td>' +
-               '<td><a href="#/' + s.file + '">' + s.index + '</a></td>' +
-               '<td class="fg">' + s.fig + '</td></tr>';
+               '<td><a href="#/' + s.file + '">' + s.index + '</a></td></tr>';
         });
       });
     });
@@ -106,7 +105,7 @@
      their parts, the empty ones are the part of the picture worth seeing. */
   function partRow(g) {
     return '<tr class="part"><td class="no">' + g.part.num + '</td>' +
-           '<td colspan="3">' + g.part.name +
+           '<td colspan="2">' + g.part.name +
            (g.part.note ? '<span class="pnote">' + g.part.note + '</span>' : '') +
            (g.sheets.length ? '' : '<span class="pnote">no sheets yet</span>') +
            '</td></tr>';
@@ -140,9 +139,9 @@
     var line = r.isIndex ? M.documentName.toUpperCase()
              : ('Sheet ' + sheetOf(r.file).num + ' · ' + sheetOf(r.file).letter + ' — ' + doc.title).toUpperCase();
     var f = M.footer;
-    return '<div class="cj"><div class="big">' + M.title + '</div><div>' + line + '</div></div>' +
-           '<div class="cj"><div>' + (r.isIndex ? f.referenceIndex : f.referenceSheet) + '</div>' +
-           '<div>' + f.detail + '</div></div>' +
+    return '<div class="cj"><div class="big">' + M.title + ' — ' + M.documentShortName +
+           '</div><div>' + line + '</div></div>' +
+           (r.isIndex ? '<div class="cj"><div>' + f.referenceIndex + '</div></div>' : '') +
            '<div class="cj"><div>' + f.rules + '</div><div class="gold">' + f.rev + '</div></div>';
   }
 
