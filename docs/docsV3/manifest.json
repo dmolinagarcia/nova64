@@ -48,8 +48,6 @@
   ],
   "footer": {
     "referenceIndex": "Seven parts · ten areas · sheets A–X — D as D1, D2 and D3 — and Y1–Y3 · Figs. 1–13 · appendix Z1–Z2",
-    "referenceSheet": "Synthesis document · sheets A–X — D as D1, D2 and D3 — and Y1–Y3 + appendix Z1–Z2 · index at index.html",
-    "detail": "Self-contained: every sheet is the specification of what it covers, not a summary of one held elsewhere — power in C and S, the embedded controller, USB and the recovery paths in D1, the integrated debug and programming port in D2, the EC boundary contract and the mailbox in D3, the kernel–hardware interface in M, the debug agent in R, the filesystem stack in Y1, Y2 and Y3, Neon in T, U and W, the windowing OS in V, the expansion bus in X, the build in P",
     "rules": "All 3.3V · hand-solderable · open toolchain",
     "rev": "DOC v0.2.1 · ARCHITECTURE REV A · POWER REV C · EC REV B · CPU REV A · MEMORY REV A · FS REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · PROTOTYPE REV A · AUG 2026"
   },
@@ -59,16 +57,35 @@
       "letter": "A1",
       "part": "introduction",
       "nav": "Disclaimer",
-      "index": "Read this before you read this document",
-      "fig": "—"
+      "index": "Disclaimer"
+    },
+    {
+      "file": "sc_a2",
+      "letter": "A2",
+      "part": "introduction",
+      "nav": "Vision and philosophy",
+      "index": "Project vision and philosophy"
+    },
+    {
+      "file": "sc_x1",
+      "letter": "X1",
+      "part": "project",
+      "nav": "Decision log",
+      "index": "Decision log"
+    },
+    {
+      "file": "sc_x2",
+      "letter": "X2",
+      "part": "project",
+      "nav": "Open questions",
+      "index": "Open questions"
     },
     {
       "file": "sc_z1",
       "letter": "Z1",
       "part": "appendices",
       "nav": "Changelog",
-      "index": "History of changes to these document",
-      "fig": "—"
+      "index": "Changelog"
     },
     {
       "file": "sec_ai_a",
@@ -76,8 +93,7 @@
       "part": "ai",
       "area": "Introduction",
       "nav": "Vision and philosophy",
-      "index": "Project vision and philosophy · how to read this document",
-      "fig": "—"
+      "index": "Project vision and philosophy · how to read this document"
     },
     {
       "file": "sec_ai_b",
@@ -85,8 +101,7 @@
       "part": "ai",
       "area": "Architecture",
       "nav": "Global architecture",
-      "index": "Global architecture",
-      "fig": "Fig. 1"
+      "index": "Global architecture"
     },
     {
       "file": "sec_ai_h",
@@ -94,8 +109,7 @@
       "part": "ai",
       "area": "Architecture",
       "nav": "Peripherals and their location",
-      "index": "Peripherals and their location",
-      "fig": "table"
+      "index": "Peripherals and their location"
     },
     {
       "file": "sec_ai_x",
@@ -103,8 +117,7 @@
       "part": "ai",
       "area": "Architecture",
       "nav": "The expansion bus",
-      "index": "The expansion bus · parallel slot and the slow I2C tier",
-      "fig": "tables"
+      "index": "The expansion bus · parallel slot and the slow I2C tier"
     },
     {
       "file": "sec_ai_c",
@@ -112,8 +125,7 @@
       "part": "ai",
       "area": "Power",
       "nav": "Power supply",
-      "index": "Power supply",
-      "fig": "Fig. 2"
+      "index": "Power supply"
     },
     {
       "file": "sec_ai_s",
@@ -121,8 +133,7 @@
       "part": "ai",
       "area": "Power",
       "nav": "Power control and telemetry",
-      "index": "Power control, shutdown and telemetry · $FF power block",
-      "fig": "Fig. 9"
+      "index": "Power control, shutdown and telemetry · $FF power block"
     },
     {
       "file": "sec_ai_d1",
@@ -130,8 +141,7 @@
       "part": "ai",
       "area": "Embedded control and boot",
       "nav": "RP2354B — embedded controller",
-      "index": "Embedded controller · boot, USB topology, on-board hub and the recovery paths",
-      "fig": "Fig. 3"
+      "index": "Embedded controller · boot, USB topology, on-board hub and the recovery paths"
     },
     {
       "file": "sec_ai_d2",
@@ -139,8 +149,7 @@
       "part": "ai",
       "area": "Embedded control and boot",
       "nav": "Debug and programming port",
-      "index": "Integrated debug and programming port · on-board probe, USB-C and domain isolation",
-      "fig": "Fig. 13"
+      "index": "Integrated debug and programming port · on-board probe, USB-C and domain isolation"
     },
     {
       "file": "sec_ai_d3",
@@ -148,8 +157,7 @@
       "part": "ai",
       "area": "Embedded control and boot",
       "nav": "The EC boundary and mailbox",
-      "index": "EC boundary contract · signals, FPGA configuration and the SPI mailbox",
-      "fig": "tables"
+      "index": "EC boundary contract · signals, FPGA configuration and the SPI mailbox"
     },
     {
       "file": "sec_ai_r",
@@ -157,8 +165,7 @@
       "part": "ai",
       "area": "Embedded control and boot",
       "nav": "Debug agent and console",
-      "index": "Debug agent and console · SPI register map",
-      "fig": "Fig. 8"
+      "index": "Debug agent and console · SPI register map"
     },
     {
       "file": "sec_ai_e",
@@ -166,8 +173,7 @@
       "part": "ai",
       "area": "CPU and system",
       "nav": "CPU — W65C816S and softcore",
-      "index": "CPU — W65C816S and the softcore option",
-      "fig": "table"
+      "index": "CPU — W65C816S and the softcore option"
     },
     {
       "file": "sec_ai_m",
@@ -175,8 +181,7 @@
       "part": "ai",
       "area": "CPU and system",
       "nav": "Kernel–hardware interface",
-      "index": "Kernel–hardware interface · Helium control registers",
-      "fig": "tables"
+      "index": "Kernel–hardware interface · Helium control registers"
     },
     {
       "file": "sec_ai_f",
@@ -184,8 +189,7 @@
       "part": "ai",
       "area": "Memory and storage",
       "nav": "Physical memory structure",
-      "index": "Physical memory structure",
-      "fig": "Fig. 4"
+      "index": "Physical memory structure"
     },
     {
       "file": "sec_ai_k",
@@ -193,8 +197,7 @@
       "part": "ai",
       "area": "Memory and storage",
       "nav": "Virtual memory — concepts",
-      "index": "Virtual memory — concepts and glossary",
-      "fig": "Fig. 5"
+      "index": "Virtual memory — concepts and glossary"
     },
     {
       "file": "sec_ai_l",
@@ -202,8 +205,7 @@
       "part": "ai",
       "area": "Memory and storage",
       "nav": "Virtual memory management",
-      "index": "Virtual memory management",
-      "fig": "Fig. 6"
+      "index": "Virtual memory management"
     },
     {
       "file": "sec_ai_g",
@@ -211,8 +213,7 @@
       "part": "ai",
       "area": "Memory and storage",
       "nav": "Persistent storage — microSD",
-      "index": "Persistent storage — microSD",
-      "fig": "—"
+      "index": "Persistent storage — microSD"
     },
     {
       "file": "sec_ai_y1",
@@ -220,8 +221,7 @@
       "part": "ai",
       "area": "Memory and storage",
       "nav": "Filesystems — the VFS layer",
-      "index": "Filesystems · the VFS layer, vnode model and mount table",
-      "fig": "tables"
+      "index": "Filesystems · the VFS layer, vnode model and mount table"
     },
     {
       "file": "sec_ai_y2",
@@ -229,8 +229,7 @@
       "part": "ai",
       "area": "Memory and storage",
       "nav": "Filesystems — NVFS",
-      "index": "Filesystems · NVFS, the native volume and its journal",
-      "fig": "tables"
+      "index": "Filesystems · NVFS, the native volume and its journal"
     },
     {
       "file": "sec_ai_y3",
@@ -238,8 +237,7 @@
       "part": "ai",
       "area": "Memory and storage",
       "nav": "Filesystems — ext2",
-      "index": "Filesystems · ext2, the transfer medium",
-      "fig": "tables"
+      "index": "Filesystems · ext2, the transfer medium"
     },
     {
       "file": "sec_ai_t",
@@ -247,8 +245,7 @@
       "part": "ai",
       "area": "Video + audio",
       "nav": "Neon — the GPU",
-      "index": "Neon — the GPU · text, graphics, blitter and command lists",
-      "fig": "Fig. 10"
+      "index": "Neon — the GPU · text, graphics, blitter and command lists"
     },
     {
       "file": "sec_ai_u",
@@ -256,8 +253,7 @@
       "part": "ai",
       "area": "Video + audio",
       "nav": "Neon — blitter and compositor",
-      "index": "Neon — blitter, arbitration and the window compositor",
-      "fig": "Fig. 11"
+      "index": "Neon — blitter, arbitration and the window compositor"
     },
     {
       "file": "sec_ai_w",
@@ -265,8 +261,7 @@
       "part": "ai",
       "area": "Video + audio",
       "nav": "Audio — DAC, mixer and driver",
-      "index": "Audio · PCM5102A, four channels, hardware mixer and /dev/audio",
-      "fig": "tables"
+      "index": "Audio · PCM5102A, four channels, hardware mixer and /dev/audio"
     },
     {
       "file": "sec_ai_i",
@@ -274,8 +269,7 @@
       "part": "ai",
       "area": "Software",
       "nav": "BIOS — what it provides",
-      "index": "BIOS — what it provides",
-      "fig": "—"
+      "index": "BIOS — what it provides"
     },
     {
       "file": "sec_ai_j",
@@ -283,8 +277,7 @@
       "part": "ai",
       "area": "Software",
       "nav": "Operating system",
-      "index": "Operating system",
-      "fig": "—"
+      "index": "Operating system"
     },
     {
       "file": "sec_ai_n",
@@ -292,8 +285,7 @@
       "part": "ai",
       "area": "Software",
       "nav": "Process management",
-      "index": "Process management",
-      "fig": "—"
+      "index": "Process management"
     },
     {
       "file": "sec_ai_o",
@@ -301,8 +293,7 @@
       "part": "ai",
       "area": "Software",
       "nav": "Programming and toolchain",
-      "index": "Programming and toolchain",
-      "fig": "—"
+      "index": "Programming and toolchain"
     },
     {
       "file": "sec_ai_v",
@@ -310,8 +301,7 @@
       "part": "ai",
       "area": "Software",
       "nav": "The windowing OS",
-      "index": "The windowing OS · window server, client protocol and toolkit",
-      "fig": "Fig. 12"
+      "index": "The windowing OS · window server, client protocol and toolkit"
     },
     {
       "file": "sec_ai_p",
@@ -319,8 +309,7 @@
       "part": "ai",
       "area": "Project and build",
       "nav": "Step-by-step build · P0–P5 · E0–E8 · L1–L8 · F0–F9",
-      "index": "Step-by-step build · prototype P0–P5 · target E0–E8 · laptop L1–L8 · host filesystem track F0–F9",
-      "fig": "Fig. 7"
+      "index": "Step-by-step build · prototype P0–P5 · target E0–E8 · laptop L1–L8 · host filesystem track F0–F9"
     },
     {
       "file": "sec_ai_q",
@@ -328,17 +317,15 @@
       "part": "ai",
       "area": "Project and build",
       "nav": "Decision log · open questions",
-      "index": "Decision log · open questions",
-      "fig": "—"
+      "index": "Decision log · open questions"
     },
     {
-      "file": "sec_ai_z1",
-      "letter": "Z1",
+      "file": "sec_ai_z3",
+      "letter": "Z3",
       "part": "ai",
       "area": "Appendix",
       "nav": "Appendix — glossary",
-      "index": "Appendix · glossary of terms and acronyms",
-      "fig": "tables"
+      "index": "Appendix · glossary of terms and acronyms"
     },
     {
       "file": "sec_ai_z2",
@@ -346,8 +333,7 @@
       "part": "ai",
       "area": "Appendix",
       "nav": "Appendix — index of figures",
-      "index": "Appendix · index of figures",
-      "fig": "table"
+      "index": "Appendix · index of figures"
     }
   ]
 }

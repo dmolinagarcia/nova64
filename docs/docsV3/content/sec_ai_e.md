@@ -1,7 +1,7 @@
 # CPU — W65C816S and the softcore option
 > the part · the pins the design leans on · what actually caps speed
 
-The 65816 is the premise of the project, not a component choice open for review — the lineage argument is in [A.3](sec_ai_a#a3). This sheet gathers what the rest of the design assumes about it, and settles what an FPGA softcore in Argon's slot would and would not buy — a question worth closing before anyone populates that footprint.
+The 65816 is the premise of the project, not a component choice open for review — the lineage argument is in [A2.3](sc_a2#a23). This sheet gathers what the rest of the design assumes about it, and settles what an FPGA softcore in Argon's slot would and would not buy — a question worth closing before anyone populates that footprint.
 
 - E.1 — The part: W65C816S in a PLCC-44 socket, in **24-bit native mode** (`CLC/XCE` at reset). WDC grades the silicon 1–14 MHz; this machine targets **8 MHz at 3.3V**, PHI2 from Helium. The 14 MHz is a property of the chip, not a ceiling anyone is pushing against — the limit that binds is memory (→ [sheet F](sec_ai_f)).
 - E.2 — The programmer's model the whole system rests on: 16-bit accumulator and index registers with widths switched at runtime by the **M and X flags**, the **E flag** for 6502 emulation mode, 24-bit addressing split into 64 KB banks via **DBR** and **PBR**, a relocatable direct page, and a stack that always lives in bank `$00` — that bank is pinned (→ [L.10](sec_ai_l#l10)).
@@ -76,4 +76,4 @@ The 65816 is the premise of the project, not a component choice open for review 
 | P65816 (srg320) | VHDL, microcoded, cycle-exact | The most complete open option, and the reference this project already names. Basis of the MiSTer SNES core and the Apple IIgs core derived from it. Would be cleaned up and given a flat memory interface. |
 | MiSTer Apple IIgs | Adaptation of srg320 | Validated in hardware at selectable speeds to 14.3 MHz. That is a *system compatibility* limit, not the isolated core's Fmax — it says nothing about what the core could reach. |
 | FT816 | Accelerator, not cycle-exact | Conceived for speed rather than fidelity, so a better base where cycle exactness does not matter. Needs an instruction-coverage audit before it can be taken seriously. |
-| WDC soft IP | Commercial | Paid, and against the project's open-toolchain principle ([A.6](sec_ai_a#a6)). |
+| WDC soft IP | Commercial | Paid, and against the project's open-toolchain principle ([A2.6](sc_a2#a26)). |
