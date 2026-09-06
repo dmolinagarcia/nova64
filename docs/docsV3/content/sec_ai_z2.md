@@ -1,7 +1,7 @@
 # Appendix — index of figures
 > every figure · the sheet it lives in · what it shows
 
-The thirteen figures are numbered across the whole document rather than per sheet ([A.13](sec_ai_a#a13)), and each one lives in the sheet it illustrates — so this is the only place they can be seen as a set. The glossary is [Z1](sec_ai_z1).
+The thirteen figures are numbered across the whole document rather than per sheet ([A.13](sec_ai_a#a13)), and each one lives in the sheet it illustrates — so this is the only place they can be seen as a set. The glossary is [Z3](sec_ai_z3).
 
 | Fig. | Sheet | What it shows |
 |---|---|---|
