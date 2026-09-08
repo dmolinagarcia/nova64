@@ -1,4 +1,4 @@
-# noVa64
+# noVa64 
 
 ![noVa64 logo](https://raw.githubusercontent.com/dmolinagarcia/nova64/main/docs/img/logo_nova64_big.png)
 
