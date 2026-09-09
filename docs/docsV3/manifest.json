@@ -49,7 +49,7 @@
   "footer": {
     "referenceIndex": "{parts} parts · {areas} areas · {sheets} sheets · Figs. 1–13",
     "rules": "All 3.3V · hand-solderable · open toolchain",
-    "rev": "DOC v0.2.4 · ARCHITECTURE REV A · POWER REV C · EC REV B · CPU REV A · MEMORY REV A · FS REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · PROTOTYPE REV A · AUG 2026"
+    "rev": "DOC v0.2.3 · ARCHITECTURE REV A · POWER REV C · EC REV B · CPU REV A · MEMORY REV A · FS REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · PROTOTYPE REV A · AUG 2026"
   },
   "sheets": [
     {
