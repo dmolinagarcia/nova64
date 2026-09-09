@@ -74,7 +74,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | Accumulator architecture | A design where most operations route through one register. Compact to encode, heavy on memory traffic, and inherently serial. |
 | Bus arbiter | The logic deciding who drives the shared bus in each cycle: CPU, cache fill, video, or refresh. The CPU is stalled rather than queued: Helium takes the shared nets with `BE` and hands the clock back afterwards. |
 | PIC | Programmable Interrupt Controller — collects device IRQs, applies priorities, and raises IRQ/NMI to the CPU. Neon's three sources arrive on one wire and are demultiplexed by the kernel reading `IRQ_STATUS`. |
-| EBR | Embedded Block RAM — 32 dual-port blocks of 512 B inside each iCE40, 16 KB in total. On Helium its scarcity is why only the TLB and the cache tags fit on-chip while the page table lives in external SRAM; on Neon it is the whole of Mode 0, and it is **fully allocated with zero margin** ([T1.12](sec_ai_t1#t112)). The prototype board's ECP5 has ~243 KB of it, roughly fifteen times as much, which is the single most misleading number on that platform ([P.04](sec_ai_p#p04)). |
+| EBR | Embedded Block RAM — 32 dual-port blocks of 512 B inside each iCE40, 16 KB in total. On Helium its scarcity is why only the TLB and the cache tags fit on-chip while the page table lives in external SRAM; on Neon it is the whole of Mode 0, and it is **fully allocated with zero margin** ([T1.12](sec_ai_t1#t112)). The prototype board's ECP5 has ~243 KB of it, roughly fifteen times as much, which is the single most misleading number on that platform ([P2.04](sec_ai_p2#p204)). |
 | Bitstream initialisation | Giving a block RAM its contents from the compiled bitstream rather than loading them at run time. What makes Neon's font and text buffer valid before any software exists — the single most useful property of the design ([D27](sec_ai_q#d27)). |
 | HDL | Hardware Description Language — Verilog or VHDL. The choice is still open ([Q2](sec_ai_q#q2)). |
 | Stub | In layout, a track branching off a bus. Long stubs ruin signal integrity at ~100 MHz, hence the short comb of [F.13](sec_ai_f#f13). |
@@ -120,7 +120,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | XIP | Execute In Place — running code directly out of flash rather than from RAM. Why the EC goes deaf for 30–50 ms while erasing a sector: it cannot execute flash-resident code, interrupt handlers included, while the erase is in progress ([D1.25](sec_ai_d1#d125)). |
 | Bitstream | The compiled gateware file loaded into an FPGA at every power-up. iCE40s are SRAM-based: they forget on power-off. |
 | CRESET_B / CDONE | The iCE40's configuration handshake: held low to start loading, raised by the FPGA when configuration succeeded. |
-| Bring-up | First powering of a new board, block by block, verifying each before enabling the next. Each stage of [sheet P](sec_ai_p) closes on an explicit `TEST ▸`, not on a judgement. |
+| Bring-up | First powering of a new board, block by block, verifying each before enabling the next. Each stage of the build sheets [P1](sec_ai_p1)–[P4](sec_ai_p4) closes on an explicit `TEST ▸`, not on a judgement. |
 | Free-run | Diagnostic where the CPU is fed a constant NOP so it just counts through addresses — proves clock, reset and address bus without any memory. |
 | Handoff | Transfer of a shared resource between two owners. **The design no longer contains one**: the microSD handoff was this document's only example and [D60](sec_ai_q#d60) removed it, leaving every peripheral with a single permanent owner ([H.1](sec_ai_h#h1)). |
 | TQFP · PLCC · TSOP · BGA | Chip packages. The first three have accessible leads and can be hand-soldered; BGA hides its balls underneath and cannot, which is why it is excluded ([D01](sec_ai_q#d01)). |
@@ -176,7 +176,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | Half resolution | Rendering the framebuffer at half the panel's pixel count in both axes and duplicating on output. The saving is **fourfold**, because vertical duplication fetches each line once and displays it twice ([U1.6](sec_ai_u1#u16)). |
 | CLUT | Colour Lookup Table — the 256 entries a framebuffer byte indexes into. Held in two banks that switch atomically at vblank, stored 24-bit and truncated at the pins ([sheet T2](sec_ai_t2)). |
 | Palette offset | An 8-bit value added to every framebuffer index before lookup, so a whole sub-palette changes in one register write instead of sixteen ([T2.9](sec_ai_t2#t29)). |
-| R-2R | A resistor-ladder DAC — the cheapest way to get analogue VGA levels out of FPGA pins. Bring-up only on the target board; **the whole video output on the prototype**, at 6 bits per channel into 1 % resistors ([P.08](sec_ai_p#p08)). |
+| R-2R | A resistor-ladder DAC — the cheapest way to get analogue VGA levels out of FPGA pins. Bring-up only on the target board; **the whole video output on the prototype**, at 6 bits per channel into 1 % resistors ([P2.08](sec_ai_p2#p208)). |
 | I2S | Serial audio bus between the FPGA and the DAC — `BCK` the bit clock, `LRCK` the frame clock, `DIN` the data. Unrelated to I2C despite the name. |
 | fs · 32fs | The sample rate · a bit clock of 32 `BCK` per stereo frame, which is exactly two 16-bit slots with no padding. **The frame length decides the divider's granularity**, which is why this machine uses 32fs and not the more common 64fs ([W.6](sec_ai_w#w6)). |
 | `SCK` grounded | Strapping that moves the PCM5102A's master clock inside the part, onto its own PLL locked to `BCK`. Costs one pin less and means **the sample rate is whatever Neon's divider produces** ([W.5](sec_ai_w#w5)). |
@@ -214,7 +214,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | Driver | Kernel module handling one device behind a fixed 5-function interface, exposed as a `/dev/*` node. |
 | devfs | The synthetic filesystem where those `/dev/*` nodes live — no bytes on the SD card. |
 | ioctl | The escape hatch of the unified I/O interface: device-specific operations that are neither read nor write, such as mapping the framebuffer. |
-| FAT32 | The filesystem this document once put on the boot card, and now the *first* of the three the host track implements ([P.26](sec_ai_p#p26)) — chosen there for being the cheapest way to get a real filesystem mounted, not for being used here. The boot card is NVFS ([G.3](sec_ai_g#g3)). |
+| FAT32 | The filesystem this document once put on the boot card, and now the *first* of the three the host track implements ([P4.1](sec_ai_p4#p41)) — chosen there for being the cheapest way to get a real filesystem mounted, not for being used here. The boot card is NVFS ([G.3](sec_ai_g#g3)). |
 | BSS | The zero-initialised data of a binary. Carries no bytes in the file: the loader just maps it and clears it. |
 | Relocation | Patching a binary's addresses to match where it was actually loaded. The MMU removes the need: every process sees the same addresses. |
 | ABI | Application Binary Interface — the contract user binaries rely on. Drivers may be rewritten as long as it holds. |
@@ -248,7 +248,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | `fsck` · `e2fsck` · `nvfsck` | Host-side repair tools. **There is no on-target `fsck` and none is planned** for either filesystem: NVFS recovers from its journal and its orphan list, and ext2's recovery is the host's ([Y2.22](sec_ai_y2#y222), [Y3.2](sec_ai_y3#y32)). |
 | Differential testing | Performing every operation twice — once through the implementation under test and once through a reference driver — and comparing. What makes the host track tractable ([Y3.15](sec_ai_y3#y315)). |
 | Crash injection | Hooking a specific write number, truncating the image there, and checking that what remains is clean or trivially recoverable. The harness that found draft 2's ordering bugs ([Y2.2](sec_ai_y2#y22)). |
-| FUSE | Filesystem in Userspace — the Linux mechanism the host track mounts through. Its **low-level, inode-keyed API** is the one that transfers; the path-based one does not, because a driver here never sees a path ([P.28](sec_ai_p#p28)). |
+| FUSE | Filesystem in Userspace — the Linux mechanism the host track mounts through. Its **low-level, inode-keyed API** is the one that transfers; the path-based one does not, because a driver here never sees a path ([P4.3](sec_ai_p4#p43)). |
 | MBR type `0x7F` | The partition type byte reserved for local and experimental use, and the one an NVFS volume carries. `0x7A` and `0x7B` are unsafe — they alias hidden-FAT types ([D52](sec_ai_q#d52)). |
 
 ## The windowing OS
@@ -301,12 +301,12 @@ The document's terminology in one place. Every acronym is also expanded on first
 
 | Term | Meaning |
 |---|---|
-| Prototype board | The single-ECP5 carrier of [sheet P](sec_ai_p) — Helium and Neon merged on one commercial module, with the CPU, SRAM, EC, VGA and audio on a board of our own. Temporary packaging of the design, never a variant of it ([D40](sec_ai_q#d40)). |
+| Prototype board | The single-ECP5 carrier of [sheet P2](sec_ai_p2) — Helium and Neon merged on one commercial module, with the CPU, SRAM, EC, VGA and audio on a board of our own. Temporary packaging of the design, never a variant of it ([D40](sec_ai_q#d40)). |
 | Colorlight i9 v7.2 | The commercial module the prototype is built around: an LFE5U-45F with 8 MB SDRAM, 8 MB SPI flash, two unused Ethernet PHYs and a 25 MHz oscillator, on a DDR2 SODIMM edge connector. Sold for LED-panel drivers and widely used as a cheap FPGA board. |
 | ECP5 | Lattice's larger FPGA family. Rejected for the target board by [D01](sec_ai_q#d01) — BGA only in the useful sizes, and the project's rule is hand-solderable — which is exactly why it is acceptable on a module somebody else soldered. |
 | SODIMM | The 200-pin edge connector the i9 module plugs into. It carries **raw FPGA balls**, not buffered I/O, which is what makes the module usable as a general-purpose carrier at all. |
 | PMOD | The 2 × 6 header convention used by the i9 extension board. Whether its pins are direct or pass through unidirectional buffers decides whether the wire-wrap stage is possible ([Q67](sec_ai_q#q67)). |
-| DAPLink | The on-board debug probe of the i9 extension board, giving JTAG plus a serial bridge. Absent on a carrier that hosts the SODIMM socket directly, which is why the RP2354B picks up ECP5 JTAG there ([P.10](sec_ai_p#p10)). |
-| prjtrellis · nextpnr-ecp5 | The ECP5 half of the same open toolchain — Yosys and nextpnr, different backend. Added to [E0.1](sec_ai_p#e01) by the prototype; no proprietary tools on either board. |
+| DAPLink | The on-board debug probe of the i9 extension board, giving JTAG plus a serial bridge. Absent on a carrier that hosts the SODIMM socket directly, which is why the RP2354B picks up ECP5 JTAG there ([P2.10](sec_ai_p2#p210)). |
+| prjtrellis · nextpnr-ecp5 | The ECP5 half of the same open toolchain — Yosys and nextpnr, different backend. Added to [E0.1](sec_ai_p3#e01) by the prototype; no proprietary tools on either board. |
 | Letterboxing | Showing a window into a buffer larger than the display rather than reflowing the buffer. How Mode 0 keeps its 128 × 32 geometry on a 640 × 480 monitor ([D44](sec_ai_q#d44)). |
-| Leak | A prototype convenience that survives into the target design and becomes a defect there — shared memory, one clock domain, abundant EBR, a hardcoded size. [Sheet P](sec_ai_p) carries the list, and it is reviewed at every merge, not at the transition. |
+| Leak | A prototype convenience that survives into the target design and becomes a defect there — shared memory, one clock domain, abundant EBR, a hardcoded size. [Sheet P2](sec_ai_p2) carries the list, and it is reviewed at every merge, not at the transition. |

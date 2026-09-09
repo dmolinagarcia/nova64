@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three build phases with Phase 1 highlighted: the P0 to P5 prototype carrier in the middle, the S0 to S11 training rig above it and the E0 to E8 target board below">
+
+  <rect x="38" y="184" width="3" height="98" fill="#7FD8BD"/>
+
+  <g opacity="0.35">
+    <text x="60" y="26" class="eye">PHASE 0 · SPARTAN-6 TRAINING RIG · S0–S11</text>
+
+    <line x1="60" y1="80" x2="900" y2="80" class="dts"/>
+
+    <circle cx="60" cy="80" r="7" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="136" cy="80" r="7" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="213" cy="80" r="7" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="289" cy="80" r="7" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="365" cy="80" r="7" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="442" cy="80" r="7" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="518" cy="80" r="7" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="594" cy="80" r="7" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="671" cy="80" r="7" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="747" cy="80" r="7" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="823" cy="80" r="7" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="900" cy="80" r="7" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+
+    <text x="60" y="62" class="nlbl">S0</text>
+    <text x="136" y="62" class="nlbl">S1</text>
+    <text x="213" y="62" class="nlbl">S2</text>
+    <text x="289" y="62" class="nlbl">S3</text>
+    <text x="365" y="62" class="nlbl">S4</text>
+    <text x="442" y="62" class="nlbl">S5</text>
+    <text x="518" y="62" class="nlbl">S6</text>
+    <text x="594" y="62" class="nlbl">S7</text>
+    <text x="671" y="62" class="nlbl">S8</text>
+    <text x="747" y="62" class="nlbl">S9</text>
+    <text x="823" y="62" class="nlbl">S10</text>
+    <text x="900" y="62" class="nlbl">S11</text>
+
+    <text x="60" y="104" class="s">blinky</text>
+    <text x="136" y="104" class="s">UART</text>
+    <text x="213" y="104" class="s">SDRAM</text>
+    <text x="289" y="104" class="s">burst</text>
+    <text x="365" y="104" class="s">65816 bus</text>
+    <text x="442" y="104" class="s">PHI2 stall</text>
+    <text x="518" y="104" class="s">Mode 0</text>
+    <text x="594" y="104" class="s">mailbox</text>
+    <text x="671" y="104" class="s">debug agent</text>
+    <text x="747" y="104" class="s">SD</text>
+    <text x="823" y="104" class="s">FAT32</text>
+    <text x="900" y="104" class="s">keyboard</text>
+  </g>
+
+  <line x1="60" y1="150" x2="235" y2="150" class="dts"/>
+  <text x="480" y="154" class="s">disposable RTL · the protocol, the firmware and the 65816 software are what carry forward</text>
+  <line x1="725" y1="150" x2="900" y2="150" class="dts"/>
+
+  <text x="60" y="196" class="eye">PHASE 1 · PROTOTYPE CARRIER · ONE ECP5 · P0–P5</text>
+
+  <line x1="60" y1="250" x2="585" y2="250" class="dt"/>
+
+  <rect x="640" y="234" width="216" height="32" fill="rgba(217,169,63,.07)" stroke="#D9A93F" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="748" y="254" class="htx">APPLE II · ON THE PROTOTYPE</text>
+  <polyline points="594,250 640,250" class="pwd"/>
+
+  <circle cx="60" cy="250" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+  <circle cx="165" cy="250" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+  <circle cx="270" cy="250" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+  <circle cx="375" cy="250" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+  <circle cx="480" cy="250" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+  <circle cx="585" cy="250" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+
+  <text x="60" y="230" class="nlbl">P0</text>
+  <text x="165" y="230" class="nlbl">P1</text>
+  <text x="270" y="230" class="nlbl">P2</text>
+  <text x="375" y="230" class="nlbl">P3</text>
+  <text x="480" y="230" class="nlbl">P4</text>
+  <text x="585" y="230" class="nlbl">P5</text>
+
+  <text x="60" y="274" class="s">platform alive</text>
+  <text x="165" y="274" class="s">console before mem</text>
+  <text x="270" y="274" class="s">CPU attached</text>
+  <text x="375" y="274" class="s">translation</text>
+  <text x="480" y="274" class="s">graphics</text>
+  <text x="585" y="274" class="s">system</text>
+
+  <line x1="60" y1="322" x2="300" y2="322" class="dts"/>
+  <text x="480" y="326" class="s">the prototype validates the gateware the E-series then commits to a PCB</text>
+  <line x1="660" y1="322" x2="900" y2="322" class="dts"/>
+
+  <g opacity="0.35">
+    <text x="60" y="366" class="eye">PHASE 2 · TARGET BOARD · THREE iCE40 · E0–E8</text>
+
+    <line x1="60" y1="420" x2="900" y2="420" class="dts"/>
+
+    <rect x="615" y="350" width="150" height="32" fill="rgba(217,169,63,.07)" stroke="#D9A93F" stroke-width="2"/>
+    <text x="690" y="370" class="htx">APPLE II MILESTONE</text>
+    <polyline points="712,382 712,411" class="pwd"/>
+    <rect x="820" y="350" width="140" height="32" fill="rgba(217,169,63,.07)" stroke="#D9A93F" stroke-width="2"/>
+    <text x="890" y="370" class="htx">AMIGA MILESTONE</text>
+    <polyline points="925,382 925,411" class="pwd"/>
+
+    <circle cx="60" cy="420" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="165" cy="420" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="270" cy="420" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="375" cy="420" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="480" cy="420" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="585" cy="420" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="690" cy="420" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="795" cy="420" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <circle cx="900" cy="420" r="9" fill="#0E3A2C" stroke="#F1ECD9" stroke-width="1.4"/>
+    <path d="M60 411 a9 9 0 0 0 0 18 z" fill="#F1ECD9"/>
+
+    <text x="60" y="400" class="nlbl">E0</text>
+    <text x="165" y="400" class="nlbl">E1</text>
+    <text x="270" y="400" class="nlbl">E2</text>
+    <text x="375" y="400" class="nlbl">E3</text>
+    <text x="480" y="400" class="nlbl">E4</text>
+    <text x="585" y="400" class="nlbl">E5</text>
+    <text x="690" y="400" class="nlbl">E6</text>
+    <text x="795" y="400" class="nlbl">E7</text>
+    <text x="900" y="400" class="nlbl">E8</text>
+
+    <text x="60" y="444" class="s">prep</text>
+    <text x="165" y="444" class="s">free-run</text>
+    <text x="270" y="444" class="s">SRAM+monitor</text>
+    <text x="375" y="444" class="s">SDRAM</text>
+    <text x="480" y="444" class="s">MMU+prot</text>
+    <text x="585" y="444" class="s">video·audio</text>
+    <text x="690" y="444" class="s">SD+min. OS</text>
+    <text x="795" y="444" class="s">multitasking</text>
+    <text x="900" y="444" class="s">laptop+GUI</text>
+  </g>
+
+  <rect x="60" y="459" width="11" height="11" fill="#F1ECD9" stroke="#F1ECD9" stroke-width="1.4"/>
+  <text x="80" y="469" class="li10">done</text>
+  <rect x="150" y="459" width="11" height="11" fill="none" stroke="#F1ECD9" stroke-width="1.4"/>
+  <rect x="150" y="459" width="5.5" height="11" fill="#F1ECD9"/>
+  <text x="170" y="469" class="li10">in progress</text>
+  <rect x="250" y="459" width="11" height="11" fill="none" stroke="#F1ECD9" stroke-width="1.4"/>
+  <text x="270" y="469" class="li10">pending</text>
+  <rect x="360" y="459" width="11" height="11" fill="none" stroke="#F1ECD9" stroke-width="1.4" stroke-dasharray="3 2"/>
+  <text x="380" y="469" class="li10">optional</text>
+</svg>

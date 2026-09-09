@@ -101,6 +101,22 @@
     M.sheets = groups.reduce(function (acc, g) { return acc.concat(g.sheets); }, []);
     M.sheets.forEach(function (s, i) { s.num = (i + 1 < 10 ? '0' : '') + (i + 1); });
     M.groups = groups;
+
+    /* The masthead's reference line used to spell the sheet letters out, which
+       meant every split and every new sheet left it a little further from the
+       truth. It is now a count, and the count is taken from what was just
+       resolved: {parts} the registry, {areas} the named runs inside it, and
+       {sheets} the reading order itself. */
+    var areas = 0;
+    groups.forEach(function (g) {
+      g.areas.forEach(function (a) { if (a.name) areas++; });
+    });
+    var counts = { parts: groups.length, areas: areas, sheets: M.sheets.length };
+    if (M.footer && M.footer.referenceIndex) {
+      M.footer.referenceIndex = M.footer.referenceIndex.replace(
+        /\{(parts|areas|sheets)\}/g,
+        function (_, k) { return counts[k]; });
+    }
     return M;
   }
 

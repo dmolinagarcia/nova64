@@ -47,9 +47,9 @@
     }
   ],
   "footer": {
-    "referenceIndex": "Seven parts · ten areas · sheets A–X — D as D1–D3, T as T1–T3, U as U1 — and Y1–Y3 · Figs. 1–13 · appendix Z1–Z2",
+    "referenceIndex": "{parts} parts · {areas} areas · {sheets} sheets · Figs. 1–13",
     "rules": "All 3.3V · hand-solderable · open toolchain",
-    "rev": "DOC v0.2.3 · ARCHITECTURE REV A · POWER REV C · EC REV B · CPU REV A · MEMORY REV A · FS REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · PROTOTYPE REV A · AUG 2026"
+    "rev": "DOC v0.2.4 · ARCHITECTURE REV A · POWER REV C · EC REV B · CPU REV A · MEMORY REV A · FS REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · PROTOTYPE REV A · AUG 2026"
   },
   "sheets": [
     {
@@ -320,12 +320,36 @@
       "index": "The windowing OS · window server, client protocol and toolkit"
     },
     {
-      "file": "sec_ai_p",
-      "letter": "P",
+      "file": "sec_ai_p1",
+      "letter": "P1",
       "part": "ai",
       "area": "Project and build",
-      "nav": "Step-by-step build · P0–P5 · E0–E8 · L1–L8 · F0–F9",
-      "index": "Step-by-step build · prototype P0–P5 · target E0–E8 · laptop L1–L8 · host filesystem track F0–F9"
+      "nav": "Phase 0 · the training rig",
+      "index": "Phase 0 · the Spartan-6 training rig · the three phases · S0–S11"
+    },
+    {
+      "file": "sec_ai_p2",
+      "letter": "P2",
+      "part": "ai",
+      "area": "Project and build",
+      "nav": "Phase 1 · the prototype carrier",
+      "index": "Phase 1 · the prototype carrier · one ECP5, two devices · P0–P5"
+    },
+    {
+      "file": "sec_ai_p3",
+      "letter": "P3",
+      "part": "ai",
+      "area": "Project and build",
+      "nav": "Phase 2 · the target board",
+      "index": "Phase 2 · the target board · three iCE40 parts · E0–E8"
+    },
+    {
+      "file": "sec_ai_p4",
+      "letter": "P4",
+      "part": "ai",
+      "area": "Project and build",
+      "nav": "The laptop and the host track",
+      "index": "Beyond the board · the laptop L1–L8 · the host filesystem track F0–F9"
     },
     {
       "file": "sec_ai_q",

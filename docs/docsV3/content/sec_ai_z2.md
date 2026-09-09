@@ -1,7 +1,7 @@
 # Appendix — index of figures
 > every figure · the sheet it lives in · what it shows
 
-The thirteen figures are numbered across the whole document rather than per sheet ([A.13](sec_ai_a#a13)), and each one lives in the sheet it illustrates — so this is the only place they can be seen as a set. The glossary is [Z3](sec_ai_z3).
+The thirteen figures are numbered across the whole document rather than per sheet ([A.13](sec_ai_a#a13)), and each one lives in the sheet it illustrates — so this is the only place they can be seen as a set. **Fig. 7 is the exception and is one drawing in three states**: the same three build phases appear on [P1](sec_ai_p1), [P2](sec_ai_p2) and [P3](sec_ai_p3), each time with that sheet's own phase picked out and the other two held back, which is why it takes a letter suffix rather than three numbers. The glossary is [Z3](sec_ai_z3).
 
 | Fig. | Sheet | What it shows |
 |---|---|---|
@@ -11,7 +11,9 @@ The thirteen figures are numbered across the whole document rather than per shee
 | Fig. 4 | [F — Physical memory](sec_ai_f) | Memory structure: the SRAM on the CPU's own nets, Helium driving the translated half and owning the SDRAM alone |
 | Fig. 5 | [K — Virtual memory concepts](sec_ai_k) | Field-width asymmetry — the virtual split falls out of the CPU's 24 bits, the physical one is the MMU's choice |
 | Fig. 6 | [L — Virtual memory management](sec_ai_l) | Address translation: TLB with ASID, the hardware walker over the flat table in SRAM, and the ABORTB fault path |
-| Fig. 7 | [P — Step-by-step build](sec_ai_p) | The two build tracks, prototype above and target below, with both milestones at their exact point |
+| Fig. 7a | [P1 — Phase 0 · the training rig](sec_ai_p1) | The three build phases — training rig above, prototype carrier in the middle, target board below with both milestones — with Phase 0 highlighted |
+| Fig. 7b | [P2 — Phase 1 · the prototype carrier](sec_ai_p2) | The same three phases, with Phase 1 highlighted |
+| Fig. 7c | [P3 — Phase 2 · the target board](sec_ai_p3) | The same three phases, with Phase 2 highlighted |
 | Fig. 8 | [R — Debug agent](sec_ai_r) | The debug agent as a requester inside Helium: the EC commands over SPI and never drives the bus |
 | Fig. 9 | [S — Power control](sec_ai_s) | The power control path — two level pins, the SPI link, and telemetry latched into atomic snapshots |
 | Fig. 10 | [T1 — Neon](sec_ai_t1) | Neon: the text path that depends on nothing but the bitstream, and the graphics path fed by commands rather than pixels |

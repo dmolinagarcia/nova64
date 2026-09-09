@@ -58,6 +58,12 @@ in a trailing "Unassigned" group that says so.
 resolves parts and areas into one reading order and numbers the sheets from it,
 so inserting a sheet anywhere renumbers the rest by itself.
 
+**So is the masthead's reference line.** `footer.referenceIndex` may contain
+`{parts}`, `{areas}` and `{sheets}`, and `prepare` fills them from what it has
+just resolved — the registry, the named area runs inside it, and the reading
+order. It used to spell the sheet letters out, which left it a little further
+from the truth after every split.
+
 **The letters follow neither, and are never reissued.** A letter is a sheet's
 identity — the file name (`sec_r.md`), the route (`#/sec_r`), and every
 cross-reference in the prose — while its number is only its position. The two
@@ -268,10 +274,21 @@ took a suffix rather than the next free letter. Letters and file names are kept
 in step — sheet R lives in `sec_r.md`, appendix sheet Z2 in `sec_z2.md` —
 because every cross-reference in the prose points at the file name.
 
-**A numeric suffix means one subject too large for one sheet**, and there are two
-such runs. `Z1`/`Z2` is the appendix. `Y1`/`Y2`/`Y3` is the filesystem stack —
-the VFS layer, NVFS and ext2 — which is one subject three ways rather than three
-subjects, and which took a suffix for the same reason the appendix did rather
-than because the alphabet had run short. Item ids inside a suffixed sheet carry
-the whole letter: `Y2.15` anchors at `#y215`, and cross-references are written
+**A numeric suffix means one subject too large for one sheet**, and there are
+three such runs. `Z1`/`Z2` is the appendix. `Y1`/`Y2`/`Y3` is the filesystem
+stack — the VFS layer, NVFS and ext2 — which is one subject three ways rather
+than three subjects, and which took a suffix for the same reason the appendix did
+rather than because the alphabet had run short. `P1`/`P2`/`P3`/`P4` is the build,
+one sheet per phase. Item ids inside a suffixed sheet carry the whole letter:
+`Y2.15` anchors at `#y215`, and cross-references are written
 `[Y2.15](sec_y2#y215)`.
+
+**The build sheets are the one place where item ids and stage ids sit side by
+side, and they are different things.** A dotted id is a discussion item and takes
+the sheet's letter — `P2.11a` on sheet P2, `P4.3` on sheet P4. An undotted id is
+a build stage and takes its *series* letter, which is independent of the sheet it
+is printed on: the S-series on P1, the P-series on P2, the E-series on P3, the L
+and F series on P4. So `P3.d` is a substep of prototype stage P3 and lives on
+sheet P2, while sheet P3 holds `E0.1` through `E8.1`. Series ids never move when
+a sheet is split; that is what kept the split from rewriting several hundred
+references.
