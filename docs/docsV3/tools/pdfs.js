@@ -12,6 +12,7 @@
  *   node tools/pdfs.js 6x9 8x10        -> just those
  *   node tools/pdfs.js --scale 1.2     -> the same trims, type 20% larger
  *   node tools/pdfs.js --list          -> the table below, and nothing else
+ *   node tools/pdfs.js --help          -> the same, for someone at a prompt
  *
  * The formatter is Vivliostyle, and it is not interchangeable here:
  * WeasyPrint 69 drops `fill` and `stroke` as CSS properties, and every figure
@@ -136,6 +137,38 @@ function sheet(t, scale) {
 
 /* ── the run ─────────────────────────────────────────────────────────────*/
 const argv = process.argv.slice(2);
+
+/* First, so that it still answers when the rest of the line is wrong. */
+if (argv.includes('--help') || argv.includes('-h')) {
+  console.log(`noVa64 · docsV3 — the whole document as a PDF, at every trim it
+is published at. Assembles print.html with tools/prerender.js once per trim and
+hands it to the formatter.
+
+usage: node tools/pdfs.js [trim ...] [options]
+
+  trim         ${trims.map(name).join(', ')}
+               name one or more, or none at all to build every one
+
+options
+  --scale s    type size, as a multiplier on the whole document. Default 1,
+               anything from 0.2 to 5. The page box is outside what scales,
+               so the margins hold still and the type grows inside the same
+               area — the page count goes with about s², not s. A scaled
+               build is written to its own name and never overwrites the
+               canonical one.
+  --list       print what each trim resolves to, and build nothing
+  --help, -h   this
+
+output         pdfs/nova64_<width>_<height>.pdf, in inches, and _s<scale>
+               on the end of the name when --scale is not 1. The directory
+               is a build artifact; docs/.gitignore already knows it.
+
+The formatter is Vivliostyle, fetched through npx on first use, and it is not
+interchangeable: WeasyPrint drops \`fill\` and \`stroke\` as CSS properties, and
+every figure here is coloured by CSS class, so it prints all thirteen of them
+as black rectangles.`);
+  process.exit(0);
+}
 
 let scale = 1;
 const at = argv.indexOf('--scale');
