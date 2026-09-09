@@ -1,0 +1,53 @@
+# Host-facing interfaces
+> the guest side is hardware-real · only the host transport is invented
+
+An emulator has two faces. Toward the guest it must present devices the target will actually have; toward the host it may present whatever is convenient. **Confusing the two produces software that runs under emulation and fails on hardware**, which is the exact failure this whole exercise exists to prevent. This sheet is the rule that keeps them apart and the four interfaces it governs — the debug agent, the console, input, and the capture toggle — followed by what the emulator counts while they are in use.
+
+## The governing rule, and the one exemption it grants.
+
+- EM3.1 — **The guest-side interface is hardware-real; only the host-side transport is emulator-specific.** The emulator must never present the guest with a device, a register or an event semantic that has no counterpart in the target machine. Every convenience register added on the guest side is something software will be written against and the hardware will then have to provide.
+  NOTE: The emulator has broken this rule once, and knowingly: its I/O map is invented because no sheet fixed one, and it landed in the wrong bank ([EM4.10](sec_ai_em4#em410)). The rule is what makes that a recorded defect rather than an unremarked habit.
+- EM3.2 — **Host-only facilities are permitted where they have no guest visibility at all, and they are marked as such.** Full state dump, deterministic record and replay control, parameter set reload, instrumentation readout and the capture hotkey are all invisible to the guest and none of them generates a mailbox event, because no such event exists in hardware.
+
+## Debug parity — write the tooling once.
+
+- EM3.3 — **The emulator exposes the same command set as the Helium Debug Agent of [sheet R](sec_ai_r).** The monitor, the host tooling and any scripted harness are then written once and run unmodified against both the emulator and real hardware, which is the whole return on the requirement. It is stated now rather than retrofitted because the Agent's command set is still being extended: **a command added to the Agent is added to the emulator in the same revision**, and one that cannot be meaningfully emulated is documented as such rather than silently stubbed.
+  NOTE: Parity is a command-set property, not a fidelity one. The Agent's transport is SPI-only and deliberately outside bank `$FF` ([R.4](sec_ai_r#r4)); the emulator reproduces what the commands *do*, not the link they arrive on. It has not been built yet ([EM6.18](sec_ai_em6#em618)).
+
+## The console — two host forms, one guest device.
+
+- EM3.4 — **The same guest device is presented to the host twice.** An **attached terminal** in the emulator's own window, available with no setup, is the default path for monitor work; and a **virtual serial port** — a pty on Linux and macOS, a named pipe or virtual COM port on Windows — lets PuTTY, minicom or screen attach to the identical character stream. The path is reported at startup.
+- EM3.5 — **Line discipline, baud rate and flow control are not modelled**, and their absence is deliberate rather than pending. The transport is byte-transparent; emulating a baud rate would model a constraint the target does not have and would slow development to no end.
+- EM3.6 — [[!blocking]] **Which target device this is remains open, and the corpus answer is not the one the emulator assumed.** DN-SW-EMU-001 records that no user-facing UART appears in this document and that the only specified one is probe-to-EC — which [R.19](sec_ai_r#r19) confirms: 115200 8N1 on `J-DBG`, the debug console's transport and not a device the 65816 can write to. **But the guest console is specified, and it is not a UART at all**: [T1.54](sec_ai_t1#t154) makes `putchar` a 16-bit store to the text buffer at `$FE:0000`, and [H.2](sec_ai_h#h2) separates that `/dev/con` from the serial `/dev/tty`. So the emulator invented a character device for a role the corpus fills with Neon, and its register layout is provisional in the strongest sense (→ [Q47](sec_ai_q#q47), [EM4.10](sec_ai_em4#em410)).
+
+## Input — the emulator stands where the EC stands.
+
+- EM3.7 — **Physical keyboard and pointer input is captured by the host, translated to the target's event encoding and delivered over the modelled mailbox.** This mirrors the hardware path, in which the EC originates HID traffic and hands it to Helium ([D1.10](sec_ai_d1#d110), [sheet D3](sec_ai_d3)); the emulator occupies that position without emulating what stands behind it ([EM1.4](sec_ai_em1#em14)).
+- EM3.8 — **Encoding, ordering and notification semantics are exact, and this is not negotiable.** Guest software must not be able to tell emulator-originated input from EC-originated input, because anything that distinguishes them is a difference that appears for the first time at bring-up, in the layer hardest to instrument. Delivery latency is a parameter with a nominal default.
+- EM3.9 — **Host key events are mapped to target scancodes through an explicit table, never through host character codes.** Host keyboard layout must not leak into the guest — a machine whose scancodes depend on whether the developer types Spanish or Dvorak is not a machine, and the browser makes this free ([EM5.9](sec_ai_em5#em59)). The provisional table is positional:
+
+| Scancode | Key |
+|---|---|
+| 1–26 | `A`–`Z`, by position |
+| 27–36 | `0`–`9` |
+| 37–38 | Enter, Space |
+| 39–41 | Backspace, Tab, Escape |
+| 42–45 | Cursor up, down, left, right |
+| 46–49 | Shift left, Shift right, Control left, Alt left |
+| 50–59 | Punctuation |
+
+  NOTE: **The set is invented and will change**, along with whether the EC delivers make and break codes as modelled. It is listed because software is already written against it, not because it is settled.
+- EM3.10 — **Input events are recorded and replayed as part of the determinism requirement** ([EM4.10](sec_ai_em4#em410)). Input is the principal source of non-determinism in an interactive session, and it is the only one at the mailbox boundary.
+- EM3.11 — [[!blocking]] **The pointer is a mouse and the touch panel is discarded**, which resolves a question the emulator had to answer before it could model input at all. The emulator therefore models relative motion, multiple buttons and a meaningful hover state, and the full mouse semantics the GUI wants — hover highlighting, pull-down menus, secondary-button actions — are hardware-real and may be relied on by [sheet V](sec_ai_v). **The consequences land outside this area and are not yet reflected there**: the GT911 and its dedicated `I2C-SW` bus disappear, which releases EC pins and retires the AON backfeed constraint that bus existed to satisfy ([C.13](sec_ai_c#c13), [H.3](sec_ai_h#h3)). The touch row of [sheet H](sec_ai_h) and the power sheet's bus split both need revision, and the panel part number should be rechecked for a digitiser variant, which would change the FPC and the part itself (→ [EM6.16](sec_ai_em6#em616)).
+- EM3.12 — [[open]] **Two narrower questions remain, and both are mailbox protocol rather than device choice.** **The event encoding and physical transport** — USB host on the EC, PS/2, or an I2C trackpad — decides the byte-level format the emulator must reproduce exactly; a USB host on the RP2354B consumes either the native controller in host mode or a PIO block, and should be costed against the EC's pin and PIO budget before it is selected ([D1.10](sec_ai_d1#d110)). **And position accumulation**: whether the EC integrates motion and delivers absolute cursor position, or delivers deltas for the kernel to integrate. The second decides whether [EM3.13](sec_ai_em3#em313) is a functional requirement or a convenience, and it affects cursor latency under load.
+
+## Capture — a functional requirement, not a convenience.
+
+- EM3.13 — **The emulator window competes with the host for keyboard and pointer, so a capture toggle is required — and under a relative-motion protocol it is load-bearing.** With the pointer uncaptured the host reports absolute window coordinates, which cannot be turned into a coherent delta stream once the host cursor reaches a screen edge: guest cursor motion stops silently while the guest stays otherwise responsive, which reads as a hang in the GUI rather than as a host artefact. If [EM3.12](sec_ai_em3#em312) resolves in favour of absolute position, capture reverts to a convenience.
+- EM3.14 — **Four properties the toggle must have.** A configurable hotkey grabs and releases both devices together. Capture state is displayed unambiguously and the host cursor is hidden while held, so that only the guest's hardware cursor is visible. The hotkey is never forwarded to the guest and must not collide with a plausible target shortcut. **And release must remain possible when the guest has hung** — the hotkey is handled by the host event loop, independently of guest execution state, or the first kernel deadlock takes the developer's keyboard with it.
+
+## Instrumentation — what it counts, and the two numbers it exists for.
+
+- EM3.15 — **The counters, readable at any point and dumped per run.** Instructions retired, PHI2 cycles, effective IPC · cache accesses, hits, misses, evictions and miss rate by region · cycles stalled on fill · TLB accesses, hits, misses, walks and cycles walking · `ABORTB` events by cause — unmapped, permission, copy-on-write, kernel · page faults per ASID · context switches and their cost · syscall count and cost by `COP` signature byte ([M.1](sec_ai_m#m1)) · Neon commands emitted, cycles emitting, queue-full stalls · blitter operations, bytes moved, cost accumulated · frames composited, damage-limited against full, over-budget frames · SD block reads and writes · mailbox transactions by class, HID events delivered, input-to-response latency · console bytes in and out.
+  NOTE: A counter nobody prints is a counter that is silently wrong. The report was written early for that reason, and it is why the numbers in [EM6.1](sec_ai_em6#em61) exist at all.
+- EM3.16 — **Two of them are the deliverables and the rest are supporting evidence.** **Cycles per Neon command emitted** under a realistic GUI workload, and the improvement actually obtained from the server-side string cache and the pre-built per-window command sublists that [sheet V](sec_ai_v) and [T1.39](sec_ai_t1#t139) treat as first-order priorities on the strength of an estimate. **And the sensitivity of kernel and GUI workloads to cache geometry**, swept, yielding a recommended geometry to be written into the hardware sheets. Neither has yet been measured against a real workload ([EM6.21](sec_ai_em6#em621)).

@@ -297,6 +297,40 @@ The document's terminology in one place. Every acronym is also expanded on first
 | GDB stub | Firmware speaking the GDB remote serial protocol, letting a host debugger drive the target. Deferred until the command set stops moving (→ [R.24](sec_ai_r#r24)). |
 | Breakpoint · watchpoint | Halt on reaching an address · halt on touching a datum. The first is `BRK` or a trace-trigger comparator; the second is deferred. |
 
+## Emulation and the host model
+  NOTE: → [sheet EM1](sec_ai_em1) · [sheet EM4](sec_ai_em4) · [sheet EM7](sec_ai_em7)
+
+| Term | Meaning |
+|---|---|
+| Emulator | Here, a PC-hosted functional and timing model of the whole machine, in C11, running natively and in a browser. Not a simulator of the gateware: it executes no RTL ([EM1.5](sec_ai_em1#em15)). |
+| Fidelity | How closely a subsystem is modelled. Chosen per subsystem against one rule — **model what software can observe** — so the blitter is bit-exact and its timing is not ([EM1.7](sec_ai_em1#em17)). |
+| Bus layer | The spine of the design: every access passes through it, and the cycle counter lives there rather than in the CPU. Cycle accuracy becomes a property of emitting the right accesses in the right order ([EM7.7](sec_ai_em7#em77)). |
+| Cycle-stepped | Advancing the model one bus cycle at a time rather than one instruction at a time. Cheap on this part, because **every 65816 cycle is a bus cycle** ([EM7.5](sec_ai_em7#em75)). |
+| Idle cycle | An internal-operation cycle. It still drives an address and still costs a cycle; it simply transfers nothing. Omitting one leaves an instruction a cycle short. |
+| Open bus | What unpopulated physical space reads as — `$FF` here, not zero. A model that returns zero hides address-decode bugs. |
+| Wait states · stretched clock | The two ways a CPU waits for memory. Wait states hold the CPU on `RDY` while PHI2 free-runs, so a stall rounds up to whole cycles; a stretched clock halts PHI2 and pays the latency exactly. **noVa64 stretches** ([EM2.4](sec_ai_em2#em24)). |
+| Wall time | Elapsed time, accumulated separately from the cycle count because under a stretched clock the two are no longer proportional ([EM2.12](sec_ai_em2#em212)). |
+| Parameter set | The runtime-configurable timing values — cache geometry, TLB depth, SDRAM timings, emission cost. Parameterised because none of them is fixed in this document, so the emulator can produce them rather than consume them ([EM2.2](sec_ai_em2#em22)). |
+| Sweep | Running the same workload across a range of one parameter to see what it changes. Worthless against a synthetic workload ([EM6.6](sec_ai_em6#em66)). |
+| Tag-only cache | A cache model holding tags, valid, dirty and LRU state but **no line data**, because the backing arrays are authoritative and nothing can observe cache contents except through timing ([EM1.9](sec_ai_em1#em19)). |
+| Record and replay | Logging every non-deterministic input as a `(cycle, event)` pair at the mailbox boundary, so a session replays exactly. Cheap if built in from the start, expensive afterwards ([EM7.42](sec_ai_em7#em742)). |
+| Determinism test | Running one trace twice and asserting identical cycle counts, memory hashes and register state. The strongest cheap test in the exercise. |
+| Oracle | Something you did not write that says whether your answer is right. This project has exactly one — the external 65816 suites — and none at all for the MMU, cache or blitter ([EM7.27](sec_ai_em7#em727)). |
+| SingleStepTests · Tom Harte | Per-instruction test vectors giving an initial state, a final state and **the complete bus cycle trace**, so they check the cycle sequence rather than the total ([EM7.23](sec_ai_em7#em723)). |
+| Klaus Dormann tests | A binary that exercises 6502 behaviour exhaustively and traps on failure. Covers emulation mode. |
+| Additive divergence | Extending the CPU behind the reserved `WDM` prefix rather than by changing an existing opcode, which leaves the published suites valid. **In tension with [M.3](sec_ai_m#m3)** ([EM7.26](sec_ai_em7#em726)). |
+| Guest side · host transport | The rule governing every emulator interface: the device the guest sees must be hardware-real, and only the host end may be invented. Breaking it produces software that runs under emulation and fails on silicon ([EM3.1](sec_ai_em3#em31)). |
+| Boot image | A raw 8 KB binary at `$00E000`–`$00FFFF` carrying its own vectors — what the EC places in memory before releasing reset. **There is no ROM in this machine**, so "BIOS" means only the image the EC loads ([EM2.15](sec_ai_em2#em215)). |
+| Ring origin | How a text mode scrolls without moving memory: a row index advances and one row is cleared, so a scroll costs the CPU nothing ([EM7.46](sec_ai_em7#em746)). |
+| Tee | A host-only development aid that streams every byte written to the text port straight to stdout. Convenient because it skips Neon entirely, and dangerous for the same reason ([EM4.13](sec_ai_em4#em413)). |
+| WebAssembly · wasm | The portable bytecode the emulator compiles to for browser delivery. Single-threaded here, so no cross-origin isolation headers are needed ([EM5.12](sec_ai_em5#em512)). |
+| WASI | The system interface a wasm module outside a browser targets. Supplies the libc the module links against; only its write call does anything here. |
+| Sysroot · builtins | The WASI headers and libraries, and the compiler-rt support routines that must sit in the compiler's own resource directory. Their release has to sit near your LLVM or the linker rejects them ([EM5.4](sec_ai_em5#em54)). |
+| Reactor model | A wasm execution model for a module with no `main`. **Deliberately not used**: it is a target option, so a clang lacking the wasm target reports it as an unknown argument and misdirects the diagnosis ([EM5.2](sec_ai_em5#em52)). |
+| Pointer lock | The browser API that captures the pointer and reports relative motion. Not a convenience: it is the capture mechanism a relative-motion protocol requires ([EM3.13](sec_ai_em3#em313)). |
+| Key code | The browser's name for a key **by physical position** rather than by the character it produces, so host keyboard layout does not leak into the guest ([EM5.11](sec_ai_em5#em511)). |
+| jsdom | A DOM implementation without a renderer, used to drive the browser shell headlessly. **Verifies wiring and not presentation** ([EM5.17](sec_ai_em5#em517)). |
+
 ## The prototype board
 
 | Term | Meaning |

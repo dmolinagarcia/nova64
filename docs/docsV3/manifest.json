@@ -49,7 +49,7 @@
   "footer": {
     "referenceIndex": "{parts} parts · {areas} areas · {sheets} sheets · Figs. 1–13",
     "rules": "All 3.3V · hand-solderable · open toolchain",
-    "rev": "DOC v0.2.3 · ARCHITECTURE REV A · POWER REV C · EC REV B · CPU REV A · MEMORY REV A · FS REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · PROTOTYPE REV A · AUG 2026"
+    "rev": "DOC v0.2.4 · ARCHITECTURE REV A · POWER REV C · EC REV B · CPU REV A · MEMORY REV A · FS REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · EMU REV B · PROTOTYPE REV A · SEP 2026"
   },
   "sheets": [
     {
@@ -318,6 +318,62 @@
       "area": "Software",
       "nav": "The windowing OS",
       "index": "The windowing OS · window server, client protocol and toolkit"
+    },
+    {
+      "file": "sec_ai_em1",
+      "letter": "EM1",
+      "part": "ai",
+      "area": "Emulation",
+      "nav": "The emulator — purpose and fidelity",
+      "index": "The host emulator · purpose, non-goals and the fidelity rule"
+    },
+    {
+      "file": "sec_ai_em2",
+      "letter": "EM2",
+      "part": "ai",
+      "area": "Emulation",
+      "nav": "The model of time",
+      "index": "Time · the parameterised model, the stretched clock and the boot state"
+    },
+    {
+      "file": "sec_ai_em3",
+      "letter": "EM3",
+      "part": "ai",
+      "area": "Emulation",
+      "nav": "Host-facing interfaces",
+      "index": "Host-facing interfaces · console, input, capture and debug parity"
+    },
+    {
+      "file": "sec_ai_em4",
+      "letter": "EM4",
+      "part": "ai",
+      "area": "Emulation",
+      "nav": "What was built",
+      "index": "What was built · the bus spine, the abort model, Neon and the SD device"
+    },
+    {
+      "file": "sec_ai_em5",
+      "letter": "EM5",
+      "part": "ai",
+      "area": "Emulation",
+      "nav": "WebAssembly and the browser",
+      "index": "WebAssembly and the browser · the module, the shell and its blind spots"
+    },
+    {
+      "file": "sec_ai_em6",
+      "letter": "EM6",
+      "part": "ai",
+      "area": "Emulation",
+      "nav": "Measurements and findings",
+      "index": "What it established · the numbers, two evaluations and the gaps surfaced"
+    },
+    {
+      "file": "sec_ai_em7",
+      "letter": "EM7",
+      "part": "ai",
+      "area": "Emulation",
+      "nav": "Building an emulator",
+      "index": "Building an emulator · a course in nineteen stages, with the code and the traps"
     },
     {
       "file": "sec_ai_p1",

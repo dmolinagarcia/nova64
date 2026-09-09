@@ -71,7 +71,7 @@
   ol.steps li{display:flex;gap:10px;padding:6px 0;border-top:1px dashed rgba(var(--ink-rgb),.14);}
   ol.steps li:first-child{border-top:0}
   .id{color:var(--mint);font-weight:700;min-width:38px;}
-  .itx{flex:1;color:rgba(var(--ink-rgb),.88);}
+  .itx{flex:1;min-width:0;color:rgba(var(--ink-rgb),.88);}
   .itx .cont,.lead .cont{display:block;margin-top:8px;}
   .itx .test{display:block;margin-top:3px;color:var(--gold);font-size:11.5px;}
   .itx .note{display:block;margin-top:2px;color:rgba(var(--ink-rgb),.55);font-size:11.5px;}
@@ -82,6 +82,19 @@
   .chip{display:inline-block;border:1px solid var(--mint);color:var(--mint);font-size:9.5px;letter-spacing:1px;padding:0 5px;margin-left:6px;vertical-align:1px;}
   .chip.g{border-color:var(--gold);color:var(--gold);}
   code{color:var(--mint);background:rgba(var(--mint-rgb),.08);padding:0 4px;}
+
+  /* fenced code — the whole document is already monospace, so a listing needs
+     only a ground, a rule down its left edge, and somewhere for a long line to
+     go that is not the page */
+  pre.code{margin:10px 0 4px;padding:9px 13px;overflow-x:auto;
+           background:rgba(var(--ink-rgb),.05);
+           border-left:2px solid rgba(var(--mint-rgb),.55);}
+  pre.code code{display:block;background:transparent;padding:0;white-space:pre;
+                color:rgba(var(--ink-rgb),.9);font-size:11.5px;line-height:1.5;}
+  pre.code[data-lang]::before{content:attr(data-lang);display:block;margin-bottom:7px;
+           font-size:9px;letter-spacing:2px;text-transform:uppercase;
+           color:rgba(var(--ink-rgb),.45);}
+  .itx pre.code{margin:8px 0 3px;}
 
   table.simple{width:100%;border-collapse:collapse;margin-top:4px;}
   table.simple th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(var(--ink-rgb),.55);text-align:left;padding:6px 8px;border-bottom:1px solid rgba(var(--ink-rgb),.4);}
@@ -258,6 +271,9 @@
     .hito{ background:transparent; border-color:#000; color:#000; }
     .tag{ border-color:#000; color:#000; }
     code{ background:transparent; }
+    pre.code{ background:transparent; border-left-color:#000; overflow-x:visible; }
+    pre.code code{ color:#000; white-space:pre-wrap; }
+    pre.code[data-lang]::before{ color:#000; }
     .pad{ border-color:#000; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .pad.done{ background:#000; }
     .pad.half{ background:linear-gradient(90deg,#000 50%,transparent 50%); }

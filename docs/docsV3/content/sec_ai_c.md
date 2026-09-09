@@ -31,7 +31,7 @@ REV C, and the revision that changes the shape of the sheet rather than its part
 |---|---|---|---|---|
 | **3V3_AON** | TPS63900 | buck-boost | **none** — lives whenever SYS lives | RP2354B, flash included · CH224K VDD · charger/gauge I2C · power button |
 | **1V2** | TLV62568 / TPS62825 | buck **from SYS** | `EN` ← EC · `PG` → EC | VCC of both iCE40s · VCCPLL through an RC filter per chip |
-| **3V3_MAIN** | TPS63020 | buck-boost | `EN` ← EC · `PG` → EC | VCC_SPI + all VCCIO · SRAM · 2× SDRAM · W65C816S · panel logic · PCM5102A · GT911 · microSD · the VPP_2V5 diodes |
+| **3V3_MAIN** | TPS63020 | buck-boost | `EN` ← EC · `PG` → EC | VCC_SPI + all VCCIO · SRAM · 2× SDRAM · W65C816S · panel logic · PCM5102A · GT911 **(removed, [C.13a](sec_ai_c#c13a))** · microSD · the VPP_2V5 diodes |
 | **backlight** | PT4110 | boost | `EN`/PWM ← EC | LED string, ~1.5 W reserved |
 | **5 V host** | TPS61023 | boost | `EN` ← EC | USB-A VBUS, 500 mA, behind a polyfuse |
 
@@ -48,10 +48,15 @@ REV C, and the revision that changes the shape of the sheet rather than its part
 | Bus | Domain | Devices | Why there |
 |---|---|---|---|
 | I2C-AON | 3V3_AON | BQ25896 · MAX17048 | Must be reachable while the machine is off |
-| I2C-SW | 3V3_MAIN | GT911 touch | Its pull-ups would back-feed it whenever the machine is off |
+| I2C-SW | 3V3_MAIN | **No tenant** — the GT911 is removed ([C.13a](sec_ai_c#c13a)) | Its pull-ups would have back-fed it whenever the machine is off |
 | I2C-EXP | 3V3_MAIN | Helium's slow expansion tier — RTC candidate, slot connector ([X.22](sec_ai_x#x22)) | A different **master**: Helium, not the EC. Two pins already carried in [Q8](sec_ai_q#q8)'s allocation |
 
 - C.14 — Sharing one bus would need a bus isolator; a second bus costs two pins on an RP2354B that has peripherals to spare, and is strictly simpler. **The audit that closes this sheet is a net-by-net list of every AON↔switched crossing checked against R1–R3** — not folded into general ERC, a pass of its own, because it is the likeliest source of a board-level bug that is hard to diagnose (→ [Q31](sec_ai_q#q31)). [[!blocking]]
+- C.13a — [[!blocking]] **The touch panel is discarded, so `I2C-SW` has lost its only device and this sheet's second bus now exists for a rule rather than for a part** ([EM3.11](sec_ai_em3#em311)). The pointing device is a mouse over the USB HID path the EC already owns ([D1.10](sec_ai_d1#d110)), which is why the decision belongs here at all: **the GT911 was the entire reason the switched-domain bus was drawn.** Three things follow and none of them is automatic.
+  NOTE: **What is released.** The GT911 and its two I2C pins on the EC, the part itself and its FPC, its share of the 3V3_MAIN budget, and boot step 9. **The current figures above are left as they stand** rather than recomputed — the GT911 is a small share of a 95 mA row and pretending to a new total would be false precision. Treat the released current as margin, not as a new number.
+  NOTE: **What is not released is R2, and that is the point worth keeping.** The rule that pulls belong to the destination domain was stated generally and is not about touch; every remaining crossing still obeys it. **Deleting the bus and deleting the rule are different decisions**, and only the first is on the table.
+  NOTE: **The open question is whether `I2C-SW` survives as a provision.** Kept, it costs two EC pins and is the natural home for any future switched-domain I2C device; deleted, it returns those pins to a budget that does not close comfortably ([R.23](sec_ai_r#r23)). **[X.22](sec_ai_x#x22)'s `I2C-EXP` is not a substitute** — different master, different domain, mirrored rather than transactional (→ [Q35](sec_ai_q#q35)).
+  NOTE: **The panel part number needs rechecking.** [Q1](sec_ai_q#q1) already asks for the module datasheet; **it should now also confirm whether a non-digitiser variant exists**, since the FPC and the part change with it — and [sheet U1](sec_ai_u1) has in any case moved the panel to LVDS, which may settle the question by replacing the module outright (→ [Q145](sec_ai_q#q145)).
 
 ## Sequencing — the EC governs both directions; the CPU-facing half is [sheet S](sec_ai_s).
 
@@ -66,7 +71,7 @@ REV C, and the revision that changes the shape of the sheet rather than its part
 | 7 | `CRESET_B` released, bitstreams loaded over SPI **from EC flash — Neon first** ([D1.22](sec_ai_d1#d122)) | 7 | 1V2 `EN` de-asserted |
 | 8 | `CDONE` verified on both devices | 8 | EC enters dormant mode, or commands **ship mode** over I2C for a true off |
 | 8b | EC reads gauge and charger and **commits an initial telemetry snapshot** into Helium, so the kernel's first read is not zeros (→ [S.16](sec_ai_s#s16)) | | |
-| 9 | I2C-SW up, GT911 initialised | | |
+| 9 | **Step deleted** — was `I2C-SW` up, GT911 initialised ([C.13a](sec_ai_c#c13a)) | | |
 | 10 | Backlight, then the USB-A 5 V boost | | |
 | 11 | BIOS preloaded into SRAM **from EC flash over the mailbox** ([D60](sec_ai_q#d60)), 65816 released from reset | | |
 
@@ -82,7 +87,7 @@ REV C, and the revision that changes the shape of the sheet rather than its part
 | 2× AS4C32M16SB SDRAM | 250 mA | 360 mA | | 1V2 (~88 %) | 0.20 W | 0.34 W |
 | 2× iCE40 HX8K VCCIO | 160 mA | 220 mA | | Backlight | 1.5 W | 1.8 W |
 | Panel logic (HX8282) | 200 mA | 250 mA | | USB-A host, loaded | 0 W | 2.8 W |
-| PCM5102A + GT911 + microSD | 95 mA | 130 mA | | **Total** | **~4.9 W** | **~9.4 W** |
+| PCM5102A + microSD **([C.13a](sec_ai_c#c13a))** | 95 mA | 130 mA | | **Total** | **~4.9 W** | **~9.4 W** |
 | Misc, LEDs, pulls | 30 mA | 45 mA | | 3V3_AON, EC active | 60 mA | — |
 | **Total 3V3_MAIN** | **~0.82 A** | **~1.12 A** | | 3V3_AON, EC dormant | 5 mA | — |
 

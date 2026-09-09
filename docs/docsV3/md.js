@@ -71,23 +71,58 @@
   var PAD = { '[ ]': '', '[x]': ' done', '[~]': ' half', '[?]': ' optl' };
   var ID = /^(?:[A-Z][A-Za-z0-9.]{0,7}|\+)$/;
 
-  /* Lines belonging to the block just parsed: NOTE:, TEST:, and any other
-     indented line, which continues the block as a further paragraph at the
-     same weight — the way A1.1 carries its second and third paragraphs. */
+  /* A fenced code block: ``` with an optional language tag, through the next
+     line that is a bare fence. The content is verbatim — no inline pass, no
+     trailer scanning — and the fence's own indentation is stripped, so a block
+     hanging off an item reads the same as one at the margin. */
+  function fence(lines, k) {
+    var open = /^\s*```+[ \t]*([A-Za-z0-9_+#-]*)[ \t]*$/.exec(lines[k] || '');
+    if (!open) return null;
+    var body = [], i = k + 1;
+    while (i < lines.length && !/^\s*```+\s*$/.test(lines[i])) { body.push(lines[i]); i++; }
+
+    var strip = Infinity;
+    body.forEach(function (l) {
+      if (l.trim()) strip = Math.min(strip, /^[ \t]*/.exec(l)[0].length);
+    });
+    if (!isFinite(strip)) strip = 0;
+    body = body.map(function (l) { return l.slice(strip); });
+    while (body.length && !body[0].trim()) body.shift();
+    while (body.length && !body[body.length - 1].trim()) body.pop();
+
+    return {
+      lang: open[1] || '',
+      code: body.join('\n'),
+      next: i < lines.length ? i + 1 : i
+    };
+  }
+
+  function codeHtml(f) {
+    return '<pre class="code"' + (f.lang ? ' data-lang="' + f.lang + '"' : '') +
+           '><code>' + escapeCode(f.code) + '</code></pre>';
+  }
+
+  /* Lines belonging to the block just parsed: NOTE:, TEST:, a fenced code
+     block, and any other indented line, which continues the block as a further
+     paragraph at the same weight — the way A1.1 carries its second and third
+     paragraphs. The fence is tested before the indent rule, or an indented
+     fence would be read as prose. */
   function trailers(lines, k) {
-    var conts = [], notes = [], test = null;
+    var conts = [], notes = [], codes = [], test = null;
     while (k < lines.length) {
-      var raw = lines[k], t = raw.trim();
-      if (/^NOTE:/.test(t)) { notes.push(t.slice(5).trim()); k++; }
+      var raw = lines[k], t = raw.trim(), f = fence(lines, k);
+      if (f) { codes.push(f); k = f.next; }
+      else if (/^NOTE:/.test(t)) { notes.push(t.slice(5).trim()); k++; }
       else if (/^TEST:/.test(t)) { test = t.slice(5).trim(); k++; }
       else if (/^\s{2,}\S/.test(raw)) { conts.push(t); k++; }
       else break;
     }
-    return { conts: conts, notes: notes, test: test, next: k };
+    return { conts: conts, notes: notes, codes: codes, test: test, next: k };
   }
 
   function tail(tr) {
     var out = tr.conts.map(function (c) { return '<span class="cont">' + inline(c) + '</span>'; }).join('');
+    out += tr.codes.map(codeHtml).join('');
     out += tr.notes.map(function (n) { return ' <span class="note">' + inline(n) + '</span>'; }).join('');
     if (tr.test) out += '<span class="test">TEST ▸ ' + inline(tr.test) + '</span>';
     return out;
@@ -122,6 +157,9 @@
       var line = lines[i], t = line.trim();
 
       if (!t) { i++; continue; }
+
+      var fen = fence(lines, i);                                    // ```code```
+      if (fen) { out.push(codeHtml(fen)); i = fen.next; continue; }
 
       if (t === 'INDEX') {                                          // sheet-index table
         doc.hasIndex = true; out.push('<div data-index></div>'); i++; continue;
@@ -196,6 +234,7 @@
 
       var para = [];                                                // paragraph
       while (i < lines.length && lines[i].trim() && !/^(NOTE:|TEST:)/.test(lines[i].trim()) &&
+             !/^\s*```/.test(lines[i]) &&
              !(para.length && /^\s{2,}\S/.test(lines[i]))) {
         para.push(lines[i].trim()); i++;
       }
