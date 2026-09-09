@@ -47,9 +47,9 @@
     }
   ],
   "footer": {
-    "referenceIndex": "Seven parts · ten areas · sheets A–X — D as D1, D2 and D3 — and Y1–Y3 · Figs. 1–13 · appendix Z1–Z2",
+    "referenceIndex": "Seven parts · ten areas · sheets A–X — D as D1–D3, T as T1–T3, U as U1 — and Y1–Y3 · Figs. 1–13 · appendix Z1–Z2",
     "rules": "All 3.3V · hand-solderable · open toolchain",
-    "rev": "DOC v0.2.2 · ARCHITECTURE REV A · POWER REV C · EC REV B · CPU REV A · MEMORY REV A · FS REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · PROTOTYPE REV A · AUG 2026"
+    "rev": "DOC v0.2.3 · ARCHITECTURE REV A · POWER REV C · EC REV B · CPU REV A · MEMORY REV A · FS REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · PROTOTYPE REV A · AUG 2026"
   },
   "sheets": [
     {
@@ -240,20 +240,36 @@
       "index": "Filesystems · ext2, the transfer medium"
     },
     {
-      "file": "sec_ai_t",
-      "letter": "T",
+      "file": "sec_ai_t1",
+      "letter": "T1",
       "part": "ai",
       "area": "Video + audio",
       "nav": "Neon — the GPU",
       "index": "Neon — the GPU · text, graphics, blitter and command lists"
     },
     {
-      "file": "sec_ai_u",
-      "letter": "U",
+      "file": "sec_ai_t2",
+      "letter": "T2",
+      "part": "ai",
+      "area": "Video + audio",
+      "nav": "Neon — palette and line control",
+      "index": "Neon — the colour lookup table, dual banking and line-synchronous control"
+    },
+    {
+      "file": "sec_ai_t3",
+      "letter": "T3",
       "part": "ai",
       "area": "Video + audio",
       "nav": "Neon — blitter and compositor",
       "index": "Neon — blitter, arbitration and the window compositor"
+    },
+    {
+      "file": "sec_ai_u1",
+      "letter": "U1",
+      "part": "ai",
+      "area": "Video + audio",
+      "nav": "The display panel interface",
+      "index": "The display panel interface · LVDS, half-resolution scanout and the pin boundary"
     },
     {
       "file": "sec_ai_w",

@@ -14,7 +14,7 @@ The thirteen figures are numbered across the whole document rather than per shee
 | Fig. 7 | [P — Step-by-step build](sec_ai_p) | The two build tracks, prototype above and target below, with both milestones at their exact point |
 | Fig. 8 | [R — Debug agent](sec_ai_r) | The debug agent as a requester inside Helium: the EC commands over SPI and never drives the bus |
 | Fig. 9 | [S — Power control](sec_ai_s) | The power control path — two level pins, the SPI link, and telemetry latched into atomic snapshots |
-| Fig. 10 | [T — Neon](sec_ai_t) | Neon: the text path that depends on nothing but the bitstream, and the graphics path fed by commands rather than pixels |
-| Fig. 11 | [U — Blitter and compositor](sec_ai_u) | The blitter datapath and the bank partition that is worth a factor of two in delivered bandwidth |
+| Fig. 10 | [T1 — Neon](sec_ai_t1) | Neon: the text path that depends on nothing but the bitstream, and the graphics path fed by commands rather than pixels |
+| Fig. 11 | [T3 — Blitter and compositor](sec_ai_t3) | The blitter datapath and the bank partition that is worth a factor of two in delivered bandwidth |
 | Fig. 12 | [V — The windowing OS](sec_ai_v) | The windowing stack, and the privilege boundary falling on command emission rather than on the framebuffer |
 | Fig. 13 | [D2 — Debug and programming port](sec_ai_d2) | The RP2040 probe on its own supply domain, the six nets that cross to the EC, and the ground that does not |

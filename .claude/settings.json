@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(awk -F: '{print $1}')",
+      "Bash(node tools/links.js --broken)",
+      "Bash(grep -n \"Do not spend a fractional PLL on it\\\\.$\\\\|^| Palette — 256 × 18 bit\\\\|^- T1\\\\.12 —\\\\|^- T1\\\\.14 —\\\\|^- T1\\\\.49 —\\\\|^| \\\\`\\\\$0A\\\\` | \\\\`IRQ_EN\\\\`\\\\|^- T1\\\\.32 —\" sec_ai_t1.md)",
+      "Bash(node tools/prerender.js)"
     ]
   }
 }
