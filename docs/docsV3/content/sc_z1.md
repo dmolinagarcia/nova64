@@ -8,5 +8,5 @@
 |09/09/2026|0.2.3|AI content for Palette Control and Panel specifications|
 |          |     |AI content for Phase 0 Spartan-6 training rig added|
 |          |     |Prototipe sheet splitted into tracks|
-|09/09/2026|0.2.4|AI content for the host emulator added as a new Emulation area|
+|          |     |AI content for the host emulator added as a new Emulation area|
 
