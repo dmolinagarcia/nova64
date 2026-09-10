@@ -209,13 +209,18 @@ letter and number are not repeated here — they live in `manifest.json`.
 |---|---|
 | a plain paragraph | `p.lead` — the standing text of a sheet |
 | `## Register map — base block $FF:0000` | sub-heading: bold up to the ` — `, plain after it |
+| `### Hardening door B` | the same, one level down and a little tighter |
 | `- A.1 — text` | a numbered item: `A.1` in mint, text beside it, anchored at `#a1` |
+| `1. text` | the same row, its number in mint where the id would be, and no anchor |
 | `- [ ] E0.1 — text` | the same, with a build checkbox in front |
 | `!!! APPLE II MILESTONE — …` | the gold milestone banner |
 | `\| Term \| Meaning \|` + `\|---\|---\|` | `table.simple` |
 | `![Fig. 1 — caption](figures/f.svg)` | the figure, its SVG inlined so the stylesheet reaches it |
 | `LEGEND: …` after a figure | the small trace legend under the caption |
 | ` ```c ` … ` ``` ` | a code listing, highlighted for that language — see below |
+| ` ~~~bash ` … ` ~~~ ` | the same, for a listing that itself contains a line of backticks |
+| `---` on its own line | nothing — a rule, dropped, since the sheets space themselves |
+| `<!-- file: srv/dev/bin/dev -->` + a fence | a file of the kit: the listing under a caption naming it — see below |
 | `INDEX` | the sheet-index table, built from `manifest.json` |
 | `TAGS:` + `- [g] …` list | the masthead tag row (index page only) |
 
@@ -227,7 +232,9 @@ lowercased with the dots dropped, which is what every cross-reference points at.
 
 A fenced block, with the language after the opening fence. It may sit at the
 margin or hang off an item like a `NOTE:`, and the fence's own indentation is
-stripped either way, so both read the same. The content is verbatim — no inline
+stripped either way, so both read the same. `~~~` opens and closes one too, and
+is closed only by `~~~` — which is what a listing containing a line of backticks
+needs, and the reason sheet EM0 can carry the script that extracts sheet EM0. The content is verbatim — no inline
 pass, so `**` and `[link]()` inside a listing stay as typed.
 
 `hl.js` highlights it while the page is built, not in the browser, because
@@ -241,6 +248,26 @@ It knows `c`, `asm` (ca65 65816), `js`, `json`, `python`, `sh` and `make`.
 **An unknown or absent language is escaped and left plain**, which is the right
 answer for a register bit-layout or a vector table, and the reason to leave the
 fence bare when a listing is not code.
+
+### Files the document carries
+
+A listing under a `<!-- file: path -->` marker is not an illustration: it is one
+of the files the document *is*, and the marker is what the extractor at the top
+of sheet EM0 reads to write it out. The renderer reads the same marker and draws
+one distinction from it, which is what keeps the printed edition a book rather
+than a program listing.
+
+The listing gets a caption naming the file and giving its size, as lines and
+bytes — checkable at the other end with `wc -lc`, which is the reason it is a
+size rather than a hash. **Past `LONG` lines in `md.js`, the block also folds on
+screen and prints as its caption alone**, since the document tells the reader
+never to retype these files and paper is the one medium they cannot be copied
+from. Below that threshold a file prints whole, so the configuration a reader
+wants in front of them stays in the book while the long shell scripts do not.
+
+Sheet EM0 is the case this exists for: eleven files, of which four are long
+enough to fold, and the rest of its fenced blocks are ordinary listings that
+carry no marker and are unaffected.
 
 It is a scanner, not a parser: it recognises comments, strings, numbers and
 words, and nothing about grammar. A label sharing a name with a mnemonic will be

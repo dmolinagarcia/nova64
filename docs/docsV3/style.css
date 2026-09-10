@@ -96,6 +96,22 @@
            color:rgba(var(--ink-rgb),.45);}
   .itx pre.code{margin:8px 0 3px;}
 
+  /* a file of the kit — a listing the document carries rather than one it
+     shows. The caption names it; past md.js's LONG it folds here and is
+     replaced by the caption alone on paper. */
+  .kit{margin:10px 0 4px;}
+  .kit pre.code{margin-top:0;}
+  .kitcap{padding:5px 13px;border-left:2px solid var(--mint);
+          background:rgba(var(--mint-rgb),.07);font-size:11px;}
+  .kitcap b{color:var(--mint);}
+  .kitsz{color:rgba(var(--ink-rgb),.5);margin-left:9px;}
+  .kitnote{display:none;}
+  .kit.long > details > summary{cursor:pointer;list-style:none;}
+  .kit.long > details > summary::-webkit-details-marker{display:none}
+  .kit.long > details > summary::after{content:' ▸';color:var(--mint);}
+  .kit.long > details[open] > summary::after{content:' ▾';}
+  .kit.long > details > summary:focus-visible{outline:2px solid var(--mint);outline-offset:2px;}
+
   /* syntax highlighting — the same five colours as the rest of the document, so
      a listing reads as part of the page rather than as a screenshot of an IDE.
      Literals gold, names mint, comments out of the way. See hl.js. */
@@ -309,6 +325,21 @@
     pre.code .k,pre.code .t,pre.code .d{ color:#004a3a; }
     pre.code .k{ font-weight:700; }
     .pad{ border-color:#000; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+    /* The kit on paper. A short file prints whole; a long one prints as its
+       caption, because the document tells the reader never to retype it and
+       a printed page is the one medium it cannot be copied from. `details`
+       is opened and flattened first, so a formatter that does not implement
+       the disclosure widget still lays the caption out as a line. */
+    .kit.long > details > summary::after{ content:''; }
+    .kit details, .kit summary{ display:block; }
+    .kit.long pre.code{ display:none; }
+    .kitcap{ border-left-color:#000; background:transparent; padding-left:11px; }
+    .kitcap b{ color:#000; }
+    .kitsz{ color:#555; }
+    .kitnote{ display:block; color:#555; font-style:italic; }
+    .kitnote code{ color:#000; background:transparent; }
+    .kit{ break-inside:avoid; }
     .pad.done{ background:#000; }
     .pad.half{ background:linear-gradient(90deg,#000 50%,transparent 50%); }
 
@@ -424,6 +455,8 @@
      elements; here the markdown says nothing about spacing, so the
      rules live with the rest of the sheet. */
   .lead.sub{margin-top:16px;}
+  .lead.sub.min{margin-top:12px;}
+  .lead.sub.min b{color:rgba(var(--ink-rgb),.85);}
   figure + ol.steps{margin-top:14px;}
   .hito + ol.steps{margin-top:10px;}
 

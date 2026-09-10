@@ -320,6 +320,14 @@
       "index": "The windowing OS · window server, client protocol and toolkit"
     },
     {
+      "file": "sec_ai_em0",
+      "letter": "EM0",
+      "part": "ai",
+      "area": "Emulation",
+      "nav": "The development environment",
+      "index": "The development environment · a browser-only build host, extracted from this sheet"
+    },
+    {
       "file": "sec_ai_em1",
       "letter": "EM1",
       "part": "ai",

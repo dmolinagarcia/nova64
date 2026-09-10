@@ -71,15 +71,23 @@
   var PAD = { '[ ]': '', '[x]': ' done', '[~]': ' half', '[?]': ' optl' };
   var ID = /^(?:[A-Z][A-Za-z0-9.]{0,7}|\+)$/;
 
-  /* A fenced code block: ``` with an optional language tag, through the next
-     line that is a bare fence. The content is verbatim — no inline pass, no
-     trailer scanning — and the fence's own indentation is stripped, so a block
-     hanging off an item reads the same as one at the margin. */
+  /* A fenced code block: ``` or ~~~ with an optional language tag, through the
+     next line that is a bare fence of the same character. The content is
+     verbatim — no inline pass, no trailer scanning — and the fence's own
+     indentation is stripped, so a block hanging off an item reads the same as
+     one at the margin.
+
+     The `~~~` form exists for one case: a listing that itself contains a line
+     of backticks, which is what a script that extracts fenced blocks out of
+     this document looks like ([EM0](sec_ai_em0)). */
+  var FENCE = { '`': /^\s*```+\s*$/, '~': /^\s*~~~+\s*$/ };
+
   function fence(lines, k) {
-    var open = /^\s*```+[ \t]*([A-Za-z0-9_+#-]*)[ \t]*$/.exec(lines[k] || '');
+    var open = /^\s*(```+|~~~+)[ \t]*([A-Za-z0-9_+#-]*)[ \t]*$/.exec(lines[k] || '');
     if (!open) return null;
+    var close = FENCE[open[1][0]];
     var body = [], i = k + 1;
-    while (i < lines.length && !/^\s*```+\s*$/.test(lines[i])) { body.push(lines[i]); i++; }
+    while (i < lines.length && !close.test(lines[i])) { body.push(lines[i]); i++; }
 
     var strip = Infinity;
     body.forEach(function (l) {
@@ -91,7 +99,7 @@
     while (body.length && !body[body.length - 1].trim()) body.pop();
 
     return {
-      lang: open[1] || '',
+      lang: open[2] || '',
       code: body.join('\n'),
       next: i < lines.length ? i + 1 : i
     };
@@ -150,6 +158,53 @@
     return { pad: pad, id: id, text: body, anchor: anchor };
   }
 
+  /* ── the kit ──────────────────────────────────────────────────────────
+
+     A listing preceded by `<!-- file: path -->` is not an illustration: it is
+     one of the files the document carries, and the marker is what the
+     extractor in sheet EM0 reads to write it out. The renderer reads the same
+     marker, and the difference it draws from it is what keeps the printed
+     edition a book rather than a program listing.
+
+     A file the reader is told never to retype is worth nothing on paper, so
+     past LONG lines the body is printed as a stub: the path, the size, and
+     where the command that materialises it lives. On screen the same blocks
+     fold, so the sheet stays a document one can scroll.
+
+     The size is bytes and lines rather than a hash, because it has to be
+     checkable at the other end and `wc -lc` is on every machine this document
+     is read on. */
+  var LONG = 60;
+
+  function kitCap(file, code, long) {
+    var bytes = 0;
+    for (var i = 0; i < code.length; i++) {
+      var c = code.charCodeAt(i);
+      bytes += c < 0x80 ? 1 : c < 0x800 ? 2 : (c & 0xF800) === 0xD800 ? 2 : 3;
+    }
+    bytes += 1;                                  // the newline the extractor writes last
+    var lines = code.split('\n').length;
+    return '<b>' + escapeCode(file) + '</b>' +
+           '<span class="kitsz">' + lines + ' lines · ' + bytes + ' bytes</span>' +
+           (long ? '<span class="kitnote">not printed — extract it with the command in section 4,' +
+                   ' and check it with <code>wc -lc</code></span>' : '');
+  }
+
+  /* `<!-- file: path -->` on its own line, and the fence under it. */
+  function kit(lines, k) {
+    var m = /^<!--\s*file:\s*(\S+)\s*-->$/.exec((lines[k] || '').trim());
+    if (!m) return null;
+    var f = fence(lines, k + 1);
+    if (!f) return null;
+    var long = f.code.split('\n').length > LONG;
+    var html = '<div class="kit' + (long ? ' long' : '') + '" data-file="' + escapeCode(m[1]) + '">';
+    html += long
+      ? '<details><summary class="kitcap">' + kitCap(m[1], f.code, true) + '</summary>' +
+        codeHtml(f) + '</details>'
+      : '<div class="kitcap">' + kitCap(m[1], f.code, false) + '</div>' + codeHtml(f);
+    return { html: html + '</div>', next: f.next };
+  }
+
   /* Parses a whole document into { title, aim, html, tags, hasIndex }. */
   function parse(src) {
     var lines = src.replace(/\r/g, '').split('\n');
@@ -163,6 +218,9 @@
       var line = lines[i], t = line.trim();
 
       if (!t) { i++; continue; }
+
+      var kt = kit(lines, i);                                       // a file of the kit
+      if (kt) { out.push(kt.html); i = kt.next; continue; }
 
       var fen = fence(lines, i);                                    // ```code```
       if (fen) { out.push(codeHtml(fen)); i = fen.next; continue; }
@@ -182,17 +240,21 @@
         continue;
       }
 
+      if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)) { i++; continue; }      // rule — spacing already says it
+
       if (/^!!!\s+/.test(t)) {                                      // milestone banner
         out.push('<div class="hito">■ ' + inline(t.replace(/^!!!\s+/, '')) + '</div>');
         i++; continue;
       }
 
-      if (/^##\s+/.test(t)) {                                       // sub-heading
-        var h = t.replace(/^##\s+/, ''), dash = h.indexOf(' — ');
+      var hd = /^(###|##)\s+/.exec(t);                              // sub-heading, two levels
+      if (hd) {
+        var h = t.slice(hd[0].length), dash = h.indexOf(' — ');
         var bold = dash > 0 ? h.slice(0, dash) : h;
         var rest = dash > 0 ? ' — ' + h.slice(dash + 3) : '';
         var trh = trailers(lines, i + 1);
-        out.push('<p class="lead sub"><b>' + inline(bold) + '</b>' + inline(rest) + tail(trh) + '</p>');
+        out.push('<p class="lead sub' + (hd[1] === '###' ? ' min' : '') + '"><b>' +
+                 inline(bold) + '</b>' + inline(rest) + tail(trh) + '</p>');
         i = trh.next; continue;
       }
 
@@ -224,6 +286,22 @@
         out.push(html + '</tbody></table>'); continue;
       }
 
+      /* A numbered procedure — `1.` through `18.` — which is a runbook's
+         backbone and reads as the same row as an item, its number where the
+         item id would be. The number is not an anchor: cross-references point
+         at ids, and a step's position is not one. */
+      if (/^\d+\.\s+/.test(t)) {
+        var nums = '';
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) {
+          var nm = /^(\d+)\.\s+/.exec(lines[i].trim());
+          var ntr = trailers(lines, i + 1);
+          nums += '<li><span class="id">' + nm[1] + '</span><div class="itx">' +
+                  inline(lines[i].trim().slice(nm[0].length)) + tail(ntr) + '</div></li>';
+          i = ntr.next;
+        }
+        out.push('<ol class="steps">' + nums + '</ol>'); continue;
+      }
+
       if (/^-\s+/.test(t)) {                                        // steps list
         var items = '';
         while (i < lines.length && /^-\s+/.test(lines[i].trim())) {
@@ -240,7 +318,7 @@
 
       var para = [];                                                // paragraph
       while (i < lines.length && lines[i].trim() && !/^(NOTE:|TEST:)/.test(lines[i].trim()) &&
-             !/^\s*```/.test(lines[i]) &&
+             !/^\s*(```|~~~)/.test(lines[i]) &&
              !(para.length && /^\s{2,}\S/.test(lines[i]))) {
         para.push(lines[i].trim()); i++;
       }
