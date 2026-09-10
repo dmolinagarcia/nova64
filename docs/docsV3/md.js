@@ -97,9 +97,15 @@
     };
   }
 
+  /* Highlighting happens here rather than in the browser, so that the printable
+     edition carries the same markup — hl.js runs under Node too. Absent, the
+     block is merely escaped, which is also what an untagged fence gets. */
   function codeHtml(f) {
+    var body = (f.lang && global.NovaHighlight)
+      ? global.NovaHighlight.highlight(f.code, f.lang)
+      : escapeCode(f.code);
     return '<pre class="code"' + (f.lang ? ' data-lang="' + f.lang + '"' : '') +
-           '><code>' + escapeCode(f.code) + '</code></pre>';
+           '><code>' + body + '</code></pre>';
   }
 
   /* Lines belonging to the block just parsed: NOTE:, TEST:, a fenced code

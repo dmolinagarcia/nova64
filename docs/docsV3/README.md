@@ -10,6 +10,8 @@ index.html          the paged edition: one sheet at a time
 full.html           every sheet in one scroll, for printing
 theme.js            the light/dark switch, applied before the first paint
 md.js               markdown → HTML for the dialect below
+hl.js               syntax highlighting for fenced code blocks — a per-language
+                    scanner, not a parser, in the document's own five colours
 shell.js            figure inlining and the failure state, shared by both pages
 app.js              sidebar, masthead, sheet index, pager, title block, routing
 full.js             the same pieces, assembled as one continuous document
@@ -120,7 +122,7 @@ weasyprint print.html nova64.pdf
 ```
 
 `tools/prerender.js` does not reimplement anything: it runs the real `md.js`,
-`shell.js` and `full.js` under Node against the real manifest and markdown,
+`hl.js`, `shell.js` and `full.js` under Node against the real manifest and markdown,
 captures what they would have written into the page, inlines the figures the way
 `shell.js` does in the browser, and writes one static file that links the same
 stylesheet. Change a sheet or the manifest and it follows. `print.html` is a
@@ -213,12 +215,37 @@ letter and number are not repeated here — they live in `manifest.json`.
 | `\| Term \| Meaning \|` + `\|---\|---\|` | `table.simple` |
 | `![Fig. 1 — caption](figures/f.svg)` | the figure, its SVG inlined so the stylesheet reaches it |
 | `LEGEND: …` after a figure | the small trace legend under the caption |
+| ` ```c ` … ` ``` ` | a code listing, highlighted for that language — see below |
 | `INDEX` | the sheet-index table, built from `manifest.json` |
 | `TAGS:` + `- [g] …` list | the masthead tag row (index page only) |
 
 Checkbox states: `[ ]` pending · `[x]` done · `[~]` in progress · `[?]` optional.
 The item id is free text — `A.1`, `E0.1`, `D07`, `+` — and its anchor is that id
 lowercased with the dots dropped, which is what every cross-reference points at.
+
+### Code listings
+
+A fenced block, with the language after the opening fence. It may sit at the
+margin or hang off an item like a `NOTE:`, and the fence's own indentation is
+stripped either way, so both read the same. The content is verbatim — no inline
+pass, so `**` and `[link]()` inside a listing stay as typed.
+
+`hl.js` highlights it while the page is built, not in the browser, because
+`tools/prerender.js` runs the same renderer to make the printable edition:
+highlighting at render time is what puts colour in the PDF. Six token classes,
+because the palette has five colours and no more — comment, string, number,
+keyword, type, directive — and they resolve to gold for literals, mint for
+names, dimmed italic for comments, in every theme and on paper.
+
+It knows `c`, `asm` (ca65 65816), `js`, `json`, `python`, `sh` and `make`.
+**An unknown or absent language is escaped and left plain**, which is the right
+answer for a register bit-layout or a vector table, and the reason to leave the
+fence bare when a listing is not code.
+
+It is a scanner, not a parser: it recognises comments, strings, numbers and
+words, and nothing about grammar. A label sharing a name with a mnemonic will be
+coloured as one. That is the deliberate ceiling — a real tokeniser is not worth
+carrying into the PDF build for a document whose listings are illustrations.
 
 ### Lines that attach to the block above
 

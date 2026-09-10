@@ -26,7 +26,7 @@
   .tag.g{border-color:var(--gold);color:var(--gold);}
   .tag.m{border-color:var(--mint);color:var(--mint);}
 
-  .idx{margin-top:26px;border:1.3px solid rgba(var(--ink-rgb),.55);}
+  .idx{--frame:1px;margin-top:26px;border:var(--frame) solid rgba(var(--ink-rgb),.55);}
   .idx .cap{padding:10px 16px;border-bottom:1px solid rgba(var(--ink-rgb),.35);font-size:11px;letter-spacing:3px;color:rgba(var(--ink-rgb),.6);font-weight:700;}
   .idx table{width:100%;border-collapse:collapse;}
   .idx td{padding:6.5px 16px;border-top:1px solid rgba(var(--ink-rgb),.16);font-size:12px;}
@@ -95,6 +95,16 @@
            font-size:9px;letter-spacing:2px;text-transform:uppercase;
            color:rgba(var(--ink-rgb),.45);}
   .itx pre.code{margin:8px 0 3px;}
+
+  /* syntax highlighting — the same five colours as the rest of the document, so
+     a listing reads as part of the page rather than as a screenshot of an IDE.
+     Literals gold, names mint, comments out of the way. See hl.js. */
+  pre.code .c{color:rgba(var(--ink-rgb),.45);font-style:italic;}
+  pre.code .s{color:var(--gold);}
+  pre.code .n{color:var(--gold);}
+  pre.code .k{color:var(--mint);font-weight:700;}
+  pre.code .t{color:var(--mint);}
+  pre.code .d{color:rgba(var(--mint-rgb),.75);}
 
   table.simple{width:100%;border-collapse:collapse;margin-top:4px;}
   table.simple th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(var(--ink-rgb),.55);text-align:left;padding:6px 8px;border-bottom:1px solid rgba(var(--ink-rgb),.4);}
@@ -264,6 +274,24 @@
     .partband .pn{ color:#6b4a00; }
     .cj,.cj>div+div{ border-color:rgba(0,0,0,.6); }
     .idx td{ border-top-color:rgba(0,0,0,.35); }
+
+    /* The sheet index is the one framed box with no padding, so its table sits
+       flush against the frame, and two things then show up that nothing else in
+       the document does. Vivliostyle resolves the table's `width:100%` against
+       `.idx`'s *border* box rather than its content box, so the last column's
+       rule lands past the inner edge — on screen nothing, on paper a rule
+       crossing the frame. Take the two borders back off here; screen resolves
+       the percentage correctly and must not get this, and `.hoja` and the rest
+       hide the same error inside their padding.
+
+       The frame is 1px rather than the 1.3px its neighbours use for the second
+       reason: the table's edge snaps to whole pixels, so a fractional frame
+       puts its inner edge somewhere the table can never land — the nearest
+       positions were a quarter point outside and half a point inside. An
+       integer frame is one the table can meet, and it is what screens were
+       already rounding 1.3px to. Both are needed; either alone leaves a
+       visible edge. */
+    .idx table{ width:calc(100% - var(--frame) * 2); }
     table.simple td{ border-bottom-color:rgba(0,0,0,.35); }
     ol.steps li{ border-top-color:rgba(0,0,0,.3); }
     .idx tr:hover td{ background:transparent; }
@@ -274,6 +302,12 @@
     pre.code{ background:transparent; border-left-color:#000; overflow-x:visible; }
     pre.code code{ color:#000; white-space:pre-wrap; }
     pre.code[data-lang]::before{ color:#000; }
+    /* on paper the two meaningful colours darken as everywhere else, and the
+       comment leans on italic and grey rather than on hue */
+    pre.code .c{ color:#555; font-style:italic; }
+    pre.code .s,pre.code .n{ color:#6b4a00; }
+    pre.code .k,pre.code .t,pre.code .d{ color:#004a3a; }
+    pre.code .k{ font-weight:700; }
     .pad{ border-color:#000; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .pad.done{ background:#000; }
     .pad.half{ background:linear-gradient(90deg,#000 50%,transparent 50%); }

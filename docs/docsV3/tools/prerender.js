@@ -82,6 +82,7 @@ global.fetch = function (rel) {
   }), () => ({ ok: false, status: 404, text: () => Promise.resolve(''), json: () => Promise.resolve(null) }));
 };
 
+require(path.join(root, 'hl.js'));
 require(path.join(root, 'md.js'));
 require(path.join(root, 'shell.js'));
 
