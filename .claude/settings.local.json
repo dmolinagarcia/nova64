@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(python3 -)",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(docker run *)",
+      "Bash(docker run --rm --user 1000:1000 -v __TRACKED_VAR__/ws/repo:/workspaces/nova64 -v __TRACKED_VAR__/ws/key:/run/devbox-git:ro -w /workspaces/nova64 mcr.microsoft.com/devcontainers/base:bookworm sh -c ' *)"
     ]
   }
 }

@@ -232,6 +232,7 @@ Notable behaviours:
 - The boot volume is 100 GB with default VPU. Size is free within the 200 GB block storage allowance; raising the performance tier is not.
 - **The instance is launched with no public IP at all**, and a reserved one is assigned to its primary private IP immediately afterwards (section 7 explains why). The reserved IP is looked up by name like everything else, so a re-run reuses it: it is created on the first run, re-assigned if it was left unassigned — after a teardown, or after the instance was rebuilt — and left alone when it is already in place.
 - A private IP holds at most one public IP. An instance created by an earlier version of this script already has an ephemeral address, so the script releases it before assigning the reserved one, and warns you that the address changes at that moment.
+- When it launches a new instance, it forgets any host key `~/.ssh/known_hosts` still holds for that address, since the old key belonged to a machine that no longer exists. It never does this for an instance it merely reuses. If SSH answers with a changed host key anyway, it says so and stops waiting, instead of retrying for seven minutes.
 - Resulting OCIDs and the public IP are written to `~/devbox.env`.
 
 When it finishes:
@@ -939,7 +940,9 @@ the allowance without notice more than once.
 ### Destroying the environment
 
 `devbox-oci-teardown.sh` (Appendix D) deletes what `devbox-oci-setup.sh` created, in reverse order: instance,
-boot volumes, reserved IP, subnet, route rules, internet gateway, the 80/443 ingress rules, VCN. It finds each resource by
+boot volumes, reserved IP, subnet, route rules, internet gateway, the 80/443 ingress rules, VCN. It also removes
+the instance's addresses from `~/.ssh/known_hosts`: the host key dies with the instance, and an address that
+comes back — a kept reserved IP always does — would otherwise make ssh refuse the next one. It finds each resource by
 the same name the setup script looks up, so it removes what that script would have reused and leaves anything
 else alone — an object it did not create is reported at the end, never deleted.
 
@@ -1007,6 +1010,7 @@ Desktop-specific problems are covered in section 12.6.
 | Container log: `cat: /run/secrets/code_server_password: Permission denied` | Secret file is 0600 and the host user is not UID 1000; compose mounts it with the host owner and ignores `uid`/`mode` for file secrets | `chmod 644 /srv/dev/secrets/<project>.password && dev restart <project>` — `secrets/` is 0700, so the host side stays private |
 | `dev` cannot reach Docker | Session predates the `docker` group | Log out and back in |
 | `git push`: `Permission denied (publickey)` | Key not added to GitHub, or an HTTPS remote | `ssh -T git@github.com` on the host; `git remote -v`; use `git@github.com:` remotes |
+| `REMOTE HOST IDENTIFICATION HAS CHANGED` connecting to the devbox | The instance was rebuilt on an address `known_hosts` remembers — a kept reserved IP, or one OCI handed out again | `ssh-keygen -R <ip>` (and `-R <hostname>` if you connect by name). Both setup, on launch, and teardown now do this for the IP |
 | SSH lost after a firewall change | `rules.v4` edited wrongly, or ufw enabled | OCI Console → instance → Console connection gives serial access; it needs a local password (`sudo passwd ubuntu` in advance) or a GRUB single-user boot |
 | Instance stopped without your action | Idle reclamation (Free Tier), or A1 limit enforcement | Start it; confirm the shape is 2 OCPU / 12 GB; consider Pay As You Go |
 
@@ -1991,6 +1995,7 @@ if [[ -n "${INST:-}" ]]; then
   esac
 else
   INST=""
+  LAUNCHED=true
   ERRFILE="$(mktemp)"
   trap 'rm -f "$ERRFILE"' EXIT
 
@@ -2158,16 +2163,36 @@ alias devbox='ssh -i ${SSH_KEY} ${SSH_USER}@${IP}'
 EOF
 ok "state saved to ${ENV_FILE}"
 
+# A freshly launched instance has a new host key. If its address was used
+# before -- a reserved IP kept across a teardown always is -- the old key is
+# still in known_hosts, and accept-new only accepts unknown hosts, never
+# changed ones. Only on launch: forgetting a key on a plain re-run would
+# silently accept whatever answers next.
+if [[ "${LAUNCHED:-false}" == "true" ]] && ssh-keygen -F "$IP" >/dev/null 2>&1; then
+  ssh-keygen -R "$IP" >/dev/null 2>&1
+  ok "new instance: removed the previous host key for ${IP} from known_hosts"
+fi
+
 log "Waiting for port 22"
+SSH_UP=false
 for _ in $(seq 1 40); do
-  if ssh -i "$SSH_KEY" -o StrictHostKeyChecking=accept-new \
+  if SSH_ERR="$(ssh -i "$SSH_KEY" -o StrictHostKeyChecking=accept-new \
          -o ConnectTimeout=5 -o BatchMode=yes \
-         "${SSH_USER}@${IP}" true 2>/dev/null; then
+         "${SSH_USER}@${IP}" true 2>&1 >/dev/null)"; then
     ok "SSH is up"
+    SSH_UP=true
+    break
+  fi
+  # Retrying cannot fix a changed host key; say so instead of waiting 7 minutes.
+  if grep -q "IDENTIFICATION HAS CHANGED" <<<"$SSH_ERR"; then
+    warn "${IP} presents a different host key than ~/.ssh/known_hosts remembers."
+    warn "expected after rebuilding on the same address: ssh-keygen -R ${IP}"
+    SSH_UP=changed
     break
   fi
   sleep 10
 done
+[[ "$SSH_UP" == "false" ]] && warn "SSH is not answering yet; the instance may still be booting."
 
 cat <<EOF
 
@@ -3071,7 +3096,9 @@ destroy() {                              # destroy <what> <cmd...>
       warn "could not delete ${what} after ${waited}s:"
       sed 's/^/         /' "$ERRFILE" >&2
       note_leftover "${what} — delete it by hand"
-      return 1
+      # Not an error return: under set -e that would end the run here, skipping
+      # every later step and the leftover report that names what failed.
+      return 0
     fi
     sleep 10
     waited=$((waited + 10))
@@ -3157,11 +3184,36 @@ log "Reserved public IP '${RESERVED_IP_NAME}'"
 mapfile -t RIPS < <(ocil oci network public-ip list --compartment-id "$C" --scope REGION --all \
     --query "data[?\"lifecycle-state\"!='TERMINATED' && \"display-name\"=='${RESERVED_IP_NAME}'].id" \
     --raw-output | ocid_only)
+RIP_ADDRS=()
 for r in "${RIPS[@]:-}"; do
   [[ -n "$r" ]] || continue
-  ok "reserved IP: $(ociq oci network public-ip get --public-ip-id "$r" --query 'data."ip-address"' --raw-output) (${r})"
+  addr="$(ociq oci network public-ip get --public-ip-id "$r" --query 'data."ip-address"' --raw-output)"
+  [[ -n "$addr" ]] && RIP_ADDRS+=("$addr")
+  ok "reserved IP: ${addr} (${r})"
 done
 [[ ${#RIPS[@]} -eq 0 ]] && ok "none"
+
+# Every address the instance answered SSH on. Its host key dies with it, and if
+# the address comes back -- a kept reserved IP always does -- ssh refuses the
+# next instance with "REMOTE HOST IDENTIFICATION HAS CHANGED".
+log "SSH known_hosts entries"
+SSH_ADDRS=()
+for a in "${RIP_ADDRS[@]:-}"; do [[ -n "$a" ]] && SSH_ADDRS+=("$a"); done
+for inst in "${INSTANCES[@]:-}"; do
+  [[ -n "$inst" ]] || continue
+  while read -r a; do [[ -n "$a" ]] && SSH_ADDRS+=("$a"); done < <(ocil oci compute instance list-vnics \
+      --instance-id "$inst" --query 'data[*]."public-ip"' --raw-output)
+done
+if [[ -f "$ENV_FILE" ]]; then
+  a="$(grep -E '^export IP=' "$ENV_FILE" 2>/dev/null | head -n1 | cut -d= -f2- || true)"
+  [[ -n "$a" ]] && SSH_ADDRS+=("$a")
+fi
+KNOWN=()
+while read -r a; do
+  [[ -n "$a" ]] || continue
+  if ssh-keygen -F "$a" >/dev/null 2>&1; then KNOWN+=("$a"); ok "known_hosts: ${a}"; fi
+done < <(printf '%s\n' "${SSH_ADDRS[@]:-}" | grep -E '^[0-9]+(\.[0-9]+){3}$' | sort -u || true)
+[[ ${#KNOWN[@]} -eq 0 ]] && ok "none"
 
 log "Boot volumes"
 BVOLS=()
@@ -3195,6 +3247,7 @@ ${RED}This deletes, permanently:${RST}
   reserved IP       $( [[ "$KEEP_RESERVED_IP" == "true" ]] && echo "0 (kept; the DNS record still resolves)" || echo "${#RIPS[@]}   — the address is released for good" )
   compartment       $( [[ "$DELETE_COMPARTMENT" == "true" ]] && echo 1 || echo "0 (kept; DELETE_COMPARTMENT=true to remove)" )
   local files       $( [[ "$DELETE_LOCAL" == "true" ]] && echo "${SSH_KEY}, ${ENV_FILE}" || echo "0 (kept; DELETE_LOCAL=true to remove)" )
+  known_hosts       ${#KNOWN[@]}   (host keys of the terminated instance)
 
   region            ${REGION}
 EOF
@@ -3224,6 +3277,19 @@ for inst in "${INSTANCES[@]:-}"; do
   destroy "instance ${inst}" \
     oci compute instance terminate --instance-id "$inst" \
       --preserve-boot-volume false --force --wait-for-state TERMINATED
+done
+
+# The host keys went with the instance. ssh-keygen -R copes with hashed
+# entries and leaves the previous file as known_hosts.old.
+for a in "${KNOWN[@]:-}"; do
+  [[ -n "$a" ]] || continue
+  if [[ "$DRY_RUN" == "true" ]]; then
+    printf '%s  dry%s   would remove %s from ~/.ssh/known_hosts\n' "$YLW" "$RST" "$a"
+  elif ssh-keygen -R "$a" >/dev/null 2>&1; then
+    gone "known_hosts entry for ${a}"
+  else
+    warn "could not remove ${a} from ~/.ssh/known_hosts: ssh-keygen -R ${a}"
+  fi
 done
 
 # ---------------------------------------------------------------------------
@@ -3427,6 +3493,8 @@ Also worth checking, none of it created by devbox-oci-setup.sh:
     against its limit of 10. Release them in any VS Code client: Remote Explorer
     -> right-click the machine -> Unregister
   - the devbox SSH key on GitHub (Settings -> SSH and GPG keys)
+  - known_hosts entries stored under a hostname rather than the IP, if you
+    ever connected by name: ssh-keygen -R <hostname>
   - the budget alert, if the tenancy has nothing left to watch
 EOF
 ```
