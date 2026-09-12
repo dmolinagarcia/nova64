@@ -543,6 +543,7 @@ Then open:
 - **Settings Sync** works on door A — enable it there. code-server has no built-in Settings Sync: on door B, use the gist-based Settings Sync extension from Open VSX or keep your settings in a dotfiles repository. The two doors also keep separate extension stores.
 - **Install both doors as PWAs.** In a normal tab the browser swallows `Ctrl+W`, `Ctrl+N` and `Ctrl+T`; an installed app window releases most of them. This is the single biggest quality-of-life difference in browser-based editing.
 - **Git inside the container** commits as `GIT_NAME` / `GIT_EMAIL` from `config.env`, and pushes over SSH with the devbox key through `GIT_SSH_COMMAND`, which applies to git only. Use SSH remotes (`git@github.com:...`).
+- **Claude Code** keeps its login, conversations and memory on the project's `-claude` volume (`CLAUDE_CONFIG_DIR`, section 18.5), so they survive `dev build`, `dev update` and `dev remove`. Both doors share it. Sign in once per project.
 
 ---
 
@@ -920,6 +921,14 @@ and extensions — one `dev login` per project; door A's extensions return throu
 with the ACME certificates (losing it costs a re-issue, not an outage) and the desktop's database
 (section 12.7).
 
+The exception worth handling by hand is each project's `-claude` volume: Claude Code's conversations and memory
+exist nowhere else. Copy it out next to the other archives:
+
+```bash
+docker run --rm -v devenv_nova64-claude:/v:ro -v /srv/dev/backups:/b alpine \
+	tar czf "/b/claude-nova64-$(date +%Y%m%d).tar.gz" -C /v .
+```
+
 OCI can also back up the whole boot volume on a schedule: Block Storage → Boot Volumes → the devbox's boot
 volume → assign a backup policy. Check your tenancy's Always Free backup allowance before enabling one; the
 budget alert is the backstop.
@@ -1006,7 +1015,7 @@ Desktop-specific problems are covered in section 12.6.
 | Whole VM unresponsive during builds | Container limit too high | `dev status`; lower `cpus:` in the project's fragment, `dev up <name>` |
 | Only the editor lags during builds | The editor shares the container's quota with the build | `nice -n 10`, fewer parallel jobs |
 | Extension installs on door A but not B | Not published on Open VSX | Side-load the `.vsix`, or do that work on door A |
-| Workspace not writable, `git status`: `error reading .git`, push fails reading the key | Image built before `dev build` remapped `vscode` to the host UID (Oracle's Ubuntu makes `ubuntu` 1001; the image's `vscode` is 1000) | `docker exec devenv-<name> id -u` must equal `id -u` on the host. If not: `dev build <name>`; if the named volumes were already written by the old UID, `docker rm -f devenv-<name>`, `docker volume rm devenv_<name>-cli devenv_<name>-server devenv_<name>-codeserver`, then `dev build <name>` (costs one `dev login`) |
+| Workspace not writable, `git status`: `error reading .git`, push fails reading the key | Image built before `dev build` remapped `vscode` to the host UID (Oracle's Ubuntu makes `ubuntu` 1001; the image's `vscode` is 1000) | `docker exec devenv-<name> id -u` must equal `id -u` on the host. If not: `dev build <name>`; if the named volumes were already written by the old UID, `docker stop devenv-<name>`, then for each of `cli`, `server`, `codeserver` and `claude` run `docker run --rm -v devenv_<name>-<vol>:/v alpine chown -R "$(id -u):$(id -g)" /v`, then `dev build <name>` (keeps the tunnel login and Claude Code's history) |
 | Container log: `cat: /run/secrets/code_server_password: Permission denied` | Secret file is 0600 and the host user is not UID 1000; compose mounts it with the host owner and ignores `uid`/`mode` for file secrets | `chmod 644 /srv/dev/secrets/<project>.password && dev restart <project>` — `secrets/` is 0700, so the host side stays private |
 | `dev` cannot reach Docker | Session predates the `docker` group | Log out and back in |
 | `git push`: `Permission denied (publickey)` | Key not added to GitHub, or an HTTPS remote | `ssh -T git@github.com` on the host; `git remote -v`; use `git@github.com:` remotes |
@@ -1195,6 +1204,7 @@ volumes:
   __NAME__-cli:
   __NAME__-server:
   __NAME__-codeserver:
+  __NAME__-claude:
 
 secrets:
   code_server_password___NAME__:
@@ -1221,6 +1231,10 @@ services:
       # -cli volume. Without it the CLI migrates to ~/.vscode/cli, which lives
       # in the container layer and is lost on every rebuild.
       VSCODE_CLI_DATA_DIR: "/home/vscode/.vscode-cli"
+      # Claude Code keeps its login, conversations and memory in ~/.claude, but
+      # its main config file in ~/.claude.json, outside that directory. Pointing
+      # CLAUDE_CONFIG_DIR at the -claude volume puts both on it.
+      CLAUDE_CONFIG_DIR: "/home/vscode/.claude"
       # Git: identity from config.env (interpolated by `dev`); SSH key shared
       # read-only from the host.
       GIT_NAME: "${GIT_NAME}"
@@ -1233,6 +1247,7 @@ services:
       - __NAME__-cli:/home/vscode/.vscode-cli
       - __NAME__-server:/home/vscode/.vscode-server
       - __NAME__-codeserver:/home/vscode/.local/share/code-server
+      - __NAME__-claude:/home/vscode/.claude
     secrets:
       - source: code_server_password___NAME__
         target: code_server_password
@@ -1242,11 +1257,13 @@ services:
     networks: [edge]
 ```
 
-The three named volumes matter for different reasons. `-cli` holds the tunnel's GitHub token and the
+The four named volumes matter for different reasons. `-cli` holds the tunnel's GitHub token and the
 downloaded VS Code servers — but only because `VSCODE_CLI_DATA_DIR` points there: the current CLI defaults to
 `~/.vscode/cli`, which would live in the container layer and vanish on every rebuild. `-server` holds the
 tunnel server's extensions and state. `-codeserver` holds door B's extensions and state separately, because
-the two doors do not share an extension store.
+the two doors do not share an extension store. `-claude` holds Claude Code's login, conversation history and
+memory, shared by both doors. Unlike the other three it is work, not cache: `dev remove` keeps it, and it is
+worth backing up (section 15).
 
 ### 18.6 `/srv/dev/templates/site.caddy.tpl`
 
@@ -1293,6 +1310,7 @@ RUN case "$(uname -m)" in \
 RUN mkdir -p /home/vscode/.vscode-cli \
 		/home/vscode/.vscode-server \
 		/home/vscode/.local/share/code-server \
+		/home/vscode/.claude \
 	&& chown -R vscode:vscode /home/vscode
 ```
 
@@ -1551,6 +1569,9 @@ cmd_remove() {
 	fi
 	compose rm -sf "devenv-${name}" || true
 	docker volume rm "devenv_${name}-cli" "devenv_${name}-server" "devenv_${name}-codeserver" 2>/dev/null || true
+	# The -claude volume is kept: it holds conversations and memory, not cache.
+	# A project re-added under the same name picks it up again.
+	info "kept volume devenv_${name}-claude; delete it with: docker volume rm devenv_${name}-claude"
 	rm -f "${DEV_ROOT}/caddy/sites/${name}.caddy" \
 		"${DEV_ROOT}/projects/${name}/devenv.compose.yml" \
 		"${DEV_ROOT}/secrets/${name}.password"

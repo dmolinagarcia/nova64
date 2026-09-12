@@ -34,4 +34,5 @@ RUN case "$(uname -m)" in \
 RUN mkdir -p /home/vscode/.vscode-cli \
 		/home/vscode/.vscode-server \
 		/home/vscode/.local/share/code-server \
+		/home/vscode/.claude \
 	&& chown -R vscode:vscode /home/vscode
