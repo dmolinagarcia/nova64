@@ -3,7 +3,7 @@
  * A small, dependency-free renderer for the dialect described in README.md.
  * It is deliberately not a general markdown engine: it knows exactly the
  * constructs the sheets use, and each one maps onto a class the stylesheet
- * already defines (.lead, ol.steps, .note, .test, .chip, .pad, .hito,
+ * already defines (.lead, ol.steps, .note, .test, .chip, .pad, .hito, .aviso,
  * table.simple, figure).
  */
 (function (global) {
@@ -245,6 +245,28 @@
       if (/^!!!\s+/.test(t)) {                                      // milestone banner
         out.push('<div class="hito">■ ' + inline(t.replace(/^!!!\s+/, '')) + '</div>');
         i++; continue;
+      }
+
+      /* AVISO — a warning box, and the one block that speaks over the prose.
+         Its own line is the heading, bold up to the ` — ` the way a
+         sub-heading is, and the lines under it are the body, through the next
+         blank line. An indented line opens a further paragraph inside the box,
+         as it does under an item. Tested after `!!!`, which it cannot match:
+         the third `!` is not the space this one requires. */
+      if (/^!!\s+/.test(t)) {
+        var av = t.replace(/^!!\s+/, ''), cut = av.indexOf(' — ');
+        var head = '<b>▲ ' + inline(cut > 0 ? av.slice(0, cut) : av) + '</b>' +
+                   (cut > 0 ? inline(' — ' + av.slice(cut + 3)) : '');
+        var run = [], paras = [];
+        for (i++; i < lines.length && lines[i].trim(); i++) {
+          if (/^\s{2,}\S/.test(lines[i]) && run.length) { paras.push(run.join(' ')); run = []; }
+          run.push(lines[i].trim());
+        }
+        if (run.length) paras.push(run.join(' '));
+        out.push('<div class="aviso">' + head + paras.map(function (pg) {
+          return '<span class="cont">' + inline(pg) + '</span>';
+        }).join('') + '</div>');
+        continue;
       }
 
       var hd = /^(###|##)\s+/.exec(t);                              // sub-heading, two levels

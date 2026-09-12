@@ -8,6 +8,10 @@
     --panel:#0E3A2C;
     --mint:#7FD8BD;   --mint-rgb:127,216,189;
     --gold:#D9A93F;   --gold-rgb:217,169,63;
+    /* a sixth colour, and the only one that is not part of the document's
+       look: it exists so that a warning is not mistaken for a milestone,
+       which the gold already spends itself on. Nothing but .aviso uses it. */
+    --warn:#E2743C;   --warn-rgb:226,116,60;
   }
 
   *{box-sizing:border-box}
@@ -134,6 +138,20 @@
   .legend .m{color:var(--mint)}.legend .g{color:var(--gold)}
 
   .hito{border:2px solid var(--gold);background:rgba(var(--gold-rgb),.07);color:var(--gold);letter-spacing:2px;font-weight:800;padding:8px 14px;margin:12px 0 4px;font-size:12.5px;}
+
+  /* AVISO — a box the reader is not meant to run past. It is built like the
+     listings, a rule down the left edge over a tinted ground, but the rule is
+     thick and closed into a frame, so it reads as something set aside from the
+     prose rather than as a quotation of it. */
+  .aviso{margin:14px 0 6px;padding:9px 14px;
+         border:1px solid rgba(var(--warn-rgb),.45);
+         border-left:4px solid var(--warn);
+         background:rgba(var(--warn-rgb),.08);
+         color:rgba(var(--ink-rgb),.9);}
+  .aviso b{color:var(--warn);letter-spacing:1.5px;font-weight:800;}
+  .aviso .cont{display:block;margin-top:8px;}
+  .aviso code{color:var(--warn);background:rgba(var(--warn-rgb),.10);}
+  .aviso a{color:var(--warn);text-decoration:underline;}
 
   .cajetin{margin-top:30px;border:1.6px solid rgba(var(--ink-rgb),.75);}
   .cj{display:flex;border-top:1px solid rgba(var(--ink-rgb),.35);flex-wrap:wrap;}
@@ -313,6 +331,10 @@
     .idx tr:hover td{ background:transparent; }
     .des{ background:#fff; border-color:#000; color:#000; }
     .hito{ background:transparent; border-color:#000; color:#000; }
+    /* the warning keeps its edge on paper the way the figure traces keep
+       theirs: the ground goes, the left rule stays, darkened */
+    .aviso{ background:transparent; border-color:#000; border-left-color:#8A3200; color:#000; }
+    .aviso b,.aviso code,.aviso a{ color:#8A3200; }
     .tag{ border-color:#000; color:#000; }
     code{ background:transparent; }
     pre.code{ background:transparent; border-left-color:#000; overflow-x:visible; }
@@ -406,7 +428,7 @@
 
     /* keep rows, steps and figures from splitting across pages */
     .sechead{ break-after:avoid; }
-    ol.steps li,figure,.hito,table.simple tr{ break-inside:avoid; }
+    ol.steps li,figure,.hito,.aviso,table.simple tr{ break-inside:avoid; }
 
     /* ── page numbers ──────────────────────────────────────────────────
        Two pieces of CSS paged media, and **no browser implements either**:
@@ -478,6 +500,7 @@
       --panel:#FFFFFF;
       --mint:#00614B;   --mint-rgb:0,97,75;
       --gold:#7A5400;   --gold-rgb:122,84,0;
+      --warn:#A33310;   --warn-rgb:163,51,16;
     }
     /* diagram shapes that carry their colour as an attribute, not a class —
        the same list the print block has to restate, for the same reason */

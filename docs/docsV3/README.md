@@ -143,9 +143,11 @@ printed folio equal to the page number a PDF reader shows.
 
 The button above the masthead switches themes; the choice is remembered in
 `localStorage`, and until one is made the page follows the system setting. The
-palette is five custom properties on `:root` — ground, ink, panel, mint, gold —
-and the light theme only redefines those, so nothing else in the stylesheet
-knows a theme exists.
+palette is six custom properties on `:root` — ground, ink, panel, mint, gold, and
+`warn` for the warning box alone — and the light theme only redefines those, so
+nothing else in the stylesheet knows a theme exists. The first five are the
+document's look and every rule draws on them; the sixth is deliberately spent on
+one construct, because a warning wearing the gold would be read as a milestone.
 
 **It stops at the screen.** The light theme lives inside `@media screen`, and
 the print block restates every colour itself, as it already did for docsV2's
@@ -214,6 +216,7 @@ letter and number are not repeated here — they live in `manifest.json`.
 | `1. text` | the same row, its number in mint where the id would be, and no anchor |
 | `- [ ] E0.1 — text` | the same, with a build checkbox in front |
 | `!!! APPLE II MILESTONE — …` | the gold milestone banner |
+| `!! AVISO — …` + the lines under it | the warning box — see below |
 | `\| Term \| Meaning \|` + `\|---\|---\|` | `table.simple` |
 | `![Fig. 1 — caption](figures/f.svg)` | the figure, its SVG inlined so the stylesheet reaches it |
 | `LEGEND: …` after a figure | the small trace legend under the caption |
@@ -227,6 +230,33 @@ letter and number are not repeated here — they live in `manifest.json`.
 Checkbox states: `[ ]` pending · `[x]` done · `[~]` in progress · `[?]` optional.
 The item id is free text — `A.1`, `E0.1`, `D07`, `+` — and its anchor is that id
 lowercased with the dots dropped, which is what every cross-reference points at.
+
+### The warning box
+
+`!!!` is a milestone and `NOTE:` is an aside; neither is a warning, and the one
+the sheets actually need — the step that can cost the reader money — was coming
+out as the dimmest line on the page. `!!` is the third thing: a framed box on a
+tinted ground with a thick rule down its left edge, in a red-amber that belongs
+to it alone.
+
+```markdown
+!! AVISO — this step can cost you money.
+Free-tier limits change, and a mistyped shape can leave a billable instance
+running. Check the shape before you confirm it.
+  A second paragraph inside the box, indented like any continuation line.
+```
+
+The `!!` line is the box's heading — bold up to the ` — `, plain after it, the
+way a `##` sub-heading reads — and the lines under it are its body, **through
+the next blank line**. Unindented lines run together into one paragraph; an
+indented line opens another, exactly as it does under an item — with no blank
+line before it, since a blank line is what closes the box. The inline pass
+applies throughout, so links, `code` and chips work inside. A `!!` line on its
+own, with no body under it, is a legal one-line warning.
+
+On paper the ground goes and the left rule stays, darkened — the same treatment
+the chips and the figure traces get, since the frame is what carries the meaning
+once the colour is gone.
 
 ### Code listings
 
