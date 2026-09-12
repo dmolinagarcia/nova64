@@ -3,53 +3,21 @@
   "documentName": "Synthesis document — index and content outline",
   "documentShortName": "Synthesis document",
   "parts": [
-    {
-      "id": "introduction",
-      "num": "1",
-      "name": "Introduction",
-      "note": ""
-    },
-    {
-      "id": "hardware",
-      "num": "2",
-      "name": "Hardware",
-      "note": ""
-    },
-    {
-      "id": "software",
-      "num": "3",
-      "name": "Software",
-      "note": ""
-    },
-    {
-      "id": "project",
-      "num": "4",
-      "name": "Project",
-      "note": ""
-    },
-    {
-      "id": "specifications",
-      "num": "5",
-      "name": "Specifications",
-      "note": ""
-    },
-    {
-      "id": "appendices",
-      "num": "6",
-      "name": "Appendices",
-      "note": ""
-    },
-    {
-      "id": "ai",
-      "num": "7",
-      "name": "AI",
+    { "id": "introduction",         "num": "1",     "name": "Introduction",     "note": ""      },
+    { "id": "hardware",             "num": "2",     "name": "Hardware",         "note": ""      },
+    { "id": "software",             "num": "3",     "name": "Software",         "note": ""      },
+    { "id": "emulator",             "num": "4",     "name": "Emulator",         "note": ""      },
+    { "id": "project",              "num": "5",     "name": "Project",          "note": ""      },
+    { "id": "specifications",       "num": "6",     "name": "Specifications",   "note": ""      },
+    { "id": "appendices",           "num": "7",     "name": "Appendices",       "note": ""      },
+    { "id": "ai",                   "num": "8",     "name": "AI",               
       "note": "Assembled by AI and not yet reviewed. Every sheet starts here and moves to its part once it has been read."
     }
   ],
   "footer": {
     "referenceIndex": "{parts} parts · {areas} areas · {sheets} sheets · Figs. 1–13",
     "rules": "All 3.3V · hand-solderable · open toolchain",
-    "rev": "DOC v0.2.3 · ARCHITECTURE REV A · POWER REV C · EC REV B · CPU REV A · MEMORY REV A · FS REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · EMU REV B · PROTOTYPE REV A · SEP 2026"
+    "rev": "DOC v0.2.4 · ARCHITECTURE REV A · POWER REV C · EC REV C · CPU REV A · MEMORY REV A · FS REV A · NEON REV B · AUDIO REV A · OS REV A · GUI REV A · EMU REV B · PROTOTYPE REV A · SEP 2026"
   },
   "sheets": [
     {
@@ -65,6 +33,13 @@
       "part": "introduction",
       "nav": "Vision and philosophy",
       "index": "Project vision and philosophy"
+    },
+    {
+      "file": "sc_w6",
+      "letter": "W6",
+      "part": "emulator",
+      "nav": "The development environment",
+      "index": "The development environment"
     },
     {
       "file": "sc_x1",

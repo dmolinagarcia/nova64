@@ -1,19 +1,23 @@
-# Self-Hosted Codespaces on OCI Always Free — Complete Build Runbook
-> the development environment · built from a browser · and extracted from this sheet
+# Creating and configuring the development environment
+> Complelety browser based. Self-contained setup scripts
 
-**Supersedes:** `dev-environment-runbook.md`, `oci-remote-desktop-guide.md`, `devbox-oci-setup.sh` and
-`devbox-desktop-setup.sh`. This document is self-contained: every script, template and configuration file
-is reproduced here in full and can be extracted automatically (section 4). What changed relative to those
-sources, and why, is listed in Appendix D.
+This document will guide you through all the needed steps to setup a web-based development environment where you will be able to create your own noVA64-emu, and, as the emulator itself is web based, you will be able to host it too. The whole premise of this document is for the development environment to be 100% free.
+
+!! WARNING! As with everything cloud-based, there are some key steps where, if not executed properly, you may incur into cost. 
+This steps will be clearly pointed out, but, please be advised, I cannot take responsability for any expenses you may generate. Mistakes happen, cloud providers contracts change over time, and what is valid today, may not me valid tomorrow.
+
+The scripts to setup the environment are self-contained in this document: every script, template and configuration file is reproduced here in full and can be extracted automatically (section 4). 
 
 - **Host:** OCI Always Free `VM.Standard.A1.Flex`, 2 OCPU / 12 GB, Ubuntu 24.04 aarch64, tenancy home region
-- **Access model:** browser-only, through two independent doors
+- **Access model:** browser-only, through two independent entry points.
 - **Door A** — `code tunnel` → `https://vscode.dev/tunnel/<name>` (outbound 443 only)
 - **Door B** — `code-server` behind Caddy → `https://<name>.<BASE_DOMAIN>` (inbound 443)
 - **Environment model:** one container per project, defined by `devcontainer.json`
 - **Management:** a single `dev` command wrapping the whole lifecycle
 - **Administration:** OCI Cloud Shell, so even the setup needs nothing but a browser
 - **Optional:** an XFCE desktop in the browser (Guacamole), published on the same edge — section 12
+
+**Door B** requires a domain you can manage, and it is provided in case your network blocks access to *vscode.dev*
 
 ---
 
@@ -40,7 +44,7 @@ sources, and why, is listed in Appendix D.
 - Appendix A — devbox-oci-setup.sh
 - Appendix B — devbox-host-setup.sh
 - Appendix C — devbox-desktop-setup.sh
-- Appendix D — Changes from the source documents
+- Appendix D — devbox-oci-teardown.sh
 
 ---
 
@@ -49,7 +53,7 @@ sources, and why, is listed in Appendix D.
 Access paths:
 
 ```
-door A   browser ── HTTPS 443 ──► vscode.dev relay ◄── outbound 443 ── code tunnel ─────┐
+door A   browser ── HTTPS 443 ──► vscode.dev relay ◄── outbound 443 ── code tunnel ────┐
 door B   browser ── HTTPS 443 ──► devenv-caddy ──► code-server :8080 ──────────────────┴─ project container
 desktop  browser ── HTTPS 443 ──► devenv-caddy ──► guacamole ──► guacd ──► xrdp ──► XFCE   (optional)
 admin    OCI Cloud Shell ── SSH 22, key only ──► instance
@@ -78,109 +82,78 @@ OCI instance "devbox" — VM.Standard.A1.Flex, 2 OCPU / 12 GB, Ubuntu 24.04 aarc
 └── /srv/dev/                      host-side state, scripts and configuration
 ```
 
-Both doors serve the same container, the same files and the same processes. They differ only in transport
-and in which extension marketplace is reachable: door A reaches the official Marketplace (Copilot and
-Microsoft-proprietary extensions work), door B reaches Open VSX only.
+Both doors serve the same container, the same files and the same processes. They differ only in transport and in which extension marketplace is reachable: door A reaches the official Marketplace (Copilot and Microsoft-proprietary extensions work), door B reaches Open VSX only.
 
-Running both is deliberate. The failure this environment exists to solve is a restrictive network, and the
-two doors fail independently: proxies with TLS inspection sometimes block `vscode.dev` or break its
-WebSocket upgrade, while a plain HTTPS request to your own domain still passes.
+Running both is deliberate. The failure this environment exists to solve is a restrictive network, and the two doors fail independently: proxies with TLS inspection sometimes block `vscode.dev` or break its WebSocket upgrade, while a plain HTTPS request to your own domain still passes.
 
-Inbound, the instance accepts 22 (SSH, key only), 80 (ACME challenge and redirects) and 443. Everything else
-is rejected by the image's host firewall, and the OCI security list opens nothing more. code-server's port
-8080 is never published, and the desktop's xrdp and Guacamole ports are not reachable from outside.
+Inbound, the instance accepts 22 (SSH, key only), 80 (ACME challenge and redirects) and 443. Everything else is rejected by the image's host firewall, and the OCI security list opens nothing more. code-server's port 8080 is never published, and the desktop's xrdp and Guacamole ports are not reachable from outside.
 
 The build is three scripts plus one management command, all contained in this document:
 
 | Piece | Runs on | Does |
 |---|---|---|
-| `devbox-oci-setup.sh` (Appendix A) | Cloud Shell | compartment, network, security list, SSH key, instance |
+| `devbox-oci-setup.sh` (Appendix A) | Cloud Shell | compartment, network, security list, SSH key, instance, reserved IP |
 | `devbox-host-setup.sh` (Appendix B) | the instance | Docker, Dev Container CLI, swap, `/srv/dev`, Git key, fail2ban |
 | `dev` (section 18.8) | the instance | project lifecycle: add, build, update, login, status, backup |
 | `devbox-desktop-setup.sh` (Appendix C) | the instance, optional | XFCE, xrdp and Guacamole behind the same edge |
+| `devbox-oci-teardown.sh` (Appendix D) | Cloud Shell | deletes everything Appendix A created, in reverse order |
 
 All of them are idempotent and safe to re-run.
+
+Although this build is aimed at noVa64-emu development, it is possible to start new containers within your OCI instance to host other project but, keep in mind, resources in the server are limited and no more than one container can run at the same time.
+
+!! You can choose to create an instance with more resources, but anything above the allocations defined in this document will exceed OCI Always-Free limits, and incur in costs.
 
 ---
 
 ## 2. Why the editor runs inside the container
 
-The Dev Containers extension cannot be installed when connecting to a remote host from `vscode.dev` in a
-browser. It works from desktop VS Code against the same host, but not from the web client. The
-"browser → host → container" path that GitHub Codespaces appears to offer is therefore not reproducible from
-a browser.
+The Dev Containers extension cannot be installed when connecting to a remote host from `vscode.dev` in a browser. It works from desktop VS Code against the same host, but not from the web client. The "browser → host → container" path that GitHub Codespaces appears to offer is therefore not reproducible from a browser.
 
-The design consequence is structural: **the editor server runs inside the project container**, and the
-browser connects directly to it. This is what Codespaces does internally. `devcontainer.json` is still the
-source of truth for the image, but it is used at *build* time only — never at connect time.
+The design consequence is structural: **the editor server runs inside the project container**, and the browser connects directly to it. This is what Codespaces does internally. `devcontainer.json` is still the source of truth for the image, but it is used at *build* time only — never at connect time.
 
 ---
 
 ## 3. Constraints worth knowing before you start
 
-**The Ampere A1 free allowance was halved.** Oracle reduced it from 4 OCPUs / 24 GB to 2 OCPUs / 12 GB
-(1,500 OCPU-hours and 9,000 GB-hours per month) effective 15 June 2026, without a public announcement.
-Free-tier accounts were emailed that instances above the new limit would be disabled from 18 August 2026.
-Reports on whether Pay As You Go accounts kept the old allocation contradict each other. Size the instance
+**This document won't guide you through creating your Oracle OCI account.** As cloud providers change their interfaces too often, these instructions could become obsolete or incorrect too soon. Goto [cloud.oracle.com](https://cloud.oracle.com) and follow the instructions there. Even though we will be using the Always-Free tier, you still need a valid credit card to sign up.
+
+**The Ampere A1 free allowance was halved.** Oracle reduced it from 4 OCPUs / 24 GB to 2 OCPUs / 12 GB (1,500 OCPU-hours and 9,000 GB-hours per month) effective 15 June 2026. Free-tier accounts were emailed that instances above the new limit would be disabled from 18 August 2026. Reports on whether Pay As You Go accounts kept the old allocation contradict each other. Size the instance
 at 2 / 12; the provisioning script checks the real quota before launching.
 
-**Always Free resources only exist in your home region.** That region was fixed at signup and cannot be
-changed. The provisioning script defaults to `eu-frankfurt-1` (roughly 30–40 ms from Madrid) and refuses to
-run against any region other than the tenancy's home region. Frankfurt has three availability domains, which
-helps with capacity; most regions have only one.
+**Always Free resources only exist in your home region.** That region is selected during signup and cannot be changed. The provisioning script defaults to `eu-frankfurt-1` and will fail to execute against any region other than the tenancy's home region. Frankfurt has three availability domains, which helps with capacity; most regions have only one.
 
-**A1 capacity is frequently exhausted.** `Out of host capacity` on instance launch is normal, not a
-misconfiguration. The provisioning script rotates through all availability domains and retries. Cloud Shell
-sessions time out after 20 minutes without keyboard activity and last 24 hours at most: for a long capacity
-fight, keep the session active or run the script from a machine that stays on.
+**A1 capacity is frequently exhausted.** `Out of host capacity` on instance launch is normal, not a misconfiguration. The provisioning script rotates through all availability domains and retries. Cloud Shell sessions time out after 20 minutes without keyboard activity and last 24 hours at most: for a long capacity fight, keep the session active or run the script from a machine that stays on.
 
-**Idle instances can be reclaimed on Free Tier accounts.** Oracle's Always Free documentation lets it
-reclaim Always Free compute instances that stay idle — low CPU, network and memory utilisation — over a
-7-day window. A development box idles most of the week. Oracle's own notice states that converting the
-account to Pay As You Go prevents this, and Always Free resources stay free after the upgrade. Recommended,
-together with the budget alert in section 5.
+**Idle instances can be reclaimed on Free Tier accounts.** Oracle's Always Free documentation lets it reclaim Always Free compute instances that stay idle — low CPU, network and memory utilisation — over a 7-day window. A development box idles most of the week. Oracle's own notice states that converting the account to Pay As You Go prevents this, and Always Free resources stay free after the upgrade. Recommended, together with the budget alert in section 5.
 
-**The host is ARM64.** Everything in this runbook is architecture-aware, and the open-source toolchains in
-Debian's archive (GCC, Yosys / nextpnr / IceStorm, cc65, KiCad and many more) are built for arm64. Vendor
-tools shipped only as x86-64 binaries do not run natively; legacy Xilinx ISE (Spartan-6) is the obvious
-example. See section 14.
+!! WARNING! Switching to a PAYG account will keep your instances running but, if you exceed the Free-Tier service limits, you will be charged.
 
-**Do not use ufw.** Oracle's Ubuntu images ship iptables rules in `/etc/iptables/rules.v4` that allow SSH,
-reject everything else, and keep the instance's volumes reachable. Oracle warns that enabling ufw can leave
-the instance unable to boot. This runbook never touches ufw: Docker publishes Caddy's ports through the
-`FORWARD` chain it manages, and the single host rule the optional desktop needs is added to `rules.v4`
-directly.
+**The host is ARM64.** Everything in this runbook is architecture-aware, and the open-source toolchains in Debian's archive (GCC, Yosys / nextpnr / IceStorm, cc65, KiCad and many more) are built for arm64. Vendor tools shipped only as x86-64 binaries do not run natively.
 
-**Door B needs a domain you own.** Each project gets its own hostname under a wildcard DNS record. Free
-dynamic DNS providers are a poor fit: FreeDNS (afraid.org) shared domains are not on the Public Suffix List —
-inclusion requests must come from the domain registrant, and the proposals never progressed — and Let's
-Encrypt counts issuance limits per registered domain, so every user of a shared domain draws from the same
-quota and `too many certificates already issued` is common. Without a domain, door A still works on its own.
+**Do not use ufw (Uncomplicated FireWall).** Oracle's Ubuntu images ship iptables rules in `/etc/iptables/rules.v4` that allow SSH, reject everything else, and keep the instance's volumes reachable. Oracle warns that enabling ufw can leave the instance unable to boot. This runbook never touches ufw: Docker publishes Caddy's ports through the `FORWARD` chain it manages, and the single host rule the optional desktop needs is added to `rules.v4` directly.
 
-**Bare-IP HTTPS is not used.** The TLS specification does not permit address literals in the Server Name
-Indication extension, so a browser opening `https://<ip>` sends no SNI at all; Caddy selects certificates by
-SNI, and the handshake fails with `ERR_SSL_PROTOCOL_ERROR`. The source desktop guide worked around this with
-`default_sni` plus either Caddy's internal CA or a short-lived Let's Encrypt IP certificate (generally
-available since 15 January 2026, about 160 hours of validity). With a domain none of that is needed: every
-hostname, the desktop included, gets an ordinary certificate automatically.
+**Door B needs a domain you own.** Each project gets its own hostname under a wildcard DNS record. Free dynamic DNS providers are a poor fit: FreeDNS (afraid.org) shared domains are not on the Public Suffix List — inclusion requests must come from the domain registrant, and the proposals never progressed — and Let's Encrypt counts issuance limits per registered domain, so every user of a shared domain draws from the same quota and `too many certificates already issued` is common. Without a domain, door A still works on its own.
+
+!! WARNING! Buying your own domain costs money. Not a lot, but money anyhow. 
+
+**Bare-IP HTTPS is not used.** The TLS specification does not permit address literals in the Server Name Indication extension, so a browser opening `https://<ip>` sends no SNI at all; Caddy selects certificates by SNI, and the handshake fails with `ERR_SSL_PROTOCOL_ERROR`. The source desktop guide worked around this with `default_sni` plus either Caddy's internal CA or a short-lived Let's Encrypt IP certificate (generally available since 15 January 2026, about 160 hours of validity). With a domain none of that is needed: every hostname, the desktop included, gets an ordinary certificate automatically.
 
 ---
 
 ## 4. How to use this document
 
-Every file in this runbook sits in a fenced code block preceded by a hidden marker naming its path (an HTML
-comment, visible in the raw Markdown). The extractor below writes each block to `~/devbox-kit/<path>` byte
-for byte and marks scripts executable. It avoids copying long scripts through a browser terminal, which is
-exactly where tabs, long lines and heredocs get mangled.
+Everyfile that you need to run is contained in this runbook. Large scripts have some hidden marker before the actual contents that instruct the extractor to create that file. Files will be created within your Cloud Shell envinronment under `~/devbox-kit/<path>` with proper permissions set. This procedure avoids the need to copy logn scripts, which could potentially introduce some hard to debug errors.
+
+Smaller scripts can (and will) be copy/pasted from this document manually.
 
 1. Open Cloud Shell (OCI Console → Developer tools → Cloud Shell) and fetch this sheet, which is the file the extractor reads:
 
 ~~~bash
 curl -fsSL -o devbox-oci-runbook.md \
-  https://raw.githubusercontent.com/dmolinagarcia/nova64/main/docs/docsV3/content/sec_ai_em0.md
+  https://raw.githubusercontent.com/dmolinagarcia/nova64/main/docs/docsV3/content/sc_w6.md
 ~~~
 
-Cloud Shell's Upload option does the same if you already have the file, and so does any Linux or macOS machine.
 2. Run, in the directory holding the file:
 
 ~~~bash
@@ -204,13 +177,14 @@ body { if (++n == 1 && /^#!/) shebang = 1; print > out }
 ' devbox-oci-runbook.md
 ~~~
 
-3. You should get eleven files:
+3. You should get twelve files:
 
 ```
 devbox-kit/
 ├── devbox-oci-setup.sh            Appendix A — run in Cloud Shell
 ├── devbox-host-setup.sh           Appendix B — run on the instance
 ├── devbox-desktop-setup.sh        Appendix C — optional, run on the instance
+├── devbox-oci-teardown.sh         Appendix D — run in Cloud Shell to destroy it all
 └── srv/dev/                       section 18 — installed into /srv/dev by Appendix B
     ├── config.env
     ├── compose.base.yml
@@ -222,8 +196,7 @@ devbox-kit/
     └── bin/dev
 ```
 
-If you edit a file inside this document, keep its marker line directly above its code block. Re-running the
-extractor overwrites the kit, never anything under `/srv/dev`.
+Re-running the extractor overwrites the kit, never anything under `/srv/dev`.
 
 ---
 
@@ -236,32 +209,19 @@ extractor overwrites the kit, never anything under `/srv/dev`.
 5. **A domain you control**, with DNS you can edit. Section 7 creates one wildcard record. If the domain publishes CAA records, they must allow `letsencrypt.org`.
 6. **A GitHub account.** Door A signs in with it, and the devbox's Git key is added to it in section 8.
 
-The scripts fix these names: compartment `devbox`, VCN `vcn-devbox`, instance `devbox`. Project names become
-tunnel names and hostnames: lowercase letters, digits and hyphens, at most 20 characters.
-
-Optional quota check before starting (the script repeats it):
-
-```bash
-oci limits resource-availability get \
-  --service-name compute \
-  --limit-name standard-a1-core-count \
-  --compartment-id <tenancy-ocid> \
-  --availability-domain <ad-name>
-```
+The scripts fix these names: compartment `devbox`, VCN `vcn-devbox`, instance `devbox`. Project names become tunnel names and hostnames: lowercase letters, digits and hyphens, at most 20 characters.
 
 ---
 
 ## 6. Phase 1 — Provision the OCI infrastructure
 
-From Cloud Shell, after section 4:
+Make sure you have extracted the scripts as explained in section 4. Then, from Cloud Shell:
 
 ```bash
 bash ~/devbox-kit/devbox-oci-setup.sh
 ```
 
-It creates, in order: the `devbox` compartment, VCN `vcn-devbox` (10.0.0.0/16), an internet gateway, a
-default route, a public subnet (10.0.0.0/24), ingress rules for TCP 80 and 443 on the default security list,
-an SSH keypair (`~/.ssh/oci_devbox`) and the `devbox` instance.
+It creates, in this order: the `devbox` compartment, VCN `vcn-devbox` (10.0.0.0/16), an internet gateway, a default route, a public subnet (10.0.0.0/24), ingress rules for TCP 80 and 443 on the default security list, an SSH keypair (`~/.ssh/oci_devbox`), the `devbox` instance, and the reserved public IP `devbox-public-ip` assigned to it.
 
 Notable behaviours:
 
@@ -270,6 +230,8 @@ Notable behaviours:
 - On `OutOfHostCapacity` it rotates through all availability domains and retries every 60 seconds. On any other error it stops and prints the message, rather than hammering the API indefinitely.
 - Ingress for 80 and 443 is added only if missing, and it is safe to add before anything listens: the image's host firewall rejects everything except SSH until Docker publishes Caddy. Port 80 stays open to `0.0.0.0/0` because ACME validation comes from many addresses; 443 as well, because door B must be reachable from every network you work from. `OPEN_WEB=false` leaves the security list alone.
 - The boot volume is 100 GB with default VPU. Size is free within the 200 GB block storage allowance; raising the performance tier is not.
+- **The instance is launched with no public IP at all**, and a reserved one is assigned to its primary private IP immediately afterwards (section 7 explains why). The reserved IP is looked up by name like everything else, so a re-run reuses it: it is created on the first run, re-assigned if it was left unassigned — after a teardown, or after the instance was rebuilt — and left alone when it is already in place.
+- A private IP holds at most one public IP. An instance created by an earlier version of this script already has an ephemeral address, so the script releases it before assigning the reserved one, and warns you that the address changes at that moment.
 - Resulting OCIDs and the public IP are written to `~/devbox.env`.
 
 When it finishes:
@@ -279,20 +241,18 @@ source ~/devbox.env
 ssh -i ~/.ssh/oci_devbox ubuntu@$IP      # or simply: devbox
 ```
 
-**Back up the SSH private key.** Download `~/.ssh/oci_devbox` (Cloud Shell's menu has a Download option) and
-keep it somewhere safe. It is the only credential that opens SSH on the instance, and Oracle removes Cloud
-Shell home directories after a long period without use.
+**Back up the SSH private key.** Download `~/.ssh/oci_devbox` (Cloud Shell's menu has a Download option) and keep it somewhere safe. It is the only credential that opens SSH on the instance, and Oracle removes Cloud Shell home directories after a long period without use. Losing this file means losing access to your server!
 
-To manage the ingress rules by hand instead: Networking → Virtual Cloud Networks → `vcn-devbox` → Security
-Lists → Default → Add Ingress Rules.
+!! WARNING! I have just said it, but it is not enough. Download your private key. Keep it somewhere safe. If you lose it you will potentially lose your server. Keep it away from other people, they could impersonate you and access your server.
+
+To manage the ingress rules by hand instead: Networking → Virtual Cloud Networks → `vcn-devbox` → Security Lists → Default → Add Ingress Rules.
 
 | Protocol | Port | Source | Purpose |
 |---|---|---|---|
 | TCP | 80 | 0.0.0.0/0 | ACME HTTP challenge, HTTP → HTTPS redirects |
 | TCP | 443 | 0.0.0.0/0 | door B and the optional desktop |
 
-Your workstation's egress address and the instance's public address are different things. Get the former
-with `curl -s ifconfig.me` from the workstation, and the latter from the metadata service on the instance:
+Your workstation's egress address and the instance's public address are different things. Get the former with `curl -s ifconfig.me` from the workstation, and the latter from the metadata service on the instance:
 
 ```bash
 curl -s -H 'Authorization: Bearer Oracle' http://169.254.169.254/opc/v2/vnics/ | grep publicIp
@@ -302,25 +262,23 @@ curl -s -H 'Authorization: Bearer Oracle' http://169.254.169.254/opc/v2/vnics/ |
 
 ## 7. Phase 2 — Stable public IP and DNS
 
-The instance received an ephemeral public IP, which lives and dies with the instance. A reserved IP survives
-termination and can be attached to a replacement, so DNS never has to change. Switch before creating any DNS
-record: the address changes when you do.
+The address is already reserved: section 6 launched the instance with no public IP and assigned it a reserved one called `devbox-public-ip`. This matters because an ephemeral address lives and dies with the instance, while a reserved one survives termination and can be attached to a replacement — so the DNS record you are about to create keeps working when you rebuild the instance, and there is no manual swap to perform in the Console.
 
-1. **Reserve the IP.** Console → Compute → Instances → `devbox` → Attached VNICs → the primary VNIC → IPv4 Addresses → edit the primary private IP → Public IP type: **Reserved public IP** → create a new one (for example `devbox-ip`) → save. Oracle announced reserved public IPs as free of charge; the budget alert from section 5 is the backstop if that ever changes.
-2. **Refresh `~/devbox.env`.** Re-run the provisioning script; it reuses everything and rewrites the file with the new address:
+Only DNS is left.
+
+1. **Create the DNS record.** Choose the base domain for door B — this runbook uses `dev.example.com` — and create a wildcard A record pointing at the address the script printed:
 
    ```bash
-   bash ~/devbox-kit/devbox-oci-setup.sh && source ~/devbox.env && echo "$IP"
+   source ~/devbox.env && echo "$IP"
    ```
-
-3. **Create the DNS record.** Choose the base domain for door B — this runbook uses `dev.example.com` — and create a wildcard A record pointing at the reserved IP:
 
    ```
    *.dev.example.com.   300   IN   A   <reserved IP>
    ```
 
-Projects become `<project>.dev.example.com` and the optional desktop `desktop.dev.example.com`. A wildcard means `dev add` never needs a DNS step.
-4. **Verify before continuing.** Caddy requests certificates as soon as a site appears, and repeated failures count against Let's Encrypt's limits:
+   Projects become `<project>.dev.example.com` and the optional desktop `desktop.dev.example.com`. A wildcard means `dev add` never needs a DNS step.
+
+2. **Verify before continuing.** Caddy requests certificates as soon as a site appears, and repeated failures count against Let's Encrypt's limits:
 
    ```bash
    dig +short anything.dev.example.com      # must print the reserved IP
@@ -333,8 +291,26 @@ Projects become `<project>.dev.example.com` and the optional desktop `desktop.de
 Copy the kit to the instance and run the host script as `ubuntu`, not as root:
 
 ```bash
+source ./devbox.env
 scp -i ~/.ssh/oci_devbox -r ~/devbox-kit ubuntu@$IP:~/
 ssh -i ~/.ssh/oci_devbox ubuntu@$IP
+```
+
+Before running the deploy setup script, we need to amend sudo permisions. As ubuntu
+
+```bash
+sudo visudo -f /etc/sudoers.d/99-nopasswd-ubuntu
+```
+
+And add this content
+```
+ubuntu ALL=(ALL:ALL) NOPASSWD: ALL
+Defaults:ubuntu !authenticate
+```
+
+Exit your server session and login again. Then, run the setup script
+
+```bash
 bash ~/devbox-kit/devbox-host-setup.sh
 ```
 
@@ -351,13 +327,7 @@ What it does, in order (full script in Appendix B):
 9. Installs fail2ban with the `sshd` jail, since port 22 is open to the internet.
 10. Confirms ufw is inactive and leaves the host firewall unchanged.
 
-**Why the host firewall is left alone.** Oracle's Ubuntu images load `/etc/iptables/rules.v4`: SSH allowed,
-then a final `REJECT` on both `INPUT` and `FORWARD`. Traffic to a port that Docker publishes is DNAT-ed in
-`PREROUTING` and crosses `FORWARD`, where Docker inserts its own accept rules ahead of that `REJECT`; it never
-touches `INPUT`. Caddy's 80 and 443 therefore work without any host rule, and `INPUT` keeps protecting
-everything else. Two things to avoid on this host: ufw (section 3), and `iptables-restore` or
-`netfilter-persistent reload`/`save` while Docker runs. A restore flushes Docker's chains and breaks container
-networking until Docker restarts; a save freezes Docker's and fail2ban's runtime rules into the file.
+**Why the host firewall is left alone.** Oracle's Ubuntu images load `/etc/iptables/rules.v4`: SSH allowed, then a final `REJECT` on both `INPUT` and `FORWARD`. Traffic to a port that Docker publishes is DNAT-ed in `PREROUTING` and crosses `FORWARD`, where Docker inserts its own accept rules ahead of that `REJECT`; it never touches `INPUT`. Caddy's 80 and 443 therefore work without any host rule, and `INPUT` keeps protecting everything else. Two things to avoid on this host: ufw (section 3), and `iptables-restore` or `netfilter-persistent reload`/`save` while Docker runs. A restore flushes Docker's chains and breaks container networking until Docker restarts; a save freezes Docker's and fail2ban's runtime rules into the file.
 
 Then finish by hand:
 
@@ -397,9 +367,7 @@ Final shape of `/srv/dev` once everything is built:
 └── backups/
 ```
 
-Only `projects/` holds real work, and it is bind-mounted rather than copied so that an image rebuild never
-touches source. Git remotes remain the actual backup; the bind mount is convenience, not durability. ACME
-certificates live in the `caddy-data` Docker volume.
+Only `projects/` holds real work, and it is bind-mounted rather than copied so that an image rebuild never touches source. Git remotes remain the actual backup; the bind mount is convenience, not durability. ACME certificates live in the `caddy-data` Docker volume.
 
 ---
 
@@ -418,45 +386,78 @@ certificates live in the `caddy-data` Docker volume.
    docker logs devenv-caddy
    ```
 
-Caddy starts with no sites configured, which is expected; it obtains certificates lazily as sites appear.
-`dev up` refuses to start while `BASE_DOMAIN` or `ACME_EMAIL` still hold placeholders: an empty email makes
-the Caddyfile unparseable, and Caddy would restart-loop.
+Caddy starts with no sites configured, which is expected; it obtains certificates lazily as sites appear. `dev up` refuses to start while `BASE_DOMAIN` or `ACME_EMAIL` still hold placeholders: an empty email makes the Caddyfile unparseable, and Caddy would restart-loop.
 
 ### Hardening door B
 
-In descending order of value. Do at least the first two before relying on door B from untrusted networks.
+**What you already have.** Every project gets its own long random password, with no action on your part:
+`dev add` generates one with `openssl rand -base64 24`, writes it to `/srv/dev/secrets/<project>.password`
+under `umask 077`, and the compose fragment mounts it into the container as the Docker secret
+`code_server_password`. The entrypoint reads it and starts code-server with `--auth password`. The password is
+printed when the project is created; `cat /srv/dev/secrets/<project>.password` shows it again later, and
+writing a new value into that file followed by `dev restart <project>` rotates it.
 
-1. **A long random password per project.** `dev add` generates one automatically.
-2. **An identity layer in front**, so the code-server login page is never the outermost defence. Cloudflare Access is the least work; Authelia if you want it self-hosted; Caddy `basic_auth` as an absolute minimum:
+That file is the whole of door B's authentication. If it is missing when the container starts, the entrypoint
+prints `WARNING: no password secret found` and starts code-server with `--auth none` — an editor with a
+terminal, published on your domain, with no login at all. It is worth grepping for after any manual surgery on
+`/srv/dev/secrets`:
+
+```bash
+dev logs <project> | grep -i "no password secret"
+```
+
+**What to add**, in descending order of value. Do at least the first before relying on door B from untrusted
+networks.
+
+1. **An identity layer in front**, so the code-server login page is never the outermost defence. Cloudflare Access is the least work; Authelia if you want it self-hosted; Caddy `basic_auth` as an absolute minimum.
+
+   No project exists yet at this point in the runbook, and per-project site files are generated by `dev add`
+   from `templates/site.caddy.tpl` (section 18.6). So edit the **template**: every project created from now on
+   is protected at birth, and there is nothing to remember later.
 
    ```bash
-   docker exec -it devenv-caddy caddy hash-password      # prompts, prints a bcrypt hash
-   nano /srv/dev/caddy/sites/nova64.caddy
-   dev reload
+   HASH="$(docker exec devenv-caddy caddy hash-password --plaintext 'your-password')"
+   echo "${#HASH}"        # must print 60; anything else means the hash is truncated
    ```
 
-   ```
-   nova64.dev.example.com {
+   ```bash
+   cat > /srv/dev/templates/site.caddy.tpl <<EOF
+   __NAME__.__BASE_DOMAIN__ {
    	encode zstd gzip
    	basic_auth {
-   		dani <bcrypt-hash-from-above>
+   		your-username ${HASH}
    	}
-   	reverse_proxy devenv-nova64:8080
+   	reverse_proxy devenv-__NAME__:8080
    }
+   EOF
    ```
 
-The browser then asks for these credentials before code-server asks for its own password. To protect every future project the same way, put the block in `templates/site.caddy.tpl` (section 18.6).
-3. **crowdsec or fail2ban reading the Caddy access log.** Enable Caddy's `log` directive first; it records no requests by default. With fail2ban, ban in Docker's `DOCKER-USER` chain as section 12 does, because this traffic never crosses `INPUT`.
-4. **No inbound ports at all.** If you can accept it operationally, replace Caddy with a Cloudflare Tunnel (`cloudflared`) so door B is also outbound-only. Same container, same code-server, nothing published on the VM.
+   The heredoc is deliberately **unquoted**, so `${HASH}` expands; the `$2a$14$` inside the hash is not
+   re-expanded, because the result of an expansion is not rescanned. Never paste a bcrypt hash by hand out of a
+   terminal — a wrapped line silently loses characters, Caddy loads the truncated hash without complaint, and
+   every login then fails with a 401 that looks exactly like a wrong password (section 16).
+
+   All projects share these credentials, which is the point: this layer identifies *you*, while the per-project
+   password identifies the project. The browser asks for these first, and code-server asks for its own
+   afterwards.
+
+   To protect a project that already exists, put the same `basic_auth` block into its
+   `/srv/dev/caddy/sites/<project>.caddy` and run `dev reload`. Do not create that file for a project you have
+   not added yet: `dev add` refuses to run when the hostname is already claimed by a site file, because two
+   blocks for one hostname make Caddy reject the whole configuration.
+
+2. **crowdsec or fail2ban reading the Caddy access log.** Enable Caddy's `log` directive first; it records no requests by default. With fail2ban, ban in Docker's `DOCKER-USER` chain as section 12 does, because this traffic never crosses `INPUT`.
+3. **No inbound ports at all.** If you can accept it operationally, replace Caddy with a Cloudflare Tunnel (`cloudflared`) so door B is also outbound-only. Same container, same code-server, nothing published on the VM.
 
 Never expose code-server on a published host port without TLS and authentication in front of it.
 
 ---
 
 ## 10. Phase 5 — First project and tunnel login
+We will now create the project container for noVa64.
 
 ```bash
-dev add nova64 git@github.com:youruser/nova64.git
+dev add nova64 git@github.com:dmolinagarcia/nova64.git
 ```
 
 This clones the repository, scaffolds `.devcontainer/` if the repo has none, generates the password, the
@@ -467,6 +468,17 @@ If the repository already carries a `devcontainer.json`, it is used unchanged �
 two editor servers and the pre-created home directories from `Dockerfile.tpl` (section 18.7), or neither door
 will start. Add those blocks to the project's own Dockerfile, keeping them architecture-aware as written: the
 devbox is ARM64, GitHub Codespaces is x86-64, and the same file has to build on both.
+
+A repository that names a ready-made image with `"image":` rather than building one almost certainly needs
+converting to `"build": {"dockerfile": "Dockerfile"}`, for two independent reasons: the image has no reason to
+carry code-server or the VS Code CLI, and it may not be published for arm64 at all. Microsoft's
+`devcontainers/universal`, the Codespaces default, is amd64-only and fails the build outright with
+`no matching manifest for linux/arm64/v8`. `devcontainers/base:bookworm` — what `Dockerfile.tpl` builds on —
+is multi-arch. Check before assuming:
+
+```bash
+docker manifest inspect <image> | grep architecture | sort -u
+```
 
 The first build on two Ampere cores takes several minutes. After that the image is cached, and a container
 start takes seconds. Rebuild after any change to `devcontainer.json` or the Dockerfile — this is your
@@ -486,8 +498,39 @@ The logs print a device code. Open `https://github.com/login/device`, enter it, 
 tunnel reports it is connected, press Ctrl-C.
 
 The tunnel CLI's data directory is pinned to the project's `-cli` volume, so this happens **once per
-project**, not on every rebuild. Tunnel names are unique per GitHub account — if a name is rejected, release
-it with `code tunnel unregister --name <name>` from any machine signed in to that account.
+project**, not on every rebuild.
+
+Tunnel names are unique per GitHub account, and a registration belongs to the account, not to the machine —
+deleting the container, the volume or the whole instance does not release the name. There are two ways to
+release one, and only the second survives losing the host:
+
+```bash
+docker exec devenv-<project> code tunnel unregister     # from the container that holds it
+```
+
+`code tunnel unregister` takes no arguments: it removes the association of *the machine it runs on*, reading
+the registration from that machine's CLI data directory. Hence `docker exec` into the right container — there
+is no way to name a different tunnel from the command line.
+
+The second way works from anywhere and needs nothing of the original machine: open any VS Code client —
+desktop or `vscode.dev` — signed in with the same GitHub account, go to the **Remote Explorer** view, find the
+machine under Remote Tunnels, right-click it and choose **Unregister**. That same view is the only account-wide
+list there is; the CLI has no command that enumerates tunnels.
+
+To see which name a container holds, and whether it still holds one:
+
+```bash
+docker exec devenv-<project> code tunnel status
+# {"tunnel":null,"service_installed":false}   -> this container has no tunnel
+```
+
+Opening `https://vscode.dev/tunnel/<name>` also tells you whether a specific name is taken. Section 13 has a
+one-liner that reports the names held by every container on this host.
+
+Two service-side behaviours worth knowing, both from Microsoft's dev tunnels documentation: **an account holds
+at most 10 registered tunnels** — past that, creating one makes the CLI "pick a random unused tunnel and delete
+it" — and **an unused tunnel is deleted after 30 days of inactivity** by default. An orphaned name therefore
+frees itself eventually, but not on any schedule you would want to wait for.
 
 Then open:
 
@@ -786,6 +829,30 @@ dev down other-project       # dormant project: stop it, keep everything
 Reboots need no action: `restart: unless-stopped` plus an enabled Docker service brings everything back,
 tunnels included, with no re-authentication.
 
+### Which tunnel names are registered
+
+The CLI has no command that lists the tunnels on your account — `code tunnel` offers `status`, `rename` and
+`unregister`, all of them about the machine they run on. Every tunnel in this environment is registered from a
+project container, so asking each container is the complete answer for this host:
+
+```bash
+for c in $(docker ps -a --format '{{.Names}}' | grep '^devenv-' | grep -v '^devenv-caddy$'); do
+	printf '%-24s %s\n' "$c" "$(docker exec "$c" code tunnel status 2>/dev/null || echo 'not running')"
+done
+```
+
+`{"tunnel":null,...}` means that container holds no name. A container that is not running cannot be asked;
+start it, or read the registration straight off its volume:
+
+```bash
+docker run --rm -v devenv_<project>-cli:/d alpine cat /d/code_tunnel.json
+```
+
+For names left behind by containers that no longer exist — a rebuilt or torn-down devbox — the view is VS
+Code's Remote Explorer under Remote Tunnels, signed in with the same GitHub account, on the desktop app or
+`vscode.dev`. Right-click → **Unregister** releases a name from there, which is the only route once the host
+is gone. `dev remove` does it the tidy way, from inside the container, before deleting anything.
+
 From a browser-only location, administration goes through Cloud Shell: `source ~/devbox.env && devbox`.
 
 `DEFAULT_CPUS` and `DEFAULT_MEM` apply when a project is created. To change one existing project, edit
@@ -800,8 +867,23 @@ Anything that cannot be installed from a package repository — licensed compile
 proprietary SDKs — should not be baked into a public image or committed to the repository. Two workable
 patterns:
 
-1. **Mount the installer.** Add a read-only bind mount of a host directory holding the installer and licence file, and install from `postCreateCommand` on first create.
+1. **Mount the installer.** Add a read-only bind mount of a host directory holding the installer and licence file to the project's compose fragment, and run the installer once from a shell inside the container (`dev shell <project>`), or from a `RUN` line in the Dockerfile that consumes the mount at build time. **Not from `postCreateCommand`:** lifecycle hooks never run here (see below), so an installer wired to one silently never executes.
 2. **Private base image.** Build a private image once with the vendor tool inside, push it to a private registry, and have `devcontainer.json` use it as the `FROM`.
+
+**`devcontainer.json` is a build manifest here, not a lifecycle manifest.** `dev build` calls `devcontainer
+build`, which only produces an image; the container is then started by docker compose with the entrypoint from
+section 18.4. Everything the Dev Containers CLI would normally run at *connect* time is therefore ignored:
+
+| Ignored on the devbox | Where the equivalent lives |
+|---|---|
+| `postCreateCommand`, `postStartCommand`, `onCreateCommand`, `postAttachCommand` | a `RUN` line in the Dockerfile, or a command you run in `dev shell <project>` |
+| `forwardPorts`, `portsAttributes` | the editor's own port forwarding, once connected through either door |
+| `runArgs`, `mounts`, `containerEnv` | the project's `devenv.compose.yml` (section 18.5) |
+| `remoteUser` | honoured — it is baked into the image at build time |
+
+`features` and everything else that shapes the image work normally, which is the reason the Dev Containers CLI
+is used as the builder at all. The same `devcontainer.json` keeps working unchanged on GitHub Codespaces,
+where the ignored keys do take effect.
 
 **Architecture first.** The devbox is ARM64. Before planning around a vendor tool, confirm that it ships an
 aarch64 Linux build; many do not. Legacy Xilinx ISE, needed for Spartan-6 targets, is x86-64 only: it does not
@@ -854,6 +936,46 @@ budget alert is the backstop.
 Keep the budget alert from section 5, and keep the total A1 allocation at 2 OCPU / 12 GB. Oracle has changed
 the allowance without notice more than once.
 
+### Destroying the environment
+
+`devbox-oci-teardown.sh` (Appendix D) deletes what `devbox-oci-setup.sh` created, in reverse order: instance,
+boot volumes, reserved IP, subnet, route rules, internet gateway, the 80/443 ingress rules, VCN. It finds each resource by
+the same name the setup script looks up, so it removes what that script would have reused and leaves anything
+else alone — an object it did not create is reported at the end, never deleted.
+
+```bash
+DRY_RUN=true bash ~/devbox-kit/devbox-oci-teardown.sh    # inventory only, deletes nothing
+bash ~/devbox-kit/devbox-oci-teardown.sh                 # asks you to type the compartment name
+```
+
+Always look at the dry run first. **The boot volume goes with the instance**, and everything under `/srv/dev`
+with it: projects, secrets, the Git key, the ACME certificates. Push your work first, and `dev backup` and copy
+the tarball off the instance if you want the environment itself back.
+
+The reserved IP goes with everything else: the setup script creates it, so the teardown removes it, and the
+address is gone for good — a new one will not be the same. Two things are kept by default, because losing them
+costs more than leaving them, and one is worth keeping deliberately:
+
+| Default | Why | Change it with |
+|---|---|---|
+| the reserved IP is **deleted** | it is part of what Appendix A creates | `KEEP_RESERVED_IP=true` — the wildcard DNS record keeps resolving, and the next `devbox-oci-setup.sh` re-assigns that same address to the new instance |
+| the `devbox` compartment is kept | empty and free; re-running Appendix A reuses it | `DELETE_COMPARTMENT=true` |
+| `~/.ssh/oci_devbox`, `~/devbox.env` are kept | local files, not OCI resources | `DELETE_LOCAL=true` |
+
+`KEEP_RESERVED_IP=true` is the right choice when you are rebuilding rather than leaving: the address survives,
+so DNS needs no edit and no certificate has to be re-issued.
+
+Compartment deletion is asynchronous, takes minutes, and the compartment stays visible in `DELETED` state
+afterwards. It also fails while anything is still inside it — keeping the reserved IP is enough to block it, and
+the script warns you about that combination before it starts.
+
+Outside OCI, and outside the script's reach: the wildcard DNS record, the devbox key on your GitHub account,
+and the tunnel names, which belong to the GitHub account and survive the instance. Releasing them **before**
+the teardown is tidier — `dev remove` does it, and `code tunnel unregister` needs the container that holds the
+name — but nothing is lost if you forget: Remote Explorer → right-click the machine → Unregister works
+afterwards, from any VS Code client (section 10). Names left registered are what makes a rebuild reject the
+same project name (section 16).
+
 ---
 
 ## 16. Troubleshooting
@@ -867,11 +989,15 @@ Desktop-specific problems are covered in section 12.6.
 | Container restart-loops on first start | Named volumes root-owned | The `mkdir`/`chown` block in the Dockerfile (18.7) is missing |
 | Container exits: `unexpected value 'false' for '--random-name'` | Entrypoint from the old runbook | Use the entrypoint in 18.4 |
 | `exec format error` during a build or at start | An x86-64 binary in an ARM64 image, e.g. `cli-alpine-x64` | Use the architecture-aware blocks in 18.7 |
-| Tunnel name rejected | Name registered to the account, or longer than 20 characters | `code tunnel unregister --name <name>`; `dev add` enforces the length |
+| `dev add` / `dev build`: `no matching manifest for linux/arm64/v8` | The `devcontainer.json` names an amd64-only image, e.g. `devcontainers/universal` | Convert it to `"build": {"dockerfile": ...}` on a multi-arch base (section 10); `docker manifest inspect <image> \| grep architecture` |
+| `postCreateCommand` (or any lifecycle hook) never runs | Expected: the image is built by the Dev Containers CLI, but the container is started by compose | Move the work into the Dockerfile or `dev shell` (section 14) |
+| Tunnel name rejected | Name registered to the account (10 per account, kept even if the machine is gone), or longer than 20 characters | `docker exec devenv-<project> code tunnel unregister`, or Remote Explorer → right-click → Unregister (section 10); `dev add` enforces the length |
 | `dev up` or `dev add` stops with "set BASE_DOMAIN" / "set ACME_EMAIL" | Placeholders still in `config.env` | Edit `/srv/dev/config.env` |
 | Caddy restart-loops | Invalid Caddyfile or site file: empty email, duplicate hostname, typo | `docker logs devenv-caddy`; fix the file; `dev up` |
 | Caddy cannot obtain a certificate | DNS not pointing at the IP, 80/443 missing from the security list, or a CAA record | `dig +short <host>`; section 6 ingress table; `docker logs devenv-caddy` |
 | `ERR_SSL_PROTOCOL_ERROR` on `https://<ip>` | Expected: no certificate for a bare IP, and browsers send no SNI for IP literals | Use the hostname |
+| `basic_auth` asks for the password again and again | Truncated bcrypt hash: Caddy loads it happily and every login 401s. A malformed one would stop Caddy from starting, so a silent 401 means a plausible-but-wrong hash | `awk '$2 ~ /^\$2[aby]\$/ {print $1, length($2)}' /srv/dev/caddy/sites/<project>.caddy` must print 60; regenerate with the `HASH=` recipe in section 9. Test with `curl -u user:pass` — browsers resend cached bad credentials |
+| `dev add` stops: "hostname ... is already served by another site file" | A site file for that hostname exists, usually hand-written before the project was created | `rm /srv/dev/caddy/sites/<project>.caddy`, then `dev add`; put shared hardening in `templates/site.caddy.tpl` instead (section 9) |
 | `502` from door B | code-server not running, or container not on `devenv_edge` | `dev logs <name>`; `dev restart <name>` |
 | `dev add` failed during the build | Toolchain or Dockerfile error | Fix the Dockerfile, `dev build <name>`, then `dev reload` (the site was written before the build) |
 | Whole VM unresponsive during builds | Container limit too high | `dev status`; lower `cpus:` in the project's fragment, `dev up <name>` |
@@ -1371,6 +1497,19 @@ cmd_remove() {
 	require_project "$name"
 	read -rp "Remove project '${name}'? Source in projects/${name} is KEPT. [y/N] " a
 	[[ "$a" == "y" ]] || exit 0
+	# Release the tunnel name FIRST. 'code tunnel unregister' takes no name: it
+	# unregisters the machine it runs on, reading the registration from
+	# VSCODE_CLI_DATA_DIR -- which lives in the -cli volume deleted just below.
+	# Once that volume is gone the name stays registered to the GitHub account,
+	# counting against its limit of 10, until it is unregistered from the Remote
+	# Explorer of any VS Code client or expires after 30 days of inactivity.
+	if docker exec "devenv-${name}" code tunnel unregister >/dev/null 2>&1; then
+		info "tunnel name '${name}' released"
+	else
+		info "could not release the tunnel name here: the container is not running"
+		info "  from this host:  docker start devenv-${name} && docker exec devenv-${name} code tunnel unregister"
+		info "  or afterwards:   VS Code -> Remote Explorer -> right-click '${name}' -> Unregister"
+	fi
 	compose rm -sf "devenv-${name}" || true
 	docker volume rm "devenv_${name}-cli" "devenv_${name}-server" "devenv_${name}-codeserver" 2>/dev/null || true
 	rm -f "${DEV_ROOT}/caddy/sites/${name}.caddy" \
@@ -1378,7 +1517,6 @@ cmd_remove() {
 		"${DEV_ROOT}/secrets/${name}.password"
 	cmd_reload
 	info "removed '${name}'; source left at ${DEV_ROOT}/projects/${name}"
-	info "release the tunnel name with: code tunnel unregister --name ${name}"
 }
 
 cmd_backup() {
@@ -1451,6 +1589,7 @@ SSH key and instance. Section 6.
 # Creates the complete OCI (Always Free) infrastructure for the devbox:
 #   compartment -> VCN -> internet gateway -> route -> public subnet
 #   -> security list ingress (80/443) -> SSH key -> instance
+#   -> reserved public IP, assigned to the instance's primary private IP
 #
 # Region:  your tenancy HOME region (Always Free compute exists only there)
 # Shape:   VM.Standard.A1.Flex (Ampere ARM), 2 OCPU / 12 GB -> Always Free
@@ -1494,6 +1633,10 @@ BOOT_VOLUME_GB=100
 OS_NAME="Canonical Ubuntu"
 OS_VERSION="24.04"
 SSH_USER="ubuntu"                     # 'opc' if you switch to Oracle Linux
+
+# The instance is launched with no public IP and gets this reserved one instead.
+# A reserved IP survives termination, so the DNS record outlives the instance.
+RESERVED_IP_NAME="devbox-public-ip"
 
 SSH_KEY="${HOME}/.ssh/oci_devbox"
 ENV_FILE="${HOME}/devbox.env"
@@ -1753,7 +1896,7 @@ if [[ -f "${SSH_KEY}.pub" ]]; then
 else
   mkdir -p "$(dirname "$SSH_KEY")"
   chmod 700 "$(dirname "$SSH_KEY")"
-  ssh-keygen -t ed25519 -C "devbox-oci" -f "$SSH_KEY" -N "" >/dev/null
+  ssh-keygen -b 2048 -t rsa -C "devbox-oci" -f "$SSH_KEY" -N "" >/dev/null  
   ok "generated: ${SSH_KEY}"
 fi
 
@@ -1826,7 +1969,7 @@ else
       --shape-config "{\"ocpus\":${OCPUS},\"memoryInGBs\":${MEMORY_GB}}" \
       --image-id "$IMG" \
       --subnet-id "$SUBNET" \
-      --assign-public-ip true \
+      --assign-public-ip false \
       --boot-volume-size-in-gbs "$BOOT_VOLUME_GB" \
       --ssh-authorized-keys-file "${SSH_KEY}.pub" \
       --wait-for-state RUNNING \
@@ -1862,19 +2005,101 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 9. Public IP and final state
+# 9. Reserved public IP
+# ---------------------------------------------------------------------------
+#
+# The instance is launched without a public IP, and the reserved one is
+# assigned here. An ephemeral address is created and destroyed with the
+# instance; a reserved one survives it, so the wildcard DNS record from
+# section 7 keeps pointing at the right place when the instance is rebuilt.
+#
+# A private IP holds at most one public IP, so an instance that already has an
+# ephemeral address — anything created by a version of this script older than
+# the reserved-IP support — must give it up first. That is the same swap the
+# Console does under IP Administration, and the address changes when it happens.
+
+log "Primary VNIC"
+VNIC=""
+for _ in $(seq 1 20); do
+  VNIC="$(ociq oci compute instance list-vnics --instance-id "$INST" \
+           --query 'data[0].id' --raw-output)"
+  [[ -n "$VNIC" ]] && break
+  sleep 5
+done
+[[ -n "$VNIC" ]] || die "The instance is running but has no VNIC yet."
+
+PRIV_IP="$(ociq oci network private-ip list --vnic-id "$VNIC" \
+            --query 'data[?"is-primary"] | [0].id' --raw-output)"
+[[ -n "$PRIV_IP" ]] || die "Could not read the primary private IP of ${VNIC}."
+ok "primary private IP: ${PRIV_IP}"
+
+log "Reserved public IP '${RESERVED_IP_NAME}'"
+RIP="$(ociq oci network public-ip list --compartment-id "$C" --scope REGION --all \
+        --query "data[?\"display-name\"=='${RESERVED_IP_NAME}' && \"lifecycle-state\"!='TERMINATED'] | [0].id" \
+        --raw-output)"
+
+RIP_PRIV=""
+if [[ -n "$RIP" ]]; then
+  RIP_PRIV="$(ociq oci network public-ip get --public-ip-id "$RIP" \
+               --query 'data."private-ip-id"' --raw-output)"
+fi
+
+if [[ -n "$RIP" && "$RIP_PRIV" == "$PRIV_IP" ]]; then
+  ok "exists and is already assigned to this instance: ${RIP}"
+else
+  # Release the ephemeral address, if the instance still has one.
+  EPHEMERAL="$(ociq oci network vnic get --vnic-id "$VNIC" \
+                --query 'data."public-ip"' --raw-output)"
+  if [[ -n "$EPHEMERAL" ]]; then
+    INST_AD="$(ociq oci compute instance get --instance-id "$INST" \
+                --query 'data."availability-domain"' --raw-output)"
+    EPH_ID="$(ociq oci network public-ip list --compartment-id "$C" \
+               --scope AVAILABILITY_DOMAIN --availability-domain "$INST_AD" --all \
+               --query "data[?\"ip-address\"=='${EPHEMERAL}'] | [0].id" --raw-output)"
+    if [[ -n "$EPH_ID" ]]; then
+      warn "releasing the ephemeral address ${EPHEMERAL}: the instance's address changes now"
+      oci network public-ip delete --public-ip-id "$EPH_ID" --force \
+        --wait-for-state TERMINATED >/dev/null 2>&1 || true
+      ok "released"
+    fi
+  fi
+
+  if [[ -n "$RIP" ]]; then
+    if [[ -n "$RIP_PRIV" ]]; then
+      warn "'${RESERVED_IP_NAME}' is assigned to another private IP (${RIP_PRIV}); moving it here."
+      warn "if OCI refuses the move, unassign it first: Console -> Networking -> Reserved public IPs."
+    fi
+    log "assigning the existing reserved IP"
+    oci network public-ip update --public-ip-id "$RIP" \
+      --private-ip-id "$PRIV_IP" --wait-for-state ASSIGNED >/dev/null
+    ok "assigned: ${RIP}"
+  else
+    log "creating and assigning the reserved IP"
+    RIP="$(oci network public-ip create \
+            --compartment-id "$C" \
+            --display-name "$RESERVED_IP_NAME" \
+            --lifetime RESERVED \
+            --private-ip-id "$PRIV_IP" \
+            --wait-for-state ASSIGNED \
+            --query 'data.id' --raw-output)"
+    ok "created: ${RIP}"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 10. Public IP and final state
 # ---------------------------------------------------------------------------
 
 log "Reading the public IP"
 IP=""
 for _ in $(seq 1 20); do
-  IP="$(ociq oci compute instance list-vnics --instance-id "$INST" \
-         --query 'data[0]."public-ip"' --raw-output)"
+  IP="$(ociq oci network vnic get --vnic-id "$VNIC" \
+         --query 'data."public-ip"' --raw-output)"
   [[ -n "$IP" ]] && break
   sleep 5
 done
-[[ -n "$IP" ]] || die "The instance is running but has no public IP assigned."
-ok "public IP: ${IP}"
+[[ -n "$IP" ]] || die "The reserved IP was assigned but the VNIC reports no public address."
+ok "public IP: ${IP} (reserved)"
 
 cat > "$ENV_FILE" <<EOF
 # Generated by devbox-oci-setup.sh on $(date -Iseconds)
@@ -1888,6 +2113,9 @@ export IGW=${IGW}
 export SUBNET=${SUBNET}
 export IMG=${IMG}
 export INST=${INST}
+export VNIC=${VNIC}
+export PRIV_IP=${PRIV_IP}
+export RIP=${RIP}
 export IP=${IP}
 export SSH_KEY=${SSH_KEY}
 export SSH_USER=${SSH_USER}
@@ -1916,7 +2144,7 @@ ${GRN}Infrastructure ready.${RST}
   instance     ${INSTANCE_NAME}         ${INST}
   shape        ${SHAPE}  ${OCPUS} OCPU / ${MEMORY_GB} GB
   boot volume  ${BOOT_VOLUME_GB} GB (default VPU)
-  public IP    ${IP}
+  public IP    ${IP}  reserved as '${RESERVED_IP_NAME}'
   ingress      22 (default)$( [[ "$OPEN_WEB" == "true" ]] && echo ", 80, 443" )
 
 Connect:
@@ -1925,7 +2153,7 @@ Connect:
 Reload these variables in another session:
   source ${ENV_FILE}
 
-Next step: section 7 — reserve the public IP, then point DNS at it.
+Next step: section 7 — point the wildcard DNS record at ${IP}.
 
 ${YLW}Reminder:${RST} create a 1 EUR budget with an alert at 1% on the root
 compartment. Oracle has changed the A1 limits without notice more than
@@ -2681,45 +2909,489 @@ EOF
 
 ---
 
-## Appendix D — Changes from the source documents
 
-Every deviation from `dev-environment-runbook.md`, `oci-remote-desktop-guide.md` and the two original scripts.
-The behaviours behind the bug fixes (CLI flag parsing and data directory, Guacamole 1.6 log format, JMESPath
-parsing, `awk` regex support, fail2ban's default action) were checked against upstream sources and the actual
-tools on 10 September 2026.
+## Appendix D — devbox-oci-teardown.sh
 
-| # | Area | Source | This document | Why |
-|---|---|---|---|---|
-| 1 | Structure | Two documents and two scripts, desktop as the main goal | One procedure; development environment first, desktop optional | Requested scope |
-| 2 | Host | "Debian 12 or Ubuntu 22.04+", x86-64 implied | OCI A1, Ubuntu 24.04 aarch64 | The Always Free shape |
-| 3 | VS Code CLI | Downloads `cli-alpine-x64` | Architecture detected at build time (`cli-alpine-arm64` on A1) | An x86-64 binary cannot run on ARM64 |
-| 4 | Base image | `devcontainers/base:debian-12` | `devcontainers/base:bookworm` | `debian-12` is not among the documented tags (`bookworm`, `debian12`); `bookworm` is published for arm64 |
-| 5 | Node.js | 20.x | 22.x LTS | Node 20 reached end of life in April 2026; the Dev Container CLI needs ≥ 20 |
-| 6 | Host firewall | `ufw allow 80,443` + `ufw enable` | Nothing opened; ufw left inactive | Oracle warns ufw can leave Ubuntu instances unable to boot; Docker-published ports cross `FORWARD`, not `INPUT` |
-| 7 | Desktop TLS | Host Caddy on 443 with internal CA or Let's Encrypt IP certificate, `default_sni` | `desktop.<BASE_DOMAIN>` through `devenv-caddy` | Two Caddy instances cannot share 443; with a domain, ordinary certificates suffice |
-| 8 | Desktop location | `~/guacamole`, loopback only | `/srv/dev/desktop`, webapp also on `devenv_edge` | One tree; reachable by the shared edge |
-| 9 | Edge network | Created by compose | External, created by the host script and on demand by `dev` | The desktop joins it; `dev down` must not try to delete it |
-| 10 | Tunnel flags | `--random-name=false` | Removed | Boolean flag; the CLI (clap 4) rejects a value, so the tunnel would exit and the container restart-loop |
-| 11 | Tunnel token | Volume on `~/.vscode-cli` | Plus `VSCODE_CLI_DATA_DIR=/home/vscode/.vscode-cli` | The current CLI uses `~/.vscode/cli` and cannot migrate a mount point; without the variable the token was lost on every rebuild |
-| 12 | Tunnel names | Any length | At most 20 characters, enforced by `dev add` | CLI limit |
-| 13 | Image pulls | Default | `pull_policy: never` | Never pull `docker.io/devenv/<name>`, a namespace that is not ours |
-| 14 | Memory default | `10g` (16 GB host) | `8g` | 12 GB host, with room for the host, the edge and the desktop |
-| 15 | CPU rationale | "Leaves half a core for the editor server" | Leaves half a core for the host; the editor shares the quota | Both editor servers run inside the container |
-| 16 | Git | Not covered | Devbox key on the host, mounted read-only into containers; identity from `config.env` | Clone and push from the containers |
-| 17 | Settings Sync | "Enable in both doors" | Door A only | code-server has no built-in Settings Sync |
-| 18 | Placeholders | `<n>` | `<name>` | Restored; columns in `dev`'s usage realigned |
-| 19 | Caddy data | `/srv/dev/caddy/data` created, never mounted | Removed from the layout | Certificates live in the `caddy-data` volume |
-| 20 | `dev` | — | Config check, network on demand, hostname-collision check, `dev update`, reload warning, backup mode 0600, status with both doors and real limits | Failure modes found while integrating |
-| 21 | `dev` limits | "Lower `DEFAULT_CPUS`, `dev build`" | Edit the fragment, `dev up <name>` | Defaults are rendered into the fragment at `dev add`; `dev build` never re-reads them |
-| 22 | Heredocs | `<<-` with tab-indented bodies | Plain `<<` | Survives tabs turning into spaces when copy-pasted |
-| 23 | Security list | `OPEN_HTTPS=false`, 443 only; check via JMESPath | `OPEN_WEB=true`, 80 and 443; idempotent merge in Python | Caddy needs both ports; the original query was a JMESPath syntax error, so the rule was re-added on every run |
-| 24 | Region | Fixed `eu-frankfurt-1` | Checked against the tenancy home region | Always Free compute exists only there |
-| 25 | Instance lookup | `RUNNING` only | Any non-terminated state; stopped instances are started | A re-run must never launch a twin |
-| 26 | Tenancy | Derived from the compartment list | `$OCI_TENANCY` first (Cloud Shell), then the list | Works in tenancies without compartments |
-| 27 | fail2ban filter | `... for user "x" failed\.` with a bracketed address | Accepts `failed: <reason>` and a bare address | On Guacamole 1.6.0 with RemoteIpValve the original regex matched nothing |
-| 28 | fail2ban action | Default action on `INPUT` | `iptables-multiport` in `DOCKER-USER`, fail2ban ordered after Docker | Docker-published traffic never crosses `INPUT`; Ubuntu 24.04's default action is nftables on the input hook |
-| 29 | iptables persistence | `netfilter-persistent save` | Rule inserted into `rules.v4` before the final `REJECT` | A save freezes Docker's and fail2ban's runtime chains into the file |
-| 30 | 3389 check | `nc` to the instance's own public IP | Inspect the `INPUT` rules | A hairpin connection proves nothing about the host firewall |
-| 31 | Socket listing | `awk '/...\s/'` | `[[:space:]]` | Ubuntu's `mawk` does not support `\s`; only the header was printed |
-| 32 | Language | Script comments and messages in Spanish | English | Documentation language |
-| 33 | New context | — | Idle reclamation, Cloud Shell limits, reserved IP before DNS, CAA, ARM64 toolchains | Needed to go from nothing to a working environment |
+Run from Cloud Shell. Deletes everything Appendix A created and nothing else. Section 15.
+
+<!-- file: devbox-oci-teardown.sh -->
+```bash
+#!/usr/bin/env bash
+#
+# devbox-oci-teardown.sh
+#
+# Destroys everything devbox-oci-setup.sh created, in reverse order:
+#   instance -> boot volumes -> reserved IP -> subnet -> route rules
+#   -> internet gateway -> security list rules -> VCN -> compartment
+#
+# Every resource is looked up by the same name the setup script uses, so it
+# finds what that script would have reused. Nothing is deleted by pattern or
+# by sweeping the compartment: an object this script did not create is
+# reported as a leftover and left alone.
+#
+# Usage:
+#   DRY_RUN=true bash devbox-oci-teardown.sh    # show what would go, delete nothing
+#   bash devbox-oci-teardown.sh                 # asks for confirmation
+#   FORCE=true bash devbox-oci-teardown.sh      # no prompt, for scripts
+#
+# Opt-in extras:
+#   KEEP_RESERVED_IP=true     keep the reserved IP, so DNS still resolves to
+#                             something and a rebuild reuses the same address
+#   DELETE_COMPARTMENT=true   also delete the 'devbox' compartment
+#   DELETE_LOCAL=true         also delete ~/.ssh/oci_devbox* and ~/devbox.env
+#
+# Requires: OCI CLI configured (oci setup config), or run it from Cloud Shell.
+#
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Configuration — every name must match devbox-oci-setup.sh
+# ---------------------------------------------------------------------------
+
+REGION="${REGION:-eu-frankfurt-1}"
+
+COMPARTMENT_NAME="devbox"
+VCN_NAME="vcn-devbox"
+IGW_NAME="igw-devbox"
+SUBNET_NAME="subnet-devbox-public"
+INSTANCE_NAME="devbox"
+RESERVED_IP_NAME="devbox-public-ip"     # created and assigned by the setup script
+
+SSH_KEY="${HOME}/.ssh/oci_devbox"
+ENV_FILE="${HOME}/devbox.env"
+
+# Ports the setup script adds to the default security list
+WEB_PORTS="80 443"
+
+DRY_RUN="${DRY_RUN:-false}"
+FORCE="${FORCE:-false}"
+KEEP_RESERVED_IP="${KEEP_RESERVED_IP:-false}"
+DELETE_COMPARTMENT="${DELETE_COMPARTMENT:-false}"
+DELETE_LOCAL="${DELETE_LOCAL:-false}"
+
+WAIT_MAX=300                            # seconds to keep retrying a delete
+
+export OCI_CLI_REGION="$REGION"
+
+# ---------------------------------------------------------------------------
+# Utilities
+# ---------------------------------------------------------------------------
+
+RED=$'\033[0;31m'; GRN=$'\033[0;32m'; YLW=$'\033[0;33m'; BLU=$'\033[0;34m'; RST=$'\033[0m'
+
+log()  { printf '%s[%s]%s %s\n' "$BLU" "$(date +%H:%M:%S)" "$RST" "$*"; }
+ok()   { printf '%s  ok%s    %s\n' "$GRN" "$RST" "$*"; }
+warn() { printf '%s  warn%s  %s\n' "$YLW" "$RST" "$*"; }
+die()  { printf '%s  error%s %s\n' "$RED" "$RST" "$*" >&2; exit 1; }
+gone() { printf '%s  gone%s  %s\n' "$GRN" "$RST" "$*"; }
+
+ERRFILE="$(mktemp)"
+trap 'rm -f "$ERRFILE"' EXIT
+
+LEFTOVERS=()
+note_leftover() { LEFTOVERS+=("$1"); }
+
+# An OCI query that may legitimately return nothing; null -> ""
+ociq() {
+  local out
+  out="$("$@" 2>/dev/null || true)"
+  [[ "$out" == "null" ]] && out=""
+  printf '%s' "$out"
+}
+
+# A --query returning a list of scalars, one per line
+ocil() {
+  ociq "$@" | tr -d '[],"' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//; /^$/d'
+}
+
+# Nothing is ever deleted on the strength of a value that is not an OCID: an
+# empty result, a JMESPath typo or an error message must not reach a delete.
+ocid_only() { grep -E '^ocid1\.[a-z0-9]+\.' || true; }
+an_ocid()   { [[ "${1:-}" =~ ^ocid1\.[a-z0-9]+\. ]] && printf '%s' "$1" || printf ''; }
+
+# Deletes with retries: OCI often needs a moment to release a dependency
+# (a VNIC keeping a subnet busy, a reserved IP still detaching).
+destroy() {                              # destroy <what> <cmd...>
+  local what="$1"; shift
+  if [[ "$DRY_RUN" == "true" ]]; then
+    printf '%s  dry%s   would delete %s\n' "$YLW" "$RST" "$what"
+    printf '          %s\n' "$*"
+    return 0
+  fi
+  log "deleting ${what}"
+  local waited=0
+  while true; do
+    if "$@" >/dev/null 2>"$ERRFILE"; then
+      gone "$what"
+      return 0
+    fi
+    # --wait-for-state polls the resource after it is gone, so a 404 here is
+    # success, not a failure. Anything genuinely left shows up in the final scan.
+    if grep -qiE 'NotAuthorizedOrNotFound|status: 404|does not exist|no longer exists' "$ERRFILE"; then
+      gone "$what"
+      return 0
+    fi
+    if (( waited >= WAIT_MAX )); then
+      warn "could not delete ${what} after ${waited}s:"
+      sed 's/^/         /' "$ERRFILE" >&2
+      note_leftover "${what} — delete it by hand"
+      return 1
+    fi
+    sleep 10
+    waited=$((waited + 10))
+    log "  still busy, retrying ${what} (${waited}s)"
+  done
+}
+
+# ---------------------------------------------------------------------------
+# 0. Pre-flight
+# ---------------------------------------------------------------------------
+
+command -v oci >/dev/null 2>&1 || die "oci CLI not found. Install it or use Cloud Shell."
+command -v python3 >/dev/null 2>&1 || die "python3 not found (needed to edit the security list)."
+
+log "Checking credentials and region ${REGION}"
+TENANCY="${OCI_TENANCY:-}"
+if [[ -z "$TENANCY" ]]; then
+  TENANCY="$(ociq oci iam compartment list --access-level ACCESSIBLE --limit 1 \
+              --query 'data[0]."compartment-id"' --raw-output)"
+fi
+[[ -n "$TENANCY" ]] || die "Could not determine the tenancy. Check ~/.oci/config."
+ok "tenancy: ${TENANCY}"
+
+HOME_REGION="$(ociq oci iam region-subscription list --tenancy-id "$TENANCY" \
+                --query 'data[?"is-home-region"] | [0]."region-name"' --raw-output)"
+if [[ -n "$HOME_REGION" && "$HOME_REGION" != "$REGION" ]]; then
+  die "REGION=${REGION} is not the tenancy home region (${HOME_REGION}). The devbox lives there: re-run with REGION=${HOME_REGION}."
+fi
+
+# ---------------------------------------------------------------------------
+# 1. Find everything
+# ---------------------------------------------------------------------------
+
+log "Compartment '${COMPARTMENT_NAME}'"
+C="$(ociq oci iam compartment list --compartment-id "$TENANCY" --all \
+      --query "data[?name=='${COMPARTMENT_NAME}' && \"lifecycle-state\"=='ACTIVE'].id | [0]" \
+      --raw-output)"
+
+if [[ -z "$C" && -f "$ENV_FILE" ]]; then
+  # Compartment renamed or already gone: fall back to the OCID the setup wrote
+  C="$(grep -E '^export C=' "$ENV_FILE" 2>/dev/null | head -n1 | cut -d= -f2- || true)"
+  [[ -n "$C" ]] && warn "not found by name; using C=${C} from ${ENV_FILE}"
+fi
+C="$(an_ocid "$C")"
+[[ -n "$C" ]] || die "No '${COMPARTMENT_NAME}' compartment in this tenancy. Nothing to tear down."
+ok "compartment: ${C}"
+
+mapfile -t ADS < <(ocil oci iam availability-domain list --compartment-id "$C" \
+                     --query 'data[*].name' --raw-output)
+
+log "Instance '${INSTANCE_NAME}'"
+mapfile -t INSTANCES < <(ocil oci compute instance list --compartment-id "$C" --all \
+    --display-name "$INSTANCE_NAME" \
+    --query "data[?\"lifecycle-state\"!='TERMINATED' && \"lifecycle-state\"!='TERMINATING'].id" \
+    --raw-output | ocid_only)
+for i in "${INSTANCES[@]:-}"; do [[ -n "$i" ]] && ok "instance: ${i}"; done
+[[ ${#INSTANCES[@]} -eq 0 ]] && ok "none"
+
+# Instances the setup script did not create: never touched, only reported
+mapfile -t OTHER_INSTANCES < <(ocil oci compute instance list --compartment-id "$C" --all \
+    --query "data[?\"lifecycle-state\"!='TERMINATED' && \"lifecycle-state\"!='TERMINATING' && \"display-name\"!='${INSTANCE_NAME}'].join(' ', [\"display-name\", id])" \
+    --raw-output)
+
+log "VCN '${VCN_NAME}'"
+VCN="$(an_ocid "$(ociq oci network vcn list --compartment-id "$C" --display-name "$VCN_NAME" --all \
+        --query "data[?\"lifecycle-state\"!='TERMINATED'] | [0].id" --raw-output)")"
+RT=""; SL=""; SUBNETS=(); IGWS=()
+if [[ -n "$VCN" ]]; then
+  ok "vcn: ${VCN}"
+  RT="$(an_ocid "$(ociq oci network vcn get --vcn-id "$VCN" --query 'data."default-route-table-id"' --raw-output)")"
+  SL="$(an_ocid "$(ociq oci network vcn get --vcn-id "$VCN" --query 'data."default-security-list-id"' --raw-output)")"
+  mapfile -t SUBNETS < <(ocil oci network subnet list --compartment-id "$C" --vcn-id "$VCN" --all \
+      --query "data[?\"lifecycle-state\"!='TERMINATED'].id" --raw-output | ocid_only)
+  mapfile -t IGWS < <(ocil oci network internet-gateway list --compartment-id "$C" --vcn-id "$VCN" --all \
+      --query "data[?\"lifecycle-state\"!='TERMINATED'].id" --raw-output | ocid_only)
+  for s in "${SUBNETS[@]:-}"; do [[ -n "$s" ]] && ok "subnet: ${s}"; done
+  for g in "${IGWS[@]:-}"; do [[ -n "$g" ]] && ok "internet gateway: ${g}"; done
+else
+  ok "none"
+fi
+
+log "Reserved public IP '${RESERVED_IP_NAME}'"
+mapfile -t RIPS < <(ocil oci network public-ip list --compartment-id "$C" --scope REGION --all \
+    --query "data[?\"lifecycle-state\"!='TERMINATED' && \"display-name\"=='${RESERVED_IP_NAME}'].id" \
+    --raw-output | ocid_only)
+for r in "${RIPS[@]:-}"; do
+  [[ -n "$r" ]] || continue
+  ok "reserved IP: $(ociq oci network public-ip get --public-ip-id "$r" --query 'data."ip-address"' --raw-output) (${r})"
+done
+[[ ${#RIPS[@]} -eq 0 ]] && ok "none"
+
+log "Boot volumes"
+BVOLS=()
+for ad in "${ADS[@]}"; do
+  mapfile -t -O "${#BVOLS[@]}" BVOLS < <(ocil oci bv boot-volume list \
+      --compartment-id "$C" --availability-domain "$ad" --all \
+      --query "data[?\"lifecycle-state\"!='TERMINATED'].id" --raw-output | ocid_only)
+done
+for b in "${BVOLS[@]:-}"; do [[ -n "$b" ]] && ok "boot volume: ${b}"; done
+[[ ${#BVOLS[@]} -eq 0 ]] && ok "none"
+
+# ---------------------------------------------------------------------------
+# 2. Confirm
+# ---------------------------------------------------------------------------
+
+TOTAL=$(( ${#INSTANCES[@]} + ${#SUBNETS[@]} + ${#IGWS[@]} + ${#BVOLS[@]} ))
+[[ -n "$VCN" ]] && TOTAL=$((TOTAL + 1))
+if [[ "$TOTAL" -eq 0 ]]; then
+  ok "nothing left from devbox-oci-setup.sh in ${REGION}"
+  [[ "$DELETE_COMPARTMENT" != "true" ]] && exit 0
+fi
+
+cat <<EOF
+
+${RED}This deletes, permanently:${RST}
+  instance          ${#INSTANCES[@]}   (boot volume included — everything in /srv/dev goes with it)
+  boot volumes      ${#BVOLS[@]}
+  subnet            ${#SUBNETS[@]}
+  internet gateway  ${#IGWS[@]}
+  vcn               $( [[ -n "$VCN" ]] && echo 1 || echo 0 )
+  reserved IP       $( [[ "$KEEP_RESERVED_IP" == "true" ]] && echo "0 (kept; the DNS record still resolves)" || echo "${#RIPS[@]}   — the address is released for good" )
+  compartment       $( [[ "$DELETE_COMPARTMENT" == "true" ]] && echo 1 || echo "0 (kept; DELETE_COMPARTMENT=true to remove)" )
+  local files       $( [[ "$DELETE_LOCAL" == "true" ]] && echo "${SSH_KEY}, ${ENV_FILE}" || echo "0 (kept; DELETE_LOCAL=true to remove)" )
+
+  region            ${REGION}
+EOF
+
+# A compartment cannot be deleted while it still holds anything
+if [[ "$DELETE_COMPARTMENT" == "true" && "$KEEP_RESERVED_IP" == "true" && ${#RIPS[@]} -gt 0 ]]; then
+  warn "KEEP_RESERVED_IP=true leaves the IP inside the compartment, so the compartment deletion will be refused."
+  warn "keep one or the other, not both."
+fi
+
+if [[ "$DRY_RUN" == "true" ]]; then
+  warn "DRY_RUN=true — nothing will be deleted"
+elif [[ "$FORCE" != "true" ]]; then
+  [[ -t 0 ]] || die "not a terminal: re-run with FORCE=true if you mean it."
+  printf '\nType %s to confirm: ' "$COMPARTMENT_NAME"
+  read -r ANSWER
+  [[ "$ANSWER" == "$COMPARTMENT_NAME" ]] || die "aborted, nothing was deleted."
+fi
+echo
+
+# ---------------------------------------------------------------------------
+# 3. Instance
+# ---------------------------------------------------------------------------
+
+for inst in "${INSTANCES[@]:-}"; do
+  [[ -n "$inst" ]] || continue
+  destroy "instance ${inst}" \
+    oci compute instance terminate --instance-id "$inst" \
+      --preserve-boot-volume false --force --wait-for-state TERMINATED
+done
+
+# ---------------------------------------------------------------------------
+# 4. Boot volumes left detached
+# ---------------------------------------------------------------------------
+
+if [[ "$DRY_RUN" != "true" && ${#INSTANCES[@]} -gt 0 ]]; then
+  BVOLS=()
+  for ad in "${ADS[@]}"; do
+    mapfile -t -O "${#BVOLS[@]}" BVOLS < <(ocil oci bv boot-volume list \
+        --compartment-id "$C" --availability-domain "$ad" --all \
+        --query "data[?\"lifecycle-state\"!='TERMINATED'].id" --raw-output)
+  done
+fi
+for bv in "${BVOLS[@]:-}"; do
+  [[ -n "$bv" ]] || continue
+  destroy "boot volume ${bv}" \
+    oci bv boot-volume delete --boot-volume-id "$bv" --force --wait-for-state TERMINATED
+done
+
+# ---------------------------------------------------------------------------
+# 5. Reserved public IP
+# ---------------------------------------------------------------------------
+
+# Terminating the instance unassigns it; a reserved IP that is still assigned
+# cannot be deleted, which is what destroy()'s retries are waiting out here.
+if [[ "$KEEP_RESERVED_IP" == "true" ]]; then
+  [[ ${#RIPS[@]} -gt 0 ]] && warn "reserved IP kept: the wildcard DNS record still points at it, and the next devbox-oci-setup.sh run re-assigns it to the new instance."
+else
+  for rip in "${RIPS[@]:-}"; do
+    [[ -n "$rip" ]] || continue
+    destroy "reserved public IP ${rip}" \
+      oci network public-ip delete --public-ip-id "$rip" --force
+  done
+fi
+
+# ---------------------------------------------------------------------------
+# 6. Subnet
+# ---------------------------------------------------------------------------
+
+# A terminated instance releases its VNIC a few seconds later; destroy() waits.
+for sn in "${SUBNETS[@]:-}"; do
+  [[ -n "$sn" ]] || continue
+  destroy "subnet ${sn}" \
+    oci network subnet delete --subnet-id "$sn" --force --wait-for-state TERMINATED
+done
+
+# ---------------------------------------------------------------------------
+# 7. Route rules, then the internet gateway
+# ---------------------------------------------------------------------------
+
+if [[ -n "$RT" && ${#IGWS[@]} -gt 0 ]]; then
+  # The gateway cannot go while a route rule still points at it.
+  if [[ "$DRY_RUN" == "true" ]]; then
+    printf '%s  dry%s   would clear the route rules of %s\n' "$YLW" "$RST" "$RT"
+  else
+    log "clearing route rules on ${RT}"
+    oci network route-table update --rt-id "$RT" --force --route-rules '[]' >/dev/null \
+      && ok "route table emptied" || warn "could not empty the route table"
+  fi
+fi
+
+for igw in "${IGWS[@]:-}"; do
+  [[ -n "$igw" ]] || continue
+  destroy "internet gateway ${igw}" \
+    oci network internet-gateway delete --ig-id "$igw" --force --wait-for-state TERMINATED
+done
+
+# ---------------------------------------------------------------------------
+# 8. Security list ingress added by the setup script
+# ---------------------------------------------------------------------------
+
+# The default security list is deleted with the VCN, so this only matters when
+# the VCN survives — a partial teardown, or a re-run with the VCN kept. It
+# removes the 80/443 rules and nothing else.
+if [[ -n "$SL" ]]; then
+  EXISTING="$(ociq oci network security-list get --security-list-id "$SL" \
+               --query 'data."ingress-security-rules"' --output json)"
+  KEPT="$(python3 - "$EXISTING" "$WEB_PORTS" <<'PY'
+import json, sys
+existing = json.loads(sys.argv[1] or "[]")
+ports = {int(p) for p in sys.argv[2].split()}
+
+def conv(r):
+    out = {}
+    for k, v in r.items():
+        if v is None:
+            continue
+        ck = ''.join(w if i == 0 else w.capitalize() for i, w in enumerate(k.split('-')))
+        out[ck] = conv(v) if isinstance(v, dict) else v
+    return out
+
+def is_web(r):
+    rng = (r.get("tcp-options") or {}).get("destination-port-range") or {}
+    return (r.get("protocol") == "6" and rng.get("min") == rng.get("max")
+            and rng.get("min") in ports)
+
+kept = [r for r in existing if not is_web(r)]
+if len(kept) != len(existing):
+    print(json.dumps([conv(r) for r in kept]))
+PY
+)"
+  if [[ -z "$KEPT" ]]; then
+    ok "security list has no 80/443 rule to remove"
+  elif [[ "$DRY_RUN" == "true" ]]; then
+    printf '%s  dry%s   would remove the 80/443 ingress rules from %s\n' "$YLW" "$RST" "$SL"
+  else
+    log "removing the 80/443 ingress rules"
+    oci network security-list update --security-list-id "$SL" --force \
+      --ingress-security-rules "$KEPT" >/dev/null && ok "removed" || warn "could not update the security list"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 9. VCN
+# ---------------------------------------------------------------------------
+
+if [[ -n "$VCN" ]]; then
+  destroy "vcn ${VCN}" \
+    oci network vcn delete --vcn-id "$VCN" --force --wait-for-state TERMINATED
+fi
+
+# ---------------------------------------------------------------------------
+# 10. Compartment
+# ---------------------------------------------------------------------------
+
+if [[ "$DELETE_COMPARTMENT" == "true" ]]; then
+  if [[ "$DRY_RUN" == "true" ]]; then
+    printf '%s  dry%s   would delete compartment %s\n' "$YLW" "$RST" "$C"
+  else
+    log "deleting compartment ${C}"
+    if oci iam compartment delete --compartment-id "$C" --force >/dev/null 2>"$ERRFILE"; then
+      ok "deletion accepted — it runs asynchronously and takes a few minutes"
+      warn "the compartment stays visible in DELETED state; check it before re-running the setup"
+    else
+      sed 's/^/         /' "$ERRFILE" >&2
+      warn "compartment not deleted: it still holds something. See the leftovers below."
+      note_leftover "compartment ${COMPARTMENT_NAME} (${C})"
+    fi
+  fi
+else
+  ok "compartment kept (empty). Re-running devbox-oci-setup.sh reuses it."
+fi
+
+# ---------------------------------------------------------------------------
+# 11. Local files
+# ---------------------------------------------------------------------------
+
+if [[ "$DELETE_LOCAL" == "true" ]]; then
+  if [[ "$DRY_RUN" == "true" ]]; then
+    printf '%s  dry%s   would delete %s, %s.pub, %s\n' "$YLW" "$RST" "$SSH_KEY" "$SSH_KEY" "$ENV_FILE"
+  else
+    rm -f "$SSH_KEY" "${SSH_KEY}.pub" "$ENV_FILE"
+    gone "local key and ${ENV_FILE}"
+  fi
+else
+  [[ -f "$SSH_KEY" ]] && ok "local SSH key kept: ${SSH_KEY}"
+fi
+
+# ---------------------------------------------------------------------------
+# 12. What is left
+# ---------------------------------------------------------------------------
+
+# Anything still in the compartment that this script did not create. These are
+# what blocks a compartment deletion, so they are worth naming explicitly.
+if [[ "$DRY_RUN" != "true" ]]; then
+  for line in "${OTHER_INSTANCES[@]:-}"; do
+    [[ -n "$line" ]] && note_leftover "instance not created by the setup script: ${line}"
+  done
+  mapfile -t VOLS < <(ocil oci bv volume list --compartment-id "$C" --all \
+      --query "data[?\"lifecycle-state\"!='TERMINATED'].join(' ', [\"display-name\", id])" --raw-output)
+  for line in "${VOLS[@]:-}"; do
+    [[ -n "$line" ]] && note_leftover "block volume: ${line}"
+  done
+  mapfile -t OTHER_VCNS < <(ocil oci network vcn list --compartment-id "$C" --all \
+      --query "data[?\"lifecycle-state\"!='TERMINATED'].join(' ', [\"display-name\", id])" --raw-output)
+  for line in "${OTHER_VCNS[@]:-}"; do
+    [[ -n "$line" ]] && note_leftover "vcn: ${line}"
+  done
+  for r in "${RIPS[@]:-}"; do
+    [[ -n "$r" && "$KEEP_RESERVED_IP" == "true" ]] && note_leftover "reserved public IP ${RESERVED_IP_NAME} (${r}) — kept on purpose"
+  done
+fi
+
+echo
+if [[ "$DRY_RUN" == "true" ]]; then
+  printf '%sDry run finished. Nothing was deleted.%s\n' "$YLW" "$RST"
+elif [[ ${#LEFTOVERS[@]} -eq 0 ]]; then
+  printf '%sTeardown complete.%s Nothing from devbox-oci-setup.sh is left in %s.\n' "$GRN" "$RST" "$REGION"
+else
+  printf '%sTeardown finished, with things still in the compartment:%s\n' "$YLW" "$RST"
+  printf '  - %s\n' "${LEFTOVERS[@]}"
+  printf '\nDelete those in the Console if you want the compartment gone too.\n'
+fi
+
+cat <<EOF
+
+Also worth checking, none of it created by devbox-oci-setup.sh:
+  - the wildcard DNS record, now pointing at an address you no longer own
+  - the tunnel names, still registered to your GitHub account and still counting
+    against its limit of 10. Release them in any VS Code client: Remote Explorer
+    -> right-click the machine -> Unregister
+  - the devbox SSH key on GitHub (Settings -> SSH and GPG keys)
+  - the budget alert, if the tenancy has nothing left to watch
+EOF
+```

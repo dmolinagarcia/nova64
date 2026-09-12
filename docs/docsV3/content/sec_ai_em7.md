@@ -1,7 +1,7 @@
 # Building an emulator — the course
 > the part you are modelling · nineteen stages · code you can type in · and a test that can fail
 
-This sheet takes a competent C programmer who has never written an emulator from an empty directory to a working, instrumented, browser-hosted noVa64. Every stage has code, a build that runs, and **a test that can fail** — the last being the part that distinguishes a course from a tour. [EM1](sec_ai_em1) says what to model and to what fidelity, [EM4](sec_ai_em4) reports what was built; this one is how, and [EM0](sec_ai_em0) is the machine you type it on.
+This sheet takes a competent C programmer who has never written an emulator from an empty directory to a working, instrumented, browser-hosted noVa64. Every stage has code, a build that runs, and **a test that can fail** — the last being the part that distinguishes a course from a tour. [EM1](sec_ai_em1) says what to model and to what fidelity, [EM4](sec_ai_em4) reports what was built; this one is how, and [W6](sc_w6) is the machine you type it on.
 
 ## Part 0 — the machine you are modelling.
 
