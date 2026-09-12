@@ -1,0 +1,49 @@
+volumes:
+  nova64-cli:
+  nova64-server:
+  nova64-codeserver:
+
+secrets:
+  code_server_password_nova64:
+    file: /srv/dev/secrets/nova64.password
+
+services:
+  devenv-nova64:
+    image: devenv/nova64:latest
+    # Local image only: if it were ever missing, compose would otherwise try
+    # to pull docker.io/devenv/nova64, a namespace that is not ours.
+    pull_policy: never
+    container_name: devenv-nova64
+    hostname: nova64
+    restart: unless-stopped
+    init: true
+    user: vscode
+    working_dir: /workspaces/nova64
+    command: ["/usr/local/bin/entrypoint.sh"]
+    environment:
+      TUNNEL_NAME: "nova64"
+      WORKSPACE_DIR: "/workspaces/nova64"
+      TZ: "Europe/Madrid"
+      # Pins the tunnel CLI's data dir (GitHub token, downloaded servers) to the
+      # -cli volume. Without it the CLI migrates to ~/.vscode/cli, which lives
+      # in the container layer and is lost on every rebuild.
+      VSCODE_CLI_DATA_DIR: "/home/vscode/.vscode-cli"
+      # Git: identity from config.env (interpolated by `dev`); SSH key shared
+      # read-only from the host.
+      GIT_NAME: "${GIT_NAME}"
+      GIT_EMAIL: "${GIT_EMAIL}"
+      GIT_SSH_COMMAND: "ssh -i /run/devbox-git/id_ed25519 -o IdentitiesOnly=yes -o UserKnownHostsFile=/run/devbox-git/known_hosts"
+    volumes:
+      - /srv/dev/projects/nova64:/workspaces/nova64
+      - /srv/dev/images/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
+      - /srv/dev/secrets/git:/run/devbox-git:ro
+      - nova64-cli:/home/vscode/.vscode-cli
+      - nova64-server:/home/vscode/.vscode-server
+      - nova64-codeserver:/home/vscode/.local/share/code-server
+    secrets:
+      - source: code_server_password_nova64
+        target: code_server_password
+    cpus: 1.5
+    mem_limit: 8g
+    stop_grace_period: 30s
+    networks: [edge]
