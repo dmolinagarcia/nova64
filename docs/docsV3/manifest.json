@@ -156,8 +156,8 @@
       "letter": "D3",
       "part": "ai",
       "area": "Embedded control and boot",
-      "nav": "The EC boundary and mailbox",
-      "index": "EC boundary contract · signals, FPGA configuration and the SPI mailbox"
+      "nav": "The EC boundary and link",
+      "index": "EC boundary contract · signals, FPGA configuration and the SPI link"
     },
     {
       "file": "sec_ai_r",
@@ -165,7 +165,7 @@
       "part": "ai",
       "area": "Embedded control and boot",
       "nav": "Debug agent and console",
-      "index": "Debug agent and console · SPI register map"
+      "index": "Debug agent and console · endpoint 0x02 and its register map"
     },
     {
       "file": "sec_ai_e",

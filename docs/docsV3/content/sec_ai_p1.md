@@ -23,8 +23,9 @@ The rig earns its place by what it de-risks, and each row is chosen because the 
 | SDRAM controller (HY57V561620FTP-H) | JEDEC SDR protocol is identical to the target AS4C32M16 / IS42S16320. Only column width differs — 9 bits against 10. |
 | 65816 bus interface | Address/data/control decode, bank latching, VDA/VPA cycle qualification. |
 | PHI2 stalling against real SDRAM latency | Exercises the "PHI2 always stretched on memory wait" invariant under real row-activation and refresh timing. |
-| EC mailbox protocol | Wire protocol and firmware, independent of FPGA family ([D3.2](sec_ai_d3#d32)). |
-| Debug agent protocol | A separate SPI slave on `DBG_CSN`; wire protocol and command set ([sheet R](sec_ai_r)). |
+| The link — front end, router, endpoint `0x01` | Frame format, header CRC, endpoint dispatch and the reserved-endpoint rejections. **Its own scope item, sequenced ahead of every endpoint on it** ([D3.9](sec_ai_d3#d39)). |
+| EC link protocol | Wire protocol and firmware for the HID and system endpoints, independent of FPGA family ([D3.12](sec_ai_d3#d312)). |
+| Debug agent protocol | **Endpoint `0x02` on the link**, not a slave of its own; wire protocol, command set and the bulk burst format ([sheet R](sec_ai_r), [R.25](sec_ai_r#r25)). |
 | Neon Mode 0, text only | Character buffer internal to Neon, hardware scroll, two-byte command port. |
 | SD through a hardware SPI master in the FPGA | Register block, SD init, sector read, and a FAT32 reader in 65816 assembly. |
 | USB HID keyboard on the Pico | Rig usability only, and it is the one item on this list that may transfer to nothing ([Q147](sec_ai_q#q147)). |
@@ -44,7 +45,7 @@ The rig earns its place by what it de-risks, and each row is chosen because the 
 
 ## Decisions
 
-- P1.4 — **A Raspberry Pi Pico 2, not a bare RP2354B.** The RP2354B is QFN-80 with in-package flash, so putting it on the HAT means designing and fabricating a breakout. Nothing in the Phase 0 scope depends on the package: the mailbox and the debug agent are protocol and firmware, and pico-sdk is identical across the family. The 2354B-specific properties — 48 GPIO, in-package flash, the A4 stepping — are integration questions the rig cannot answer whatever is soldered to it. **Consequence: the Pico socket on the HAT is a standard Pico 2 footprint** (→ [D74](sec_ai_q#d74)).
+- P1.4 — **A Raspberry Pi Pico 2, not a bare RP2354B.** The RP2354B is QFN-80 with in-package flash, so putting it on the HAT means designing and fabricating a breakout. Nothing in the Phase 0 scope depends on the package: the link and the debug agent are protocol and firmware, and pico-sdk is identical across the family. The 2354B-specific properties — 48 GPIO, in-package flash, the A4 stepping — are integration questions the rig cannot answer whatever is soldered to it. **Consequence: the Pico socket on the HAT is a standard Pico 2 footprint** (→ [D74](sec_ai_q#d74)).
   NOTE: Bootrom A/B partition table support, which is an open item blocking schematic capture, is verifiable here: it is the same bootrom (→ [Q128](sec_ai_q#q128)).
 - P1.5 — **Debug over UART, not USB CDC.** A USB HID keyboard requires the Pico to be a USB **host**, and it has one USB port: it cannot be a host for the keyboard and a CDC device to the PC at the same time. The port serves the keyboard under TinyUSB host, and the debug console runs over UART to a USB-serial adapter (→ [D75](sec_ai_q#d75)).
   NOTE: Rejected alternative — Pico-PIO-USB for a second host port. It works, and the RP2350 has three PIO blocks to spend on it, but it adds a dependency for no Phase 0 benefit.
@@ -53,13 +54,14 @@ The rig earns its place by what it de-risks, and each row is chosen because the 
   NOTE: Consequence: BRAM is limited to the text framebuffer, the font ROM, the boot ROM and controller FIFOs ([P1.13](sec_ai_p1#p113)).
 - P1.7 — **The SD register block is the transferable artefact, and the RTL is not.** The SPI master itself is trivial and will be rewritten for iCE40. The register map is not: `SPI_DATA`, `SPI_STATUS`, `SPI_CTRL`, `SPI_DIV`, `SPI_CS`, the ready/busy flag semantics and the CPU-side access protocol transfer verbatim into Helium, and the SD driver and FAT32 reader written in 65816 assembly against that map transfer without recompilation (→ [D77](sec_ai_q#d77), [sheet G](sec_ai_g)).
   NOTE: [[!blocking]] **The register map is specified in its own design note before any Phase 0 RTL is written.** It is the artefact; the rig is how it was discovered.
-- P1.8 — **Helium has two distinct SPI roles and documentation never refers to "Helium's SPI" without qualification.** Helium is an SPI **slave** to the EC, for configuration and the mailbox, discriminated by chip-select; and an SPI **master** to the SD card. Phase 0 exercises the master plus the mailbox and debug slave, and does not exercise the configuration slave at all (→ [D78](sec_ai_q#d78)).
+- P1.8 — **Helium has two distinct SPI roles and documentation never refers to "Helium's SPI" without qualification.** Helium is an SPI **slave** to the EC — for configuration, and for the one runtime link every endpoint rides on ([D3.9](sec_ai_d3#d39)) — and an SPI **master** to the SD card. Phase 0 exercises the master plus the runtime slave, and does not exercise the configuration slave at all (→ [D78](sec_ai_q#d78)).
+  NOTE: **The rig loses a pin and a distinction at REV C.** Block D drops `DBG_CSN` and the HAT total falls from 53 to 52 ([P1.10](sec_ai_p1#p110)), and *the mailbox slave* and *the debug slave* stop being two things to bring up separately — which does not make bring-up simpler, only differently ordered ([S7](sec_ai_p1#s7), [S8](sec_ai_p1#s8)).
 - P1.9 — **Text mode geometry is 80 × 30 at 640 × 480.** With an 8 × 16 font that consumes the full active area exactly. The pixel clock is **25.000 MHz**, a divide-by-two of a 50 MHz oscillator, which needs no DCM and no fractional synthesis; monitors tolerate it in place of the nominal 25.175 MHz. Framebuffer: 80 × 30 × 2 = 4800 bytes (→ [D79](sec_ai_q#d79)).
   NOTE: **This is the one geometry decision that does not transfer.** [P1](sec_ai_p2#p1) runs a 128 × 32 buffer displayed as an 80 × 30 window, because [D44](sec_ai_q#d44) keeps one console driver across both boards. The rig's 80 × 30 is the screen, not a window into anything.
 
 ## Budgets
 
-- P1.10 — **Pin budget — 53 header pins, and the count the board actually offers has not been taken.** SDRAM is routed on the Spartan-6 board itself and consumes no header pins.
+- P1.10 — **Pin budget — 52 header pins, and the count the board actually offers has not been taken.** SDRAM is routed on the Spartan-6 board itself and consumes no header pins.
 
 | Block | Signals | Count |
 |---|---|---|
@@ -68,10 +70,10 @@ The rig earns its place by what it de-risks, and each row is chosen because the 
 | | PHI2, RWB, VDA, VPA, RDY, RESB, IRQB, NMIB, BE, MX, E | 11 |
 | B — VGA | HSYNC, VSYNC, R[1:0], G[1:0], B[1:0] | 8 |
 | C — SD | SCLK, MOSI, MISO, CSN | 4 |
-| D — EC link | SCLK, MOSI, MISO, MBOX_CSN, DBG_CSN, HELIUM_ATTN | 6 |
-| **Total** | | **53** |
+| D — EC link | SCLK, MOSI, MISO, LINK_CSN, HELIUM_ATTN | 5 |
+| **Total** | | **52** |
 
-- P1.11 — [[!blocking]] **How many I/O the board exposes on headers is not known, and it blocks the HAT layout.** If fewer than 53 usable pins are available, block B and block D can be time-separated across two HAT revisions — but that has to be established before layout rather than discovered during it (→ [Q148](sec_ai_q#q148)).
+- P1.11 — [[!blocking]] **How many I/O the board exposes on headers is not known, and it blocks the HAT layout.** If fewer than 52 usable pins are available, block B and block D can be time-separated across two HAT revisions — but that has to be established before layout rather than discovered during it (→ [Q148](sec_ai_q#q148)).
 - P1.12 — **Six bits of colour, as everywhere else in this project.** Two bits per channel here against six on the carrier's R-2R ladder ([P2.08](sec_ai_p2#p208)) — a rig running text has no use for the other twelve pins, and Mode 0 has no palette. The 18-bit palette rule of [P2.16](sec_ai_p2#p216) starts at Phase 1 and is untouched by this.
 - P1.13 — **BRAM budget — ~19 KB of 72, and the headroom is not the binding constraint.** The XC6SLX16 has 32 × 18 Kbit = 576 Kbit = 72 KB.
 
@@ -94,13 +96,13 @@ The rig earns its place by what it de-risks, and each row is chosen because the 
   NOTE: **The USB HID keyboard firmware.** The target keyboard is expected to be an internal matrix scanned by the EC ([L1](sec_ai_p4#l1)), which is a different problem end to end (→ [Q147](sec_ai_q#q147)).
   NOTE: **The FPGA configuration path.** JTAG on Spartan-6, SPI slave on iCE40 ([D61](sec_ai_q#d61)).
   NOTE: **The debug probe topology.** There is no embedded RP2040 probe in Phase 0 ([P1.5](sec_ai_p1#p15)).
-- P1.15 — **What does transfer is most of the value.** The SD register map ([P1.7](sec_ai_p1#p17)), the mailbox and debug agent wire protocols and their command sets, the EC firmware structure, the 65816 boot monitor, the SD and FAT32 driver, every simulation testbench, and the measured SDRAM bandwidth figure. **All of it is protocol, firmware or software — which is the same thing the carrier buys one device later, and the reason both are worth building.**
+- P1.15 — **What does transfer is most of the value.** The SD register map ([P1.7](sec_ai_p1#p17)), the link's frame format and router behaviour, the endpoint and debug agent command sets, the EC firmware structure, the 65816 boot monitor, the SD and FAT32 driver, every simulation testbench, and the measured SDRAM bandwidth figure. **All of it is protocol, firmware or software — which is the same thing the carrier buys one device later, and the reason both are worth building.**
 
 ## Abandonment conditions
 
 Written down in advance, because a rig that gates nothing is a rig that can be stopped without a meeting.
 
-- P1.16 — **If slice utilisation exceeds the XC6SLX16 even after splitting into two bitstreams**, Neon Mode 0 is dropped from Phase 0 and text output is deferred to Phase 1. The rig retains its value for SDRAM, the mailbox, the debug agent and SD.
+- P1.16 — **If slice utilisation exceeds the XC6SLX16 even after splitting into two bitstreams**, Neon Mode 0 is dropped from Phase 0 and text output is deferred to Phase 1. The rig retains its value for SDRAM, the link, the debug agent and SD.
 - P1.17 — **If the carrier reaches fabrication before Phase 0 is complete**, the remaining S-series work is abandoned in place and folded into Phase 1. Phase 0 exists to use calendar time that would otherwise be idle; **it does not gate Phase 1**.
 - P1.18 — **If ISE 14.7 proves unworkable in the available VM environment, Phase 0 is abandoned entirely rather than mitigated.** The rig is not worth toolchain archaeology, and [P1.1](sec_ai_p1#p11)'s concession only holds while it is cheap.
 
@@ -123,10 +125,11 @@ Sequential, each gated on the one before it, consistent with the single-thread p
   NOTE: This is the stage the rig exists for. Everything before it is training; everything after it is protocol work that could in principle have waited.
 - [ ] S6 — **Neon Mode 0** — VGA text output at 640 × 480, hardware scroll, the two-byte command port.
   TEST: a correct 80 × 30 character grid on a monitor, scrolled by exactly one row on command, with no SDRAM anywhere in the path.
-- [ ] S7 — **Pico socket populated, and the mailbox protocol running.**
-  TEST: the mailbox command set exercised end to end from the host console, with the wire protocol matching [sheet D3](sec_ai_d3) rather than a rig-local variant.
-- [ ] S8 — **Debug agent** on its own chip-select.
-  TEST: `DBG_ID` reading `$6516` in one frame, then physical read and write against SDRAM with the CPU held in reset ([R.8](sec_ai_r#r8), [R.22](sec_ai_r#r22)).
+- [ ] S7 — **Pico socket populated, and the link running — front end, router and endpoint `0x01` before any endpoint behind it.**
+  TEST: endpoint `0x01` returns magic, protocol version and build ID · a corrupted `HCRC` returns `NACK_HCRC` · `EP = 0x00`, `0xFF` and an unassigned value each return their own code · then the HID and system endpoints exercised end to end from the host console, with the wire protocol matching [sheet D3](sec_ai_d3) rather than a rig-local variant.
+  NOTE: **The router is the single point of failure and cannot be debugged by the block that would normally debug it**, so it is proved alone first ([D3.12c](sec_ai_d3#d312c)). Unimplemented endpoints answer `NACK_EP_UNKNOWN`, which is what makes each step below testable in isolation.
+- [ ] S8 — **Debug agent as endpoint `0x02`**, sharing the one chip select.
+  TEST: `DBG_ID` reading `$6516`, then physical read and write against SDRAM with the CPU held in reset ([R.8](sec_ai_r#r8), [R.22](sec_ai_r#r22)) · a `WRITE_BURST`/`READ_BURST` round trip over a pseudorandom block · a deliberately corrupted `FCRC` frame retransmitted verbatim converging ([R.25](sec_ai_r#r25)) · **the HID queue filled and left undrained while debug throughput on `0x02` is measured unaffected** ([D3.12a](sec_ai_d3#d312a)).
 - [ ] S9 — **SD register block, card init and sector read** — the map of [P1.7](sec_ai_p1#p17) before the driver written against it.
   TEST: a sector read back byte-for-byte against the same sector read on a PC.
 - [ ] S10 — **FAT32 reader in 65816 assembly**, against the register map and not against the hardware.

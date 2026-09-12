@@ -9,4 +9,6 @@
 |          |         |AI content for Phase 0 Spartan-6 training rig added                              |
 |          |         |Prototipe sheet splitted into tracks                                             |
 |          |         |AI content for the host emulator added as a new Emulation area                   |
+|nn/nn/2026|0.2.4    |EC ↔ Helium single link: one chip select, header-routed endpoints, frame format  |
+|          |         |Boot memory load consolidated into the Debug Agent; `MEM_WRITE` withdrawn        |
 
