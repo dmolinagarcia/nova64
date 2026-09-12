@@ -392,7 +392,7 @@ Caddy starts with no sites configured, which is expected; it obtains certificate
 
 **What you already have.** Every project gets its own long random password, with no action on your part:
 `dev add` generates one with `openssl rand -base64 24`, writes it to `/srv/dev/secrets/<project>.password`
-under `umask 077`, and the compose fragment mounts it into the container as the Docker secret
+(mode 0644, inside the 0700 `secrets/` directory), and the compose fragment mounts it into the container as the Docker secret
 `code_server_password`. The entrypoint reads it and starts code-server with `--auth password`. The password is
 printed when the project is created; `cat /srv/dev/secrets/<project>.password` shows it again later, and
 writing a new value into that file followed by `dev restart <project>` rotates it.
@@ -1003,7 +1003,8 @@ Desktop-specific problems are covered in section 12.6.
 | Whole VM unresponsive during builds | Container limit too high | `dev status`; lower `cpus:` in the project's fragment, `dev up <name>` |
 | Only the editor lags during builds | The editor shares the container's quota with the build | `nice -n 10`, fewer parallel jobs |
 | Extension installs on door A but not B | Not published on Open VSX | Side-load the `.vsix`, or do that work on door A |
-| Files owned by the wrong user in the workspace | Host UID ≠ container UID | `vscode` is UID 1000, same as `ubuntu` on Oracle's image; match the owner of `projects/<name>` |
+| Workspace not writable, `git status`: `error reading .git`, push fails reading the key | Image built before `dev build` remapped `vscode` to the host UID (Oracle's Ubuntu makes `ubuntu` 1001; the image's `vscode` is 1000) | `docker exec devenv-<name> id -u` must equal `id -u` on the host. If not: `dev build <name>`; if the named volumes were already written by the old UID, `docker rm -f devenv-<name>`, `docker volume rm devenv_<name>-cli devenv_<name>-server devenv_<name>-codeserver`, then `dev build <name>` (costs one `dev login`) |
+| Container log: `cat: /run/secrets/code_server_password: Permission denied` | Secret file is 0600 and the host user is not UID 1000; compose mounts it with the host owner and ignores `uid`/`mode` for file secrets | `chmod 644 /srv/dev/secrets/<project>.password && dev restart <project>` — `secrets/` is 0700, so the host side stays private |
 | `dev` cannot reach Docker | Session predates the `docker` group | Log out and back in |
 | `git push`: `Permission denied (publickey)` | Key not added to GitHub, or an HTTPS remote | `ssh -T git@github.com` on the host; `git remote -v`; use `git@github.com:` remotes |
 | SSH lost after a firewall change | `rules.v4` edited wrongly, or ufw enabled | OCI Console → instance → Console connection gives serial access; it needs a local password (`sudo passwd ubuntu` in advance) or a GRUB single-user boot |
@@ -1410,7 +1411,12 @@ JSON
 	fi
 
 	info "generating password secret"
-	( umask 077; openssl rand -base64 24 > "${DEV_ROOT}/secrets/${name}.password" )
+	# 0644 on purpose. Compose bind-mounts file secrets with their host owner and
+	# mode, and ignores uid/gid/mode for them, so a 0600 file is unreadable to
+	# the container's vscode (UID 1000) whenever the host user is not UID 1000.
+	# The host side stays protected by secrets/ itself, which is mode 0700.
+	openssl rand -base64 24 > "${DEV_ROOT}/secrets/${name}.password"
+	chmod 644 "${DEV_ROOT}/secrets/${name}.password"
 
 	info "generating compose fragment"
 	render "${DEV_ROOT}/templates/devenv.compose.yml.tpl" "$name" > "${dir}/devenv.compose.yml"
@@ -1428,6 +1434,34 @@ JSON
 	echo "    password: $(cat "${DEV_ROOT}/secrets/${name}.password")"
 }
 
+# The workspace, the Git key and the password secret are bind-mounted with
+# their host owner, and the image's vscode is UID 1000. Where the user running
+# dev is not UID 1000 -- Oracle's Ubuntu image makes ubuntu 1001 -- nothing in
+# the workspace is writable, git cannot read .git and the key is unreadable.
+# The Dev Containers CLI fixes this with updateRemoteUserUID, but only on
+# `devcontainer up`, which this setup never runs; so remap as a last layer.
+match_host_uid() {
+	local image="devenv/$1:latest" uid gid
+	uid="$(id -u)"; gid="$(id -g)"
+	if [[ "$(docker run --rm --entrypoint id "$image" -u vscode)" == "$uid" \
+		&& "$(docker run --rm --entrypoint id "$image" -g vscode)" == "$gid" ]]; then
+		return 0
+	fi
+	info "remapping vscode in the image to host UID ${uid}:${gid}"
+	docker build -q -t "$image" --build-arg BASE="$image" \
+		--build-arg HOST_UID="$uid" --build-arg HOST_GID="$gid" - >/dev/null <<'EOF'
+ARG BASE
+FROM ${BASE}
+ARG HOST_UID
+ARG HOST_GID
+USER root
+RUN groupmod -o -g "$HOST_GID" vscode \
+ && usermod -o -u "$HOST_UID" -g "$HOST_GID" vscode \
+ && chown -R vscode:vscode /home/vscode
+USER vscode
+EOF
+}
+
 cmd_build() {
 	local name="${1:-}"
 	shift || true
@@ -1437,6 +1471,7 @@ cmd_build() {
 		--workspace-folder "${DEV_ROOT}/projects/${name}" \
 		--image-name "devenv/${name}:latest" \
 		"$@"
+	match_host_uid "$name"
 	info "recreating container"
 	compose up -d --force-recreate "devenv-${name}"
 }
