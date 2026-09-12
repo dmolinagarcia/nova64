@@ -2,6 +2,7 @@ volumes:
   nova64-cli:
   nova64-server:
   nova64-codeserver:
+  nova64-claude:
 
 secrets:
   code_server_password_nova64:
@@ -33,6 +34,7 @@ services:
       GIT_NAME: "${GIT_NAME}"
       GIT_EMAIL: "${GIT_EMAIL}"
       GIT_SSH_COMMAND: "ssh -i /run/devbox-git/id_ed25519 -o IdentitiesOnly=yes -o UserKnownHostsFile=/run/devbox-git/known_hosts"
+      CLAUDE_CONFIG_DIR: "/home/vscode/.claude"
     volumes:
       - /srv/dev/projects/nova64:/workspaces/nova64
       - /srv/dev/images/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
@@ -40,6 +42,7 @@ services:
       - nova64-cli:/home/vscode/.vscode-cli
       - nova64-server:/home/vscode/.vscode-server
       - nova64-codeserver:/home/vscode/.local/share/code-server
+      - nova64-claude:/home/vscode/.claude
     secrets:
       - source: code_server_password_nova64
         target: code_server_password
