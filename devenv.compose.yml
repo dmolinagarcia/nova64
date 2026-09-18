@@ -20,7 +20,10 @@ services:
     init: true
     user: vscode
     working_dir: /workspaces/nova64
-    command: ["/usr/local/bin/entrypoint.sh"]
+    # Starts the docsV3 web server (web.sh, 127.0.0.1:8000) in the background,
+    # then hands over to the shared entrypoint. Its output goes to the
+    # container logs.
+    command: ["bash", "-c", "bash web.sh & exec /usr/local/bin/entrypoint.sh"]
     environment:
       TUNNEL_NAME: "nova64"
       WORKSPACE_DIR: "/workspaces/nova64"
@@ -29,12 +32,15 @@ services:
       # -cli volume. Without it the CLI migrates to ~/.vscode/cli, which lives
       # in the container layer and is lost on every rebuild.
       VSCODE_CLI_DATA_DIR: "/home/vscode/.vscode-cli"
+      # Claude Code keeps its login, conversations and memory in ~/.claude, but
+      # its main config file in ~/.claude.json, outside that directory. Pointing
+      # CLAUDE_CONFIG_DIR at the -claude volume puts both on it.
+      CLAUDE_CONFIG_DIR: "/home/vscode/.claude"
       # Git: identity from config.env (interpolated by `dev`); SSH key shared
       # read-only from the host.
       GIT_NAME: "${GIT_NAME}"
       GIT_EMAIL: "${GIT_EMAIL}"
       GIT_SSH_COMMAND: "ssh -i /run/devbox-git/id_ed25519 -o IdentitiesOnly=yes -o UserKnownHostsFile=/run/devbox-git/known_hosts"
-      CLAUDE_CONFIG_DIR: "/home/vscode/.claude"
     volumes:
       - /srv/dev/projects/nova64:/workspaces/nova64
       - /srv/dev/images/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro

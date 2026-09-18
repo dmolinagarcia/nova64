@@ -1,0 +1,237 @@
+## 12. Phase 7 (optional) — Web desktop with Guacamole
+
+Not needed for the development environment. This phase adds a full Linux desktop in a browser tab, for the GUI applications the editor entrypoints cannot run — KiCad, a waveform viewer, a vendor GUI — and publishes it through the same Caddy edge as entrypoint B at `https://desktop.<BASE_DOMAIN>`. No new port is opened.
+
+### 12.1 What it adds
+
+```
+browser ── HTTPS 443 ──► devenv-caddy ──► guacamole :8080   webapp, TOTP, on devenv_edge
+                                              │ 4822
+                                            guacd ── RDP ──► xrdp :3389 on the host ──► XFCE session
+                                              │
+                                  PostgreSQL (users, connections, TOTP secrets)
+```
+
+Nothing new is exposed. Port 443 is already open. xrdp listens on `0.0.0.0:3389` because guacd reaches it
+over the Docker bridge, but the host firewall accepts 3389 only from Docker's address range (`172.16.0.0/12`)
+and the OCI security list does not open it. Guacamole is published only on the host's loopback, for health
+checks and an SSH-tunnel fallback (`ssh -L 8080:127.0.0.1:8080 ...`).
+
+The XFCE session, Tomcat and PostgreSQL together use roughly 1–1.5 GB of RAM — the reason `DEFAULT_MEM` is
+8g rather than the 10g of the original runbook.
+
+### 12.2 Install
+
+Prerequisites, checked by the script: section 8 done, a real `BASE_DOMAIN` in `config.env`, and the edge up
+(`dev up`). The wildcard record from section 7 already covers the desktop hostname.
+
+```bash
+bash ~/devbox-kit/devbox-desktop-setup.sh
+```
+
+The script prompts once for a password for the `ubuntu` account. xrdp authenticates through PAM and the
+account ships with SSH-key authentication only. That password goes into the Guacamole RDP connection, not
+into the web login. SSH stays key-only: the image disables password authentication for SSH.
+
+What it does, in order (full script in Appendix C):
+
+1. Installs XFCE, xrdp, xorgxrdp and theme packages
+2. Writes a polkit rule for colord and packagekit
+3. Removes screen lockers
+4. Binds xrdp to `0.0.0.0` and starts it
+5. Verifies the Guacamole images publish `arm64` manifests, then deploys guacd, the webapp and PostgreSQL in `/srv/dev/desktop`, with the webapp joined to `devenv_edge`
+6. Accepts 3389 only from `172.16.0.0/12`, at runtime and in `/etc/iptables/rules.v4`
+7. Writes `/srv/dev/caddy/sites/_desktop.caddy`, reloads Caddy and waits for the certificate
+8. Adds a fail2ban jail for the Guacamole login that bans in Docker's `DOCKER-USER` chain
+9. Verifies the listening sockets and the 3389 rule
+
+### 12.3 First login and connection setup
+
+Open `https://desktop.dev.example.com`.
+
+**Log in with `guacadmin` / `guacadmin`.** These are Guacamole's own credentials, stored in PostgreSQL. The
+`ubuntu` account and its password belong to the operating system and are used only inside the RDP connection
+definition. Mixing these up is the most common stumbling block.
+
+On first login, TOTP enrolment is presented as a QR code. Complete it, then immediately change the
+guacadmin password: user menu → Settings → Preferences.
+
+If you ever lose the TOTP device, clear the secret from the database:
+
+```bash
+cd /srv/dev/desktop
+sudo docker compose exec postgres psql -U guacamole -d guacamole_db \
+  -c "DELETE FROM guacamole_user_attribute WHERE attribute_name LIKE 'guac-totp%';"
+```
+
+**RDP connection:** Settings → Connections → New Connection.
+
+| Field | Value |
+|---|---|
+| Name | devbox |
+| Protocol | RDP |
+| Hostname | `host.docker.internal` |
+| Port | 3389 |
+| Username | ubuntu |
+| Password | the password set during the install |
+| Security mode | Any |
+| Ignore server certificate | enabled |
+
+The hostname works because `extra_hosts: host.docker.internal:host-gateway` is declared on the **guacd**
+service, not on the webapp. guacd is what opens the RDP socket; putting it on the wrong container produces a
+generic "unable to connect" with no useful diagnostics. `Security mode: Any` matters because xrdp rejects NLA;
+`Ignore server certificate` matters because xrdp presents a self-signed certificate.
+
+Under Display:
+
+| Setting | Value |
+|---|---|
+| Width / Height | **leave empty** |
+| Resolution (DPI) | empty, or 120–144 on HiDPI screens |
+| Color depth | 16-bit |
+| Enable wallpaper | off |
+| Enable font smoothing | off |
+| Enable full window drag | off |
+
+Leaving width and height empty is what lets the session adopt the browser window size. Any value there pins
+the resolution and disables the adaptation. Display settings apply at session creation, so reopen the
+connection after changing them.
+
+### 12.4 Hardening and lockouts
+
+- Five failed Guacamole logins within 10 minutes ban the source address for an hour on ports 80 and 443. The ban covers everything behind Caddy, so it also locks that address out of entrypoint B for the hour; entrypoint A is unaffected. Unban with `sudo fail2ban-client set guacamole unbanip <ip>`.
+- To allow the desktop only from networks you trust without affecting entrypoint B, uncomment the two `remote_ip` lines in `/srv/dev/caddy/sites/_desktop.caddy`, set your CIDR, and run `dev reload`. Caddy sees real client addresses, because Docker's DNAT preserves them. (The source guide's advice to restrict 443 in the security list no longer fits: entrypoint B needs 443 from everywhere.)
+- Re-running the desktop script keeps an edited `_desktop.caddy`.
+
+### 12.5 Desktop appearance
+
+The session runs XFCE, not GNOME. This is deliberate: GNOME depends on compositing and GPU acceleration,
+neither of which works well over RDP, and on 2 ARM cores with no GPU the result is slow and visually broken.
+
+XFCE's default theme looks dated but is easily changed. Settings live at Applications → Settings → Settings
+Manager, or launch the panels directly:
+
+```bash
+xfce4-appearance-settings     # themes, icons, fonts
+xfwm4-settings                # window decorations and compositor
+xfce4-settings-manager        # full grid
+```
+
+Right-clicking the desktop background opens the full application menu, useful if the panel fails to start.
+
+Recommended settings, with the theme packages already installed by the script:
+
+- Appearance → Style: `Arc-Dark`; Icons: `Papirus-Dark`
+- Window Manager → Style: `Arc-Dark`
+- Window Manager Tweaks → Compositor: **disabled** — shadows and transparency are exactly what stalls over RDP
+
+If you want something closer to a conventional modern desktop, MATE is a reasonable middle ground:
+
+```bash
+sudo apt install -y ubuntu-mate-desktop
+echo "mate-session" > ~/.xsession
+sudo pkill -u ubuntu xfce4-session
+sudo systemctl restart xrdp
+```
+
+Avoid `ubuntu-desktop` (GNOME) on xrdp. It can be forced to run, but you will spend the time fighting the
+compositor and Wayland, and half the RAM is gone before you open anything.
+
+### 12.6 Troubleshooting the desktop
+
+**Cannot log in as ubuntu on the web page.** That page is Guacamole: use `guacadmin` / `guacadmin`. If that
+also fails, the schema was never loaded — PostgreSQL only runs init scripts when the data directory is empty,
+so a first `up` with a missing or empty `initdb.sql` leaves a database with no tables, and the file is never
+applied again.
+
+```bash
+cd /srv/dev/desktop
+sudo docker compose exec postgres \
+  psql -U guacamole -d guacamole_db -c "SELECT name FROM guacamole_entity;"
+```
+
+If that errors, rebuild:
+
+```bash
+wc -l initdb.sql        # several hundred lines, never 0
+sudo docker compose down
+sudo rm -rf pgdata
+sudo docker compose up -d
+```
+
+**"Unable to connect" when opening the RDP connection.** Test from inside guacd, which is what actually dials
+the socket:
+
+```bash
+sudo docker exec guacd nc -zv host.docker.internal 3389
+sudo docker logs guacd --tail 30
+```
+
+A failure here is the host rule for 3389 (`sudo iptables -S INPUT | grep 3389`), not Guacamole.
+
+**XFCE hangs on a colord authentication dialog.** The polkit rule is missing or in the wrong format. Ubuntu
+24.04 uses the JavaScript `rules.d` format; the `.pkla` files in older guides have no effect.
+
+**Resolution does not follow the browser window.** Width and height are set in the connection's Display
+section — clear them. Then verify which X backend is serving the session:
+
+```bash
+ps aux | grep -E "Xorg|Xvnc" | grep -v grep
+```
+
+`Xvnc` means xrdp fell back to a VNC session, which has no dynamic resize. Fix the ordering in
+`/etc/xrdp/xrdp.ini` so the Xorg channel comes first, and check `channel_code=1` is set. xrdp sessions persist
+across connections, so closing the browser tab returns you to the same session with the same geometry. Force a
+clean one:
+
+```bash
+sudo pkill -u ubuntu xfce4-session
+```
+
+**The desktop does not load, but entrypoint B does.** Check that the stack is up and that the webapp is attached
+to the edge network:
+
+```bash
+sudo docker compose -f /srv/dev/desktop/docker-compose.yml ps
+docker network inspect devenv_edge --format '{{range .Containers}}{{.Name}} {{end}}'   # must list guacamole
+docker logs devenv-caddy --tail 50
+```
+
+**fail2ban does not ban.** Ubuntu 24.04 sends logs to the journal, and the jail reads the container's journal
+entries. Check that the filter matches your Guacamole version's log format — it changed in 1.6:
+
+```bash
+sudo journalctl CONTAINER_NAME=guacamole --since "1 hour ago" > /tmp/guac.log
+sudo fail2ban-regex /tmp/guac.log /etc/fail2ban/filter.d/guacamole.conf
+sudo fail2ban-client status guacamole
+```
+
+Zero matches after a deliberate failed login means the regex needs adjusting to the strings actually present.
+
+### 12.7 Maintenance and removal
+
+**Guacamole upgrades.** Change the version tag in both image lines of `/srv/dev/desktop/docker-compose.yml`
+(and `GUAC_VERSION` in the script, so a re-run does not revert it), then
+`sudo docker compose pull && sudo docker compose up -d`. Major versions can require database schema
+upgrades, shipped with the release and applied manually — read the release notes first — and may change the
+log format the fail2ban filter relies on. Back up first:
+
+```bash
+cd /srv/dev/desktop
+sudo docker compose exec postgres pg_dump -U guacamole guacamole_db > backup.sql
+```
+
+`dev backup` does not include the desktop: its database files belong to the PostgreSQL container's user.
+
+**Removal**, leaving the development environment untouched:
+
+```bash
+cd /srv/dev/desktop && sudo docker compose down
+rm /srv/dev/caddy/sites/_desktop.caddy && dev reload
+sudo rm /etc/fail2ban/jail.d/guacamole.conf && sudo systemctl restart fail2ban
+sudo iptables -D INPUT -s 172.16.0.0/12 -p tcp -m tcp --dport 3389 -j ACCEPT
+sudo sed -i '/--dport 3389 -j ACCEPT/d' /etc/iptables/rules.v4
+sudo systemctl disable --now xrdp
+```
+
+---
