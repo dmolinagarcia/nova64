@@ -130,7 +130,7 @@ It's the laptop's "management microcontroller": it handles everything that happe
   NOTE: **Accepted, on the grounds that it matches essentially any modern laptop**, and mitigated by discipline rather than by architecture: the EC's command bridge stays simple, non-blocking and watchdogged, and the per-transaction watchdog on the Debug Agent side ([R.17](sec_ai_r#r17)) stays specified.
   NOTE: **A hung EC and a bricked EC are different, and both are recoverable.** Hung loses debug access to the *system* while the EC itself is still reachable over SWD; bricked is [D1.24](sec_ai_d1#d124)'s case and is reachable against blank flash. **The unrecoverable case needs a blank flash *and* burned OTP debug-disable bits at the same time**, which is precisely why [D1.19](sec_ai_d1#d119) is a prohibition rather than a preference.
 
-![Fig. 3 — Boot sequence. States S0–S6 are executed by the EC (gold); from S6 onward the 65816 (mint) takes over. Nothing outside the EC's own package is read before the CPU runs.](figures/fig-3-ec.svg)
+![Fig. 3 — Boot sequence. States S0–S6 are executed by the EC; from S6 onward the 65816 takes over, and the rule down the left-hand edge names the phase in force. Nothing outside the EC's own package is read before the CPU runs.](figures/fig-3-ec.svg)
 
 ## Do not do — the list of irreversible or expensive mistakes, kept together deliberately.
 

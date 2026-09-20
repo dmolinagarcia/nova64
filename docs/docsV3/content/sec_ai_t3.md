@@ -236,4 +236,4 @@
 | APS6404L PSRAM, ~66 MB/s QSPI ceiling | Already removed board-wide ([D13](sec_ai_q#d13)) |
 
 ![Fig. 11 — The blitter and the bank partition. Three read channels and one write channel meet in the minterm LUT; the partition below is what keeps every ACTIVATE inside another bank's data phase, and it is worth a factor of two in delivered bandwidth.](figures/fig-11-blitter.svg)
-LEGEND: Trace legend: <span class="m">mint = channel and pixel data</span> · <span class="g">gold = the bank partition and the arbiter's hard deadline</span> · dashed = the paths that exist only under the channel model of [T3.1](sec_ai_t3#t31).
+LEGEND: Trace legend: <svg class="ls" viewBox="0 0 30 8" aria-hidden="true"><line class="dt" x1="1" y1="4" x2="29" y2="4"/></svg><span class="m">channel and pixel data</span> · <svg class="ls" viewBox="0 0 30 8" aria-hidden="true"><line class="pw" x1="1" y1="4" x2="29" y2="4"/></svg><span class="g">the bank partition and the arbiter's hard deadline</span> · <svg class="ls" viewBox="0 0 30 8" aria-hidden="true"><line class="dts" x1="1" y1="4" x2="29" y2="4"/></svg>the paths that exist only under the channel model of [T3.1](sec_ai_t3#t31).

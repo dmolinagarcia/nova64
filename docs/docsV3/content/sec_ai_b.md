@@ -34,4 +34,4 @@ An Amiga-style shared bus with four inhabitants: the physical CPU, two always-pr
   NOTE: **`NEON_BUS_BSY` is the one exception to "nothing reads as asserted"**: there the safe state *is* the asserted one, and its pull-up means busy ([B.6](sec_ai_b#b6)).
 
 ![Fig. 1 — Global architecture. Four inhabitants of the shared bus; the RP2354B governs configuration and reset from outside.](figures/fig-1-architecture.svg)
-LEGEND: Trace legend: <span class="m">mint = data</span> · <span class="g">gold = power / EC control</span> · dashed = optional or future.
+LEGEND: Trace legend: <svg class="ls" viewBox="0 0 30 8" aria-hidden="true"><line class="dt" x1="1" y1="4" x2="29" y2="4"/></svg><span class="m">data</span> · <svg class="ls" viewBox="0 0 30 8" aria-hidden="true"><line class="op" x1="1" y1="4" x2="29" y2="4"/></svg>EC control and configuration · <svg class="ls" viewBox="0 0 30 8" aria-hidden="true"><line class="dts" x1="1" y1="4" x2="29" y2="4"/></svg>optional or future.

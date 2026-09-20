@@ -21,14 +21,19 @@
   a{color:var(--mint);text-decoration:none}
   a:hover{text-decoration:underline}
   a:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+  /* a monospace bold barely thickens, and the running text around it is
+     already dimmed, so bold also steps up to the full ink — weight alone
+     does not carry it on screen */
+  b,strong{color:var(--ink);font-weight:800;}
 
   .masthead{border:1.6px solid rgba(var(--ink-rgb),.75);padding:22px 24px 18px;}
   .masthead h1{margin:0;font-size:30px;letter-spacing:4px;font-weight:800;}
   .masthead .sub{margin-top:6px;color:rgba(var(--ink-rgb),.75);font-size:12px;letter-spacing:2px;text-transform:uppercase;}
   .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
   .tag{border:1px solid rgba(var(--ink-rgb),.5);padding:2px 8px;font-size:10px;letter-spacing:1.5px;color:rgba(var(--ink-rgb),.8);}
-  .tag.g{border-color:var(--gold);color:var(--gold);}
-  .tag.m{border-color:var(--mint);color:var(--mint);}
+  /* the milestone tag is filled for the reason the blocking chip is: the fill
+     is the mark and the colour only repeats it (A.17) */
+  .tag.g{border-color:var(--gold);background:var(--gold);color:var(--ground);font-weight:700;}
 
   .idx{--frame:1px;margin-top:26px;border:var(--frame) solid rgba(var(--ink-rgb),.55);}
   .idx .cap{padding:10px 16px;border-bottom:1px solid rgba(var(--ink-rgb),.35);font-size:11px;letter-spacing:3px;color:rgba(var(--ink-rgb),.6);font-weight:700;}
@@ -77,14 +82,21 @@
   .id{color:var(--mint);font-weight:700;min-width:38px;}
   .itx{flex:1;min-width:0;color:rgba(var(--ink-rgb),.88);}
   .itx .cont,.lead .cont{display:block;margin-top:8px;}
+  /* a numbered list inside an item: the number hangs, the text aligns beside it */
+  .itx .cont.num,.lead .cont.num{display:flex;gap:8px;}
+  .cont.num .n{flex:none;min-width:2ch;text-align:right;}
+  .cont.num .nt{flex:1;min-width:0;}
   .itx .test{display:block;margin-top:3px;color:var(--gold);font-size:11.5px;}
   .itx .note{display:block;margin-top:2px;color:rgba(var(--ink-rgb),.55);font-size:11.5px;}
   .pad{width:13px;height:13px;border:1.4px solid var(--ink);margin-top:3px;flex:none;background:transparent;}
   .pad.done{background:var(--ink);}
   .pad.half{background:linear-gradient(90deg,var(--ink) 50%,transparent 50%);}
   .pad.optl{border-style:dashed;opacity:.75;}
+  /* An open chip is a frame, a blocking one is filled solid. The fill is the
+     mark and the colour only repeats it, so the two are still told apart in a
+     black-and-white copy — the rule sheet A states as A.17. */
   .chip{display:inline-block;border:1px solid var(--mint);color:var(--mint);font-size:9.5px;letter-spacing:1px;padding:0 5px;margin-left:6px;vertical-align:1px;}
-  .chip.g{border-color:var(--gold);color:var(--gold);}
+  .chip.g{border-color:var(--gold);background:var(--gold);color:var(--ground);font-weight:700;}
   code{color:var(--mint);background:rgba(var(--mint-rgb),.08);padding:0 4px;}
 
   /* fenced code — the whole document is already monospace, so a listing needs
@@ -135,6 +147,11 @@
   figure svg{width:100%;height:auto;display:block;}
   figcaption{margin-top:8px;color:rgba(var(--ink-rgb),.55);font-size:11px;letter-spacing:1px;}
   .legend{color:rgba(var(--ink-rgb),.5);font-size:10.5px;margin-top:2px}
+  /* A legend names a trace by drawing it. The sample carries the figure's own
+     classes, so it is rendered by the rules above and the two can never drift
+     apart — and on paper it is the sample, not a colour word, that identifies
+     the line. The width has to beat `figure svg`, which is why it is a class. */
+  .legend .ls{width:30px;height:8px;display:inline-block;vertical-align:middle;margin-right:3px;}
   .legend .m{color:var(--mint)}.legend .g{color:var(--gold)}
 
   .hito{border:2px solid var(--gold);background:rgba(var(--gold-rgb),.07);color:var(--gold);letter-spacing:2px;font-weight:800;padding:8px 14px;margin:12px 0 4px;font-size:12.5px;}
@@ -149,6 +166,9 @@
          background:rgba(var(--warn-rgb),.08);
          color:rgba(var(--ink-rgb),.9);}
   .aviso b{color:var(--warn);letter-spacing:1.5px;font-weight:800;}
+  /* the separator lives here rather than in the text, because on paper the
+     label takes a line of its own and a leading dash would dangle */
+  .aviso .avtx::before{content:' \2014 ';}
   .aviso .cont{display:block;margin-top:8px;}
   .aviso code{color:var(--warn);background:rgba(var(--warn-rgb),.10);}
   .aviso a{color:var(--warn);text-decoration:underline;}
@@ -174,12 +194,18 @@
   svg .gtx{fill:var(--gold);font-size:11px;}
   svg .htx{fill:var(--gold);font-size:11px;font-weight:800;letter-spacing:1px;text-anchor:middle;}
   svg .nlbl{fill:var(--ink);font-size:11px;font-weight:700;text-anchor:middle;}
-  svg .pw{stroke:var(--gold);stroke-width:3;fill:none;}
-  svg .pwd{stroke:var(--gold);stroke-width:1.6;fill:none;stroke-dasharray:5 4;}
+  /* ── traces ─────────────────────────────────────────────────────────
+     A trace names its family by its pattern and its role within that family
+     by its weight; the colour repeats the pattern and carries nothing on its
+     own (A.17). Data runs solid, power carries a dash-dot, and the control
+     and configuration lines are dotted. Breaking a line keeps its family's
+     pattern, so an optional supply is still read as a supply. */
+  svg .pw{stroke:var(--gold);stroke-width:3;fill:none;stroke-dasharray:18 4 2 4;}
+  svg .pwd{stroke:var(--gold);stroke-width:2;fill:none;stroke-dasharray:8 4 2 4;}
   svg .dt{stroke:var(--mint);stroke-width:2;fill:none;}
   svg .dtb{stroke:var(--mint);stroke-width:5;fill:none;}
-  svg .dts{stroke:var(--mint);stroke-width:1.6;fill:none;stroke-dasharray:5 4;}
-  svg .op{stroke:rgba(var(--ink-rgb),.6);stroke-width:1.6;fill:none;stroke-dasharray:5 4;}
+  svg .dts{stroke:var(--mint);stroke-width:2;fill:none;stroke-dasharray:6 4;}
+  svg .op{stroke:rgba(var(--ink-rgb),.6);stroke-width:1.6;fill:none;stroke-dasharray:1 3.5;stroke-linecap:round;}
   svg text{font-family:inherit}
 
   @media (max-width:560px){ .masthead h1{font-size:22px;letter-spacing:2px} .sheet{display:none} }
@@ -293,11 +319,15 @@
     /* text → pure black */
     a,.lead,.itx,.itx .cont,.itx .note,.aim,.sheet,.masthead .sub,.idx .cap,.idx .no,.idx td,
     figcaption,.legend,.cj>div,.cj .big,table.simple th,table.simple td,
-    table.simple td:first-child{ color:#000; }
+    table.simple td:first-child,b,strong{ color:#000; }
     a{ text-decoration:none; }
 
     /* frames → pure black */
-    .masthead,.idx,.hoja,.cajetin{ border-color:#000; }
+    .masthead,.idx,.cajetin{ border-color:#000; }
+    /* the frame round a sheet is a screen device, a card among cards. On paper
+       the page is the frame, so it goes, and its padding with it, which gives
+       the width back to the text */
+    .hoja{ border:0; padding:0; }
     .idx .cap,.sechead,table.simple th{ border-bottom-color:#000; }
     .idx tr.grp td{ background:transparent; color:#000; border-top-color:#000; }
     .idx tr.part td{ background:transparent; color:#000; border-top-color:#000; }
@@ -315,8 +345,9 @@
        `.idx`'s *border* box rather than its content box, so the last column's
        rule lands past the inner edge — on screen nothing, on paper a rule
        crossing the frame. Take the two borders back off here; screen resolves
-       the percentage correctly and must not get this, and `.hoja` and the rest
-       hide the same error inside their padding.
+       the percentage correctly and must not get this. A sheet has neither frame
+       nor padding on paper, so for it the two boxes are one and there is no
+       error to hide.
 
        The frame is 1px rather than the 1.3px its neighbours use for the second
        reason: the table's edge snaps to whole pixels, so a fractional frame
@@ -333,18 +364,41 @@
     .hito{ background:transparent; border-color:#000; color:#000; }
     /* the warning keeps its edge on paper the way the figure traces keep
        theirs: the ground goes, the left rule stays, darkened */
-    .aviso{ background:transparent; border-color:#000; border-left-color:#8A3200; color:#000; }
-    .aviso b,.aviso code,.aviso a{ color:#8A3200; }
+    .aviso{ background:transparent; border-color:#000; border-left-color:#000; color:#000; }
+    /* On screen the box wears a red-amber of its own. Paper has no sixth
+       colour to spend, so the warning is carried by its frame and by a
+       label that takes the line to itself, set well above the body size —
+       the one place in the document where type is used to raise a voice. */
+    .aviso b{ display:block; color:#000; font-size:12pt; letter-spacing:2.5px;
+              margin-bottom:6px; }
+    .aviso .avtx::before{ content:none; }
+    .aviso code,.aviso a{ color:#000; }
     .tag{ border-color:#000; color:#000; }
-    code{ background:transparent; }
-    pre.code{ background:transparent; border-left-color:#000; overflow-x:visible; }
-    pre.code code{ color:#000; white-space:pre-wrap; }
+    /* Inline code is the one mark the paper edition cannot borrow a font for:
+       the whole document is already monospaced, so nothing but the colour sets
+       a register name apart, and colour is what a black-and-white copy loses.
+       A light ground does it instead, forced through the way the filled chip
+       is rather than left to the printer. It runs inside a sentence, so it
+       takes no frame — the ground alone, and the line keeps its rhythm. */
+    code{ background:#EFEFEF;
+          -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    /* the two places that set their own ground take the same one */
+    .aviso code,.kitnote code{ background:#EFEFEF; }
+    /* A listing is a block, so it takes the frame the inline form cannot: the
+       same ground, closed on all four sides in place of the screen's single
+       left rule. The frame is what stops a listing running into the prose when
+       a page break lands beside it. */
+    pre.code{ background:#EFEFEF; border:1px solid #000; overflow-x:visible;
+              -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    pre.code code{ color:#000; white-space:pre-wrap; background:transparent; }
     pre.code[data-lang]::before{ color:#000; }
-    /* on paper the two meaningful colours darken as everywhere else, and the
-       comment leans on italic and grey rather than on hue */
+    /* A listing on paper is read line by line rather than skimmed for token
+       classes, so the six classes collapse to one ink and contrast is the only
+       thing asked of them. Two survive the collapse because they earn their
+       keep without hue: the comment, which the reader may want to skip, keeps
+       grey and italic, and the keyword keeps its weight. */
     pre.code .c{ color:#555; font-style:italic; }
-    pre.code .s,pre.code .n{ color:#6b4a00; }
-    pre.code .k,pre.code .t,pre.code .d{ color:#004a3a; }
+    pre.code .s,pre.code .n,pre.code .k,pre.code .t,pre.code .d{ color:#000; }
     pre.code .k{ font-weight:700; }
     .pad{ border-color:#000; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 
@@ -360,16 +414,26 @@
     .kitcap b{ color:#000; }
     .kitsz{ color:#555; }
     .kitnote{ display:block; color:#555; font-style:italic; }
-    .kitnote code{ color:#000; background:transparent; }
+    .kitnote code{ color:#000; }
     .kit{ break-inside:avoid; }
     .pad.done{ background:#000; }
     .pad.half{ background:linear-gradient(90deg,#000 50%,transparent 50%); }
 
     /* colour that carries meaning → darkened, not flattened */
-    .idx .de,.itx .test,.tag.g,.chip.g,.cj .gold,.legend .g{ color:#6b4a00; }
+    .itx .test,.tag.g,.chip.g,.cj .gold,.legend .g{ color:#6b4a00; }
     .tag.g,.chip.g{ border-color:#6b4a00; }
-    .id,code,.tag.m,.chip,.legend .m{ color:#004a3a; }
-    .tag.m,.chip{ border-color:#004a3a; }
+    /* filled on paper too, and the ground forced through rather than left to
+       the printer: once the two colours darken to near-black the fill is all
+       that tells a milestone tag from a plain one, and a blocking chip from
+       an open one */
+    .tag.g,.chip.g{ background:#000; border-color:#000; color:#fff;
+                    -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .chip,.legend .m{ color:#004a3a; }
+    /* the index letter, the item id and inline code are ink on paper: each
+       one is already marked by its place, its weight or its ground, so the
+       colour was the one channel of the three carrying nothing */
+    .idx .de,.id,code{ color:#000; }
+    .chip{ border-color:#004a3a; }
 
     /* diagrams — class-driven */
     svg text{ fill:#000; }
@@ -426,9 +490,25 @@
     body.full #content::after{ content:""; display:block; break-before:page; height:var(--cajetin-drop); }
     body.full .cajetin{ break-inside:avoid; }
 
-    /* keep rows, steps and figures from splitting across pages */
+    /* keep rows and figures from splitting across pages. An item may: holding
+       one whole pushed it to the next page and left the gap behind it, and a
+       long item with a listing under it could leave most of a page blank */
     .sechead{ break-after:avoid; }
-    ol.steps li,figure,.hito,.aviso,table.simple tr{ break-inside:avoid; }
+    figure,.hito,.aviso,table.simple tr{ break-inside:avoid; }
+
+    /* An item is a flex row on screen, and Vivliostyle lays a flex box out
+       whole: it never breaks one across pages, and one taller than the page is
+       cut off. On paper the row is a plain block, with the checkbox and the id
+       hung in the text's left margin. The id column is fixed at the longest id
+       the sheets use (P2.11a, EM7.65) rather than growing with it as the flex
+       row does, so every item's text starts on the same line. */
+    ol.steps li{ display:block; position:relative; }
+    ol.steps li .pad,ol.steps li .id{ position:absolute; left:0; }
+    ol.steps li .id{ width:6ch; }
+    ol.steps li .pad ~ .id{ left:23px; }
+    ol.steps li .id ~ .itx{ margin-left:calc(6ch + 10px); }
+    ol.steps li .pad ~ .itx{ margin-left:23px; }
+    ol.steps li .pad ~ .id ~ .itx{ margin-left:calc(23px + 6ch + 10px); }
 
     /* ── page numbers ──────────────────────────────────────────────────
        Two pieces of CSS paged media, and **no browser implements either**:

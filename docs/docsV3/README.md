@@ -212,10 +212,11 @@ letter and number are not repeated here — they live in `manifest.json`.
 | a plain paragraph | `p.lead` — the standing text of a sheet |
 | `## Register map — base block $FF:0000` | sub-heading: bold up to the ` — `, plain after it |
 | `### Hardening door B` | the same, one level down and a little tighter |
-| `- A.1 — text` | a numbered item: `A.1` in mint, text beside it, anchored at `#a1` |
-| `1. text` | the same row, its number in mint where the id would be, and no anchor |
+| `- A.1 — text` | a numbered item: `A.1` in bold at the head, text beside it, anchored at `#a1` |
+| `1. text` | the same row, its number where the id would be, and no anchor |
+| `  1. text` indented under an item | a numbered list inside the item: the written number hung in the margin, one line per entry |
 | `- [ ] E0.1 — text` | the same, with a build checkbox in front |
-| `!!! APPLE II MILESTONE — …` | the gold milestone banner |
+| `!!! APPLE II MILESTONE — …` | the milestone banner — a framed band with a `■` at its head |
 | `!! AVISO — …` + the lines under it | the warning box — see below |
 | `\| Term \| Meaning \|` + `\|---\|---\|` | `table.simple` |
 | `![Fig. 1 — caption](figures/f.svg)` | the figure, its SVG inlined so the stylesheet reaches it |
@@ -255,8 +256,11 @@ applies throughout, so links, `code` and chips work inside. A `!!` line on its
 own, with no body under it, is a legal one-line warning.
 
 On paper the ground goes and the left rule stays, darkened — the same treatment
-the chips and the figure traces get, since the frame is what carries the meaning
-once the colour is gone.
+the chips and the figure traces get. No mark in the document is told apart by
+its colour alone, which is the rule sheet A states as A.17: the box is known by
+its rule, a blocking chip by its fill against an open one's frame, and a trace
+by its pattern and its weight. Colour repeats those on screen and adds nothing
+the paper edition loses.
 
 ### Code listings
 
@@ -313,7 +317,7 @@ carrying into the PDF build for a document whose listings are illustrations.
   NOTE: Currently at REV B and well behind this document (→ [A.7](sec_a#a7)).
 ```
 
-`TEST:` renders as the gold *TEST ▸* line, `NOTE:` as the dimmed aside. Both
+`TEST:` renders as the *TEST ▸* line, `NOTE:` as the dimmed aside. Both
 also work under a paragraph or a `##` sub-heading.
 
 Any other indented line attaches the same way, but as a further paragraph of the
@@ -331,10 +335,10 @@ does so without leaving its number:
 |---|---|
 | `**bold**` · `*italic*` · `` `code` `` | `<b>` · `<i>` · `<code>` |
 | `[text](sec_q#q8)` | a link, rewritten to the route `#/sec_q/q8` |
-| `[[open]]` | a mint chip |
-| `[[!blocking]]` | a gold chip |
+| `[[open]]` | an outline chip |
+| `[[!blocking]]` | a filled chip |
 | `((an aside))` | an inline `.note`, for when it sits mid-sentence |
-| raw HTML | passed through — the escape hatch, used once, for the legend |
+| raw HTML | passed through — the escape hatch, used by the figure legends for their line samples |
 
 ## Adding a sheet
 

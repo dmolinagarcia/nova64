@@ -120,22 +120,35 @@
      block, and any other indented line, which continues the block as a further
      paragraph at the same weight — the way A1.1 carries its second and third
      paragraphs. The fence is tested before the indent rule, or an indented
-     fence would be read as prose. */
+     fence would be read as prose.
+
+     An indented `1. text` is the same continuation with its number hung in
+     the margin — a list inside an item, the way A3.1 walks through the four
+     levels. It stays in `conts`, so it keeps its place among the paragraphs,
+     and the number is the one written, as in a procedure at the margin. */
   function trailers(lines, k) {
     var conts = [], notes = [], codes = [], test = null;
     while (k < lines.length) {
-      var raw = lines[k], t = raw.trim(), f = fence(lines, k);
+      var raw = lines[k], t = raw.trim(), f = fence(lines, k), n;
       if (f) { codes.push(f); k = f.next; }
       else if (/^NOTE:/.test(t)) { notes.push(t.slice(5).trim()); k++; }
       else if (/^TEST:/.test(t)) { test = t.slice(5).trim(); k++; }
+      else if ((n = /^\s{2,}(\d+)\.\s+(\S.*)$/.exec(raw))) { conts.push({ num: n[1], text: n[2] }); k++; }
       else if (/^\s{2,}\S/.test(raw)) { conts.push(t); k++; }
       else break;
     }
     return { conts: conts, notes: notes, codes: codes, test: test, next: k };
   }
 
+  /* Spans rather than an <ol>: the same trailers hang off a p.lead, and a
+     list inside a paragraph is not HTML — the parser would close the <p>. */
   function tail(tr) {
-    var out = tr.conts.map(function (c) { return '<span class="cont">' + inline(c) + '</span>'; }).join('');
+    var out = tr.conts.map(function (c) {
+      return typeof c === 'string'
+        ? '<span class="cont">' + inline(c) + '</span>'
+        : '<span class="cont num"><span class="n">' + c.num + '.</span><span class="nt">' +
+          inline(c.text) + '</span></span>';
+    }).join('');
     out += tr.codes.map(codeHtml).join('');
     out += tr.notes.map(function (n) { return ' <span class="note">' + inline(n) + '</span>'; }).join('');
     if (tr.test) out += '<span class="test">TEST ▸ ' + inline(tr.test) + '</span>';
@@ -233,7 +246,7 @@
         doc.tags = []; i++;
         while (i < lines.length && /^-\s+/.test(lines[i].trim())) {
           var tag = lines[i].trim().replace(/^-\s+/, '');
-          var cm = /^\[([mg])\]\s*/.exec(tag);
+          var cm = /^\[(g)\]\s*/.exec(tag);
           doc.tags.push({ cls: cm ? cm[1] : '', text: cm ? tag.slice(cm[0].length) : tag });
           i++;
         }
@@ -255,8 +268,11 @@
          the third `!` is not the space this one requires. */
       if (/^!!\s+/.test(t)) {
         var av = t.replace(/^!!\s+/, ''), cut = av.indexOf(' — ');
+        /* The separator is not written into the text: the label is a line of
+           its own on paper (style.css), where a leading dash would dangle. The
+           screen puts it back with a `::before`, so both read as one sentence. */
         var head = '<b>▲ ' + inline(cut > 0 ? av.slice(0, cut) : av) + '</b>' +
-                   (cut > 0 ? inline(' — ' + av.slice(cut + 3)) : '');
+                   (cut > 0 ? '<span class="avtx">' + inline(av.slice(cut + 3)) + '</span>' : '');
         var run = [], paras = [];
         for (i++; i < lines.length && lines[i].trim(); i++) {
           if (/^\s{2,}\S/.test(lines[i]) && run.length) { paras.push(run.join(' ')); run = []; }

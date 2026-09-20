@@ -3,9 +3,9 @@
 
 TAGS:
 - W65C816S · 3× iCE40 TQ144 · RP2354B
-- [m] Helium · Neon · Argon
+- Helium · Neon · Argon
 - all 3.3V · hand-solderable
-- [m] 100% open toolchain
+- 100% open toolchain
 - [g] MILESTONE 1 · APPLE II — autonomous boot to prompt
 - [g] MILESTONE 2 · AMIGA — multitasking + windowed GUI
 
