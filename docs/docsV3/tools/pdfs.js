@@ -213,7 +213,10 @@ for (const t of wanted) {
   try {
     execFileSync(process.execPath, [path.join(__dirname, 'prerender.js'), '--head', css, html],
                  { stdio: ['ignore', 'ignore', 'inherit'] });
-    execFileSync('npx', ['--yes', '@vivliostyle/cli', 'build', html, '-o', out],
+    /* Vivliostyle gives up after 300 s by default, and the whole document
+       takes longer than that on the two-core ARM devbox; half an hour is
+       headroom, not an estimate. */
+    execFileSync('npx', ['--yes', '@vivliostyle/cli', 'build', html, '-o', out, '--timeout', '1800'],
                  { stdio: ['ignore', 'ignore', 'ignore'] });
     const mb = (fs.statSync(out).size / 1048576).toFixed(1);
     console.error(`${path.relative(process.cwd(), out)} — ${mb} MB`);

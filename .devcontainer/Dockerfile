@@ -32,6 +32,21 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
 	&& ln -sf /usr/bin/clang++-18 /usr/bin/clang++ \
 	&& rm -rf /var/lib/apt/lists/*
 
+# --- Headless Chrome for the docs PDFs ---------------------------------------
+# tools/pdfs.js runs Vivliostyle, which downloads its own Chrome build on first
+# use but not the system libraries that build links against. base:bookworm
+# ships none of them, and no fonts either: Liberation Mono is in the document's
+# font stack, DejaVu covers the symbols (▲ ■ ▸) it does not.
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+		libglib2.0-0 libnss3 libnspr4 \
+		libatk1.0-0 libatk-bridge2.0-0 libatspi2.0-0 \
+		libdbus-1-3 libcups2 libasound2 \
+		libxcb1 libxkbcommon0 libgbm1 \
+		libx11-6 libxext6 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+		libcairo2 libpango-1.0-0 \
+		fonts-liberation fonts-dejavu-core \
+	&& rm -rf /var/lib/apt/lists/*
+
 # --- WASI sysroot and wasm32 builtins ----------------------------------------
 # Both from the same wasi-sdk release (see nova64-emu-ongoing/README.md). The
 # builtins must sit in clang's own resource directory, where it looks for them
