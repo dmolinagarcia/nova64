@@ -295,6 +295,38 @@
       "index": "The windowing OS · window server, client protocol and toolkit"
     },
     {
+      "file": "sec_ai_vm1",
+      "letter": "VM1",
+      "part": "ai",
+      "area": "The NVM32 virtual machine",
+      "nav": "NVM32 — the instruction set",
+      "index": "NVM32 — the instruction set, memory model, encoding and ABI"
+    },
+    {
+      "file": "sec_ai_vm2",
+      "letter": "VM2",
+      "part": "ai",
+      "area": "The NVM32 virtual machine",
+      "nav": "NVM32 — the 65816 interpreter",
+      "index": "NVM32 — the interpreter on the W65C816S, and the gate into bytecode"
+    },
+    {
+      "file": "sec_ai_vm3",
+      "letter": "VM3",
+      "part": "ai",
+      "area": "The NVM32 virtual machine",
+      "nav": "NVM32 — the bytecode coprocessor",
+      "index": "NVM32 — the bytecode coprocessor on Argon"
+    },
+    {
+      "file": "sec_ai_vm4",
+      "letter": "VM4",
+      "part": "ai",
+      "area": "The NVM32 virtual machine",
+      "nav": "NVM32 — toolchain and measurement",
+      "index": "NVM32 — the C toolchain and the measurement harness"
+    },
+    {
       "file": "sec_ai_em1",
       "letter": "EM1",
       "part": "ai",
@@ -389,6 +421,14 @@
       "area": "Project and build",
       "nav": "Decision log · open questions",
       "index": "Decision log · open questions"
+    },
+    {
+      "file": "sec_ai_nv1",
+      "letter": "NV1",
+      "part": "ai",
+      "area": "Future roadmap",
+      "nav": "noVa128 — the Argon 2 core",
+      "index": "noVa128 — the Argon 2 tri-mode core and what it requires of noVa64"
     },
     {
       "file": "sec_ai_z3",
