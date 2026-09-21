@@ -79,7 +79,7 @@
 
      The `~~~` form exists for one case: a listing that itself contains a line
      of backticks, which is what a script that extracts fenced blocks out of
-     this document looks like ([EM0](sc_w6)). */
+     this document looks like ([V7](sc_v7)). */
   var FENCE = { '`': /^\s*```+\s*$/, '~': /^\s*~~~+\s*$/ };
 
   function fence(lines, k) {

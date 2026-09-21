@@ -10,7 +10,7 @@
  *   node tools/progress.js            lines per part, and the share outside AI
  *   node tools/progress.js --sheets   the same, with every sheet under its part
  *   node tools/progress.js --prose    count only prose: no blank lines, and no
- *                                     fenced listings (sc_w6 carries a kit of
+ *                                     fenced listings (sc_v7 carries a kit of
  *                                     scripts that would otherwise dominate)
  */
 'use strict';

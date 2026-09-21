@@ -41,7 +41,7 @@ It's not all roses. Oracle halved the free ARM allowance earlier this year, capa
 
 ### The runbook
 
-Everything is in a single sheet: [The development environment]({{ '/docsV3/' | relative_url }}#/sc_w6). It's self-contained: every script, template and configuration file is reproduced in full, and a short `awk` one-liner extracts them into a ready-to-run kit, so there's nothing to copy and paste by hand beyond a few short commands.
+Everything is in a single sheet: [The development environment]({{ '/docsV3/' | relative_url }}#/sc_v7). It's self-contained: every script, template and configuration file is reproduced in full, and a short `awk` one-liner extracts them into a ready-to-run kit, so there's nothing to copy and paste by hand beyond a few short commands.
 
 It is also the first sheet of the Emulation area to leave the AI part and move into the reviewed part of the document. I didn't just read this one. I ran it, broke it, and ran it again until it came up clean.
 

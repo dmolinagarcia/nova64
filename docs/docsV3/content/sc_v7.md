@@ -3,7 +3,7 @@
 
 This document will guide you through every step needed to set up a web-based development environment where you can build your own noVa64-emu and, since the emulator itself is also web-based, host it too. The whole premise of this document is that the development environment costs nothing.
 
-!! WARNING! As with everything cloud-based, there are some key steps that, if not executed properly, may incur costs.
+!! WARNING! — As with everything cloud-based, there are some key steps that, if not executed properly, may incur costs.
 These steps will be clearly pointed out but, please be advised, I cannot take responsibility for any expenses you may generate. Mistakes happen, cloud providers' terms change over time, and what is valid today may not be valid tomorrow.
 
 The scripts to setup the environment are self-contained in this document: every script, template and configuration file is reproduced here in full and can be extracted automatically (section 4). 
@@ -93,7 +93,7 @@ All of them are idempotent and safe to re-run.
 
 Although this build is aimed at noVa64-emu development, it is possible to start new containers within your OCI instance to host other projects but, keep in mind, resources on an Always Free server are limited. Each container's CPU and memory limits are ceilings, not reservations (section 12), so several can run at once: an idle one costs little, but two heavy builds at the same time compete for the same two cores.
 
-!! You can choose to create an instance with more resources, but anything above the allocations defined in this document will exceed the OCI Always Free limits and incur costs.
+!! WARNING! — You can choose to create an instance with more resources, but anything above the allocations defined in this document will exceed the OCI Always Free limits and incur costs.
 
 ---
 
@@ -117,7 +117,7 @@ The design consequence is structural: **the editor server runs inside the projec
 
 **Idle instances can be reclaimed on Free Tier accounts.** Oracle's Always Free documentation lets it reclaim Always Free compute instances that stay idle — low CPU, network and memory utilisation — over a 7-day window. A development box idles most of the week. Oracle's own notice states that converting the account to Pay As You Go prevents this, and Always Free resources stay free after the upgrade. Recommended, together with the budget alert in section 5.
 
-!! WARNING! Switching to a Pay As You Go account keeps your instances running but, if you exceed the Always Free limits, you will be charged.
+!! WARNING! — Switching to a Pay As You Go account keeps your instances running but, if you exceed the Always Free limits, you will be charged.
 
 **The host is ARM64.** Everything in this runbook is architecture-aware, and the whole noVa64-emu toolchain (GCC, clang/lld, cc65, Node.js) is available for arm64. Binaries shipped only for x86-64 do not run natively.
 
@@ -125,7 +125,7 @@ The design consequence is structural: **the editor server runs inside the projec
 
 **Entrypoint B needs a domain you own.** Each project gets its own hostname under a wildcard DNS record. Free dynamic DNS providers are a poor fit: FreeDNS (afraid.org) shared domains are not on the Public Suffix List — inclusion requests must come from the domain registrant, and the proposals never progressed — and Let's Encrypt counts issuance limits per registered domain, so every user of a shared domain draws from the same quota and `too many certificates already issued` is common. Without a domain, entrypoint A still works on its own.
 
-!! WARNING! Buying your own domain costs money. Not a lot, but money nonetheless.
+!! WARNING! — Buying your own domain costs money. Not a lot, but money nonetheless.
 
 **Bare-IP HTTPS is not used.** The TLS specification does not permit address literals in the Server Name Indication extension, so a browser opening `https://<ip>` sends no SNI at all; Caddy selects certificates by SNI, and the handshake fails with `ERR_SSL_PROTOCOL_ERROR`. It can be worked around with `default_sni` plus either Caddy's internal CA or a short-lived Let's Encrypt IP certificate (generally available since 15 January 2026, about 160 hours of validity). With a domain none of that is needed: every hostname gets an ordinary certificate automatically.
 
@@ -141,7 +141,7 @@ Smaller snippets can (and will) be copied and pasted from this document manually
 
 ~~~bash
 curl -fsSL -o devbox-oci-runbook.md \
-  https://raw.githubusercontent.com/dmolinagarcia/nova64/main/docs/docsV3/content/sc_w6.md
+  https://raw.githubusercontent.com/dmolinagarcia/nova64/main/docs/docsV3/content/sc_v7.md
 ~~~
 
 2. From the directory containing the file, run:
@@ -225,7 +225,7 @@ Notable behaviours:
 
 When the script completes, **back up the SSH private key immediately.** Download `~/.ssh/oci_devbox` (Cloud Shell's menu has a Download option) and keep it somewhere safe. It is the only credential that opens SSH on the instance, and Oracle removes Cloud Shell home directories after a long period without use. Losing this file means losing access to your server!
 
-!! WARNING! I have just said it, but maybe once is not enough. Download your private key **NOW**! Keep it somewhere safe. If you lose it, you may lose your server. Keep it away from other people: anyone who has it can impersonate you and access your server.
+!! WARNING! — I have just said it, but maybe once is not enough. Download your private key **NOW**! Keep it somewhere safe. If you lose it, you may lose your server. Keep it away from other people: anyone who has it can impersonate you and access your server.
 
 Then, connect to your newly created instance:
 
