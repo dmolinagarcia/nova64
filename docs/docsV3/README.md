@@ -66,6 +66,11 @@ just resolved — the registry, the named area runs inside it, and the reading
 order. It used to spell the sheet letters out, which left it a little further
 from the truth after every split.
 
+**The title block's revisions are a list.** `footer.revs` holds one entry per
+area — `"POWER REV C"` — and `shell.js` sets each on a line of its own, so the
+cell stays readable as the areas multiply. Under them, ruled off, `footer.version`
+and `footer.date` close the block.
+
 **The letters follow neither, and are never reissued.** A letter is a sheet's
 identity — the file name (`sec_r.md`), the route (`#/sec_r`), and every
 cross-reference in the prose — while its number is only its position. The two

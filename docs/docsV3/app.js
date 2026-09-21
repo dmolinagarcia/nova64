@@ -142,7 +142,7 @@
     return '<div class="cj"><div class="big">' + M.title + ' — ' + M.documentShortName +
            '</div><div>' + line + '</div></div>' +
            (r.isIndex ? '<div class="cj"><div>' + f.referenceIndex + '</div></div>' : '') +
-           '<div class="cj"><div>' + f.rules + '</div><div class="gold">' + f.rev + '</div></div>';
+           '<div class="cj"><div>' + f.rules + '</div>' + NovaShell.revCell(f) + '</div>';
   }
 
   // ── rendering ─────────────────────────────────────────────────────────

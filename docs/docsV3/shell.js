@@ -120,6 +120,18 @@
     return M;
   }
 
+  /* The title block's revision cell. One revision to a line, because the run
+     of them read as a single sentence once it passed a dozen areas, and the
+     line that closes it carries the document's own version and date. Both
+     editions build the same cell, so it is built here. */
+  function revCell(footer) {
+    if (!footer) return '';
+    var revs = footer.revs || [];
+    return '<div class="gold">' +
+           revs.map(function (r) { return '<div>' + r + '</div>'; }).join('') +
+           '<div class="ver">' + footer.version + ' \u00b7 ' + footer.date + '</div></div>';
+  }
+
   function loadManifest() {
     return fetch('manifest.json').then(function (res) {
       if (!res.ok) throw new Error('HTTP ' + res.status + ' on manifest.json');
@@ -127,6 +139,6 @@
     }).then(prepare);
   }
 
-  global.NovaShell = { inlineFigures: inlineFigures, fail: fail,
+  global.NovaShell = { inlineFigures: inlineFigures, fail: fail, revCell: revCell,
                        loadSheet: loadSheet, loadManifest: loadManifest, prepare: prepare };
 })(window);

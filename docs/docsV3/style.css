@@ -181,6 +181,12 @@
   .cj>div+div{border-left:1px solid rgba(var(--ink-rgb),.35);}
   .cj .big{font-size:16px;font-weight:800;letter-spacing:3px;color:var(--ink);}
   .cj .gold{color:var(--gold);font-weight:700}
+  /* one revision to a line, and the version and date on the last of them,
+     ruled off so the stamp reads as the block's signature rather than as one
+     more area */
+  .cj .gold>div{line-height:1.8;}
+  .cj .gold .ver{margin-top:7px;padding-top:7px;
+                 border-top:1px solid rgba(var(--ink-rgb),.35);}
 
   svg .blk{fill:var(--panel);stroke:var(--ink);stroke-width:1.3;}
   svg .opt{stroke-dasharray:5 4;opacity:.85;}
@@ -336,7 +342,7 @@
     .areaband{ color:#000; border-bottom-color:#000; break-after:avoid; }
     .partband{ background:transparent; color:#000; border-color:#000; break-after:avoid; }
     .partband .pn{ color:#6b4a00; }
-    .cj,.cj>div+div{ border-color:rgba(0,0,0,.6); }
+    .cj,.cj>div+div,.cj .gold .ver{ border-color:rgba(0,0,0,.6); }
     .idx td{ border-top-color:rgba(0,0,0,.35); }
 
     /* The sheet index is the one framed box with no padding, so its table sits

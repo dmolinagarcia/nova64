@@ -87,7 +87,7 @@
            '<div>' + M.documentName.toUpperCase() + ' — COMPLETE, SHEETS ' +
            M.sheets[0].letter + '–' + last.letter + '</div></div>' +
            '<div class="cj"><div>' + f.referenceIndex + '</div></div>' +
-           '<div class="cj"><div>' + f.rules + '</div><div class="gold">' + f.rev + '</div></div>';
+           '<div class="cj"><div>' + f.rules + '</div>' + NovaShell.revCell(f) + '</div>';
   }
 
   document.addEventListener('DOMContentLoaded', function () {
