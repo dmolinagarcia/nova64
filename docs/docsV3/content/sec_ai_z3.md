@@ -225,7 +225,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | Driver | Kernel module handling one device behind a fixed 5-function interface, exposed as a `/dev/*` node. |
 | devfs | The synthetic filesystem where those `/dev/*` nodes live — no bytes on the SD card. |
 | ioctl | The escape hatch of the unified I/O interface: device-specific operations that are neither read nor write, such as mapping the framebuffer. |
-| FAT32 | The filesystem this document once put on the boot card, and now the *first* of the three the host track implements ([P4.1](sec_ai_p4#p41)) — chosen there for being the cheapest way to get a real filesystem mounted, not for being used here. The boot card is NVFS ([G.3](sec_ai_g#g3)). |
+| FAT32 | The filesystem this document once put on the boot card, and now the *first* of the three the host track implements ([Y4.2](sec_ai_y4#y42)) — chosen there for being the cheapest way to get a real filesystem mounted, not for being used here. The boot card is NVFS ([G.3](sec_ai_g#g3)). |
 | BSS | The zero-initialised data of a binary. Carries no bytes in the file: the loader just maps it and clears it. |
 | Relocation | Patching a binary's addresses to match where it was actually loaded. The MMU removes the need: every process sees the same addresses. |
 | ABI | Application Binary Interface — the contract user binaries rely on. Drivers may be rewritten as long as it holds. |
@@ -234,7 +234,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | Toolchain | The full chain from source to loadable artefact. Open end to end here: KiCad · Yosys · nextpnr · IceStorm · pico-sdk · ca65/64tass. |
 
 ## Filesystems
-  NOTE: → [sheet Y1](sec_ai_y1) · [sheet Y2](sec_ai_y2) · [sheet Y3](sec_ai_y3)
+  NOTE: → [sheet Y1](sec_ai_y1) · [sheet Y2](sec_ai_y2) · [sheet Y3](sec_ai_y3) · [sheet Y4](sec_ai_y4)
 
 | Term | Meaning |
 |---|---|
@@ -259,7 +259,9 @@ The document's terminology in one place. Every acronym is also expanded on first
 | `fsck` · `e2fsck` · `nvfsck` | Host-side repair tools. **There is no on-target `fsck` and none is planned** for either filesystem: NVFS recovers from its journal and its orphan list, and ext2's recovery is the host's ([Y2.22](sec_ai_y2#y222), [Y3.2](sec_ai_y3#y32)). |
 | Differential testing | Performing every operation twice — once through the implementation under test and once through a reference driver — and comparing. What makes the host track tractable ([Y3.15](sec_ai_y3#y315)). |
 | Crash injection | Hooking a specific write number, truncating the image there, and checking that what remains is clean or trivially recoverable. The harness that found draft 2's ordering bugs ([Y2.2](sec_ai_y2#y22)). |
-| FUSE | Filesystem in Userspace — the Linux mechanism the host track mounts through. Its **low-level, inode-keyed API** is the one that transfers; the path-based one does not, because a driver here never sees a path ([P4.3](sec_ai_p4#p43)). |
+| FUSE | Filesystem in Userspace — the Linux mechanism the host track mounts through. Its **low-level, inode-keyed API** is the one that transfers; the path-based one does not, because a driver here never sees a path ([Y4.6](sec_ai_y4#y46)). |
+| `fsops` | The internal table the host track discovers by implementing three filesystems behind it — its actual deliverable, and the candidate shape for [sheet Y1](sec_ai_y1)'s per-vnode operations ([Y4.5](sec_ai_y4#y45)). |
+| Corruption corpus | A set of deliberately damaged images kept as a regression suite. **A hang counts as a failure**, which is why every run carries a timeout — without one a hang reads as a slow pass ([Y4.12](sec_ai_y4#y412)). |
 | MBR type `0x7F` | The partition type byte reserved for local and experimental use, and the one an NVFS volume carries. `0x7A` and `0x7B` are unsafe — they alias hidden-FAT types ([D52](sec_ai_q#d52)). |
 
 ## The windowing OS

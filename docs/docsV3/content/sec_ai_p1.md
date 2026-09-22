@@ -108,7 +108,7 @@ Written down in advance, because a rig that gates nothing is a rig that can be s
 
 ## Rig stages · S0–S11
 
-Sequential, each gated on the one before it, consistent with the single-thread preference of [P4.4](sec_ai_p4#p44). **S0–S3 are FPGA training and have standalone value regardless of what follows.**
+Sequential, each gated on the one before it, consistent with the single-thread preference of [Y4.14](sec_ai_y4#y414). **S0–S3 are FPGA training and have standalone value regardless of what follows.**
 
 - [ ] S0 — **Blinky with a DCM** — validates the clock and the full ISE flow end to end.
   TEST: the bitstream loads over JTAG, the device ID reads back correct, and DCM lock is observable on a pin rather than inferred.

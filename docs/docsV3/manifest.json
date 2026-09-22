@@ -230,6 +230,14 @@
       "index": "Filesystems · ext2, the transfer medium"
     },
     {
+      "file": "sec_ai_y4",
+      "letter": "Y4",
+      "part": "ai",
+      "area": "Memory and storage",
+      "nav": "Filesystems — the host track",
+      "index": "Filesystems · the host FUSE track, the fsops vtable and the FUS gates"
+    },
+    {
       "file": "sec_ai_t1",
       "letter": "T1",
       "part": "ai",
@@ -426,8 +434,8 @@
       "letter": "P4",
       "part": "ai",
       "area": "Project and build",
-      "nav": "The laptop and the host track",
-      "index": "Beyond the board · the laptop L1–L8 · the host filesystem track F0–F9"
+      "nav": "Beyond the board — the laptop",
+      "index": "Beyond the board · the laptop L1–L8"
     },
     {
       "file": "sec_ai_q",
