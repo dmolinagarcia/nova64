@@ -69,7 +69,7 @@
   // ── block scanner ─────────────────────────────────────────────────────
 
   var PAD = { '[ ]': '', '[x]': ' done', '[~]': ' half', '[?]': ' optl' };
-  var ID = /^(?:[A-Z][A-Za-z0-9.]{0,7}|\+)$/;
+  var ID = /^(?:[A-Z][A-Za-z0-9.-]{0,7}|\+)$/;
 
   /* A fenced code block: ``` or ~~~ with an optional language tag, through the
      next line that is a bare fence of the same character. The content is
@@ -166,7 +166,9 @@
       body = body.slice(cut + 3);
     }
     /* The anchor is the id with its dots dropped — A.7 → a7, E0.1 → e01 —
-       which is what the cross-references in the sheets point at. */
+       which is what the cross-references in the sheets point at. A build step's
+       hyphen is kept, BRD-06 → brd-06 (A3.11): it is what makes the anchor
+       readable, and nothing else in an id can produce one. */
     var anchor = id && /^[A-Za-z]/.test(id) ? id.toLowerCase().replace(/\./g, '') : '';
     return { pad: pad, id: id, text: body, anchor: anchor };
   }

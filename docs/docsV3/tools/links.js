@@ -65,9 +65,10 @@ function sheetName(file) {
 // ── the anchors each sheet offers ─────────────────────────────────────────
 
 /* md.js: an item is `- A.7 — text`, optionally with a `[ ]` checkbox, and its
-   anchor is the id lowercased with the dots dropped. Same rule here, so that
-   an anchor this script accepts is one the page can actually reach. */
-const ID = /^(?:[A-Z][A-Za-z0-9.]{0,7}|\+)$/;
+   anchor is the id lowercased with the dots dropped and any hyphen kept — A.7
+   → a7, BRD-06 → brd-06. Same rule here, so that an anchor this script accepts
+   is one the page can actually reach. */
+const ID = /^(?:[A-Z][A-Za-z0-9.-]{0,7}|\+)$/;
 
 /* Every item, in document order, with the line its bullet starts on — so a
    link line can be traced back to the item it falls under. */

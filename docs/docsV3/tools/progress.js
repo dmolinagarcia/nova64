@@ -12,6 +12,7 @@
  *   node tools/progress.js --prose    count only prose: no blank lines, and no
  *                                     fenced listings (sc_v7 carries a kit of
  *                                     scripts that would otherwise dominate)
+ *   node tools/progress.js --help     this list, as -h too
  */
 'use strict';
 
@@ -23,6 +24,25 @@ const CONTENT = path.join(ROOT, 'content');
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8'));
 
 const flags = new Set(process.argv.slice(2));
+
+if (flags.has('--help') || flags.has('-h')) {
+  console.log(`noVa64 · docsV3 — review progress, counted in lines.
+
+A sheet sits in the AI part until a human has read it (A1.1), so the share of
+lines outside AI is how much of the document has been reviewed. The part of
+each sheet comes from manifest.json, not from the file name, and a file in
+content/ the manifest does not list is left out of the total and named at the
+end.
+
+Usage: node tools/progress.js [options]
+
+  --sheets   list every sheet under its part
+  --prose    count only prose: no blank lines, and no fenced listings (sc_v7
+             carries a kit of scripts that would otherwise dominate)
+  -h, --help show this help`);
+  process.exit(0);
+}
+
 const prose = flags.has('--prose');
 
 /* Lines as `wc -l` counts them, plus an unterminated last one. With --prose,
