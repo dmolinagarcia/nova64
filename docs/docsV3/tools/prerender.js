@@ -18,7 +18,7 @@
  *   node tools/prerender.js out.html      -> writes it somewhere else
  *   node tools/prerender.js --head trim.css   -> with that CSS in the head
  *
- * For the four trims the document is published at, run tools/pdfs.js, which
+ * For every trim the document is published at, run tools/pdfs.js, which
  * drives this script and the formatter once per trim.
  *
  * Then hand that file to a formatter that implements paged media:
@@ -34,14 +34,18 @@
 const fs = require('fs');
 const path = require('path');
 
-const root = path.resolve(__dirname, '..');
-
 /* `--head <file>` inlines that file as a stylesheet in the head, after
    style.css and so on top of it: it is how tools/pdfs.js states a trim
-   without a second copy of the stylesheet. Anything else is the output path. */
+   without a second copy of the stylesheet. `--root <dir>` assembles a docsV3
+   tree somewhere else, which is how the renderer is exercised against a
+   throwaway fixture without touching the document. Anything else is the
+   output path. */
 const argv = process.argv.slice(2);
 const flag = argv.indexOf('--head');
 const head = flag === -1 ? '' : fs.readFileSync(argv.splice(flag, 2)[1], 'utf8');
+const rootFlag = argv.indexOf('--root');
+const root = rootFlag === -1 ? path.resolve(__dirname, '..')
+                             : path.resolve(argv.splice(rootFlag, 2)[1]);
 const out = path.resolve(argv[0] || path.join(root, 'print.html'));
 
 /* ── the browser, reduced to what full.js actually touches ───────────────
@@ -111,15 +115,19 @@ global.document._onload();
    shell.js swaps each placeholder for the file's own markup so the print
    rules that recolour every trace still reach the shapes. Same thing here,
    on the string. */
+/* A numbered figure also carries an `id`, so every other attribute on the tag
+   has to survive the swap — matched and put back rather than rebuilt, or the
+   anchor would vanish and every page number in the list of figures with it. */
 function inlineFigures(html) {
-  return html.replace(/<figure data-svg="([^"]+)"><div class="svg-slot"><\/div>/g, (m, src) => {
+  return html.replace(/<figure data-svg="([^"]+)"([^>]*)><div class="svg-slot"><\/div>/g,
+                      (m, src, attrs) => {
     const file = path.join(root, src);
     if (!fs.existsSync(file)) {
       process.exitCode = 1;
       console.error('missing figure: ' + src);
       return m;
     }
-    return '<figure data-svg="' + src + '">' +
+    return '<figure data-svg="' + src + '"' + attrs + '>' +
            fs.readFileSync(file, 'utf8').replace(/<\?xml[^>]*\?>\s*/, '');
   });
 }
@@ -157,6 +165,17 @@ done.then(() => {
   const sheets = (content.match(/<section class="hoja"/g) || []).length;
   const figures = (content.match(/<figure data-svg=/g) || []).length;
   console.error(path.relative(process.cwd(), out) + ' — ' + sheets + ' sheets, ' + figures + ' figures inlined');
+
+  /* Two failures that a PDF hides rather than shows: an unsubstituted list
+     directive leaves an empty div where an index should be, and a dangling
+     figure reference prints as `⟨F.id⟩`. Neither stops the build, and
+     `@media print{ .status{display:none} }` means no banner appears on paper
+     either — so they are named here or they are not named at all. */
+  const lists = (content.match(/data-list="/g) || []).length;
+  const misses = (content.match(/class="xref miss"/g) || []).length;
+  if (lists) console.error(lists + ' list directive(s) never substituted — see full.js');
+  if (misses) console.error(misses + ' figure/table reference(s) resolve to nothing — run tools/numbers.js');
+  if (lists || misses) process.exitCode = 1;
 });
 
 setTimeout(() => { console.error('timed out assembling the document'); process.exit(1); }, 20000).unref();

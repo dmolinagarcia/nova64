@@ -397,5 +397,5 @@ Neon (FPGA-B) is the graphics half of the machine: a text mode that works before
 - [ ] T1.71 — **The hardware cursor** appears at `CURSOR_POS`, in the selected shape, blinking at the selected rate.
 - [ ] T1.72 — **A font written through the aperture** takes effect on the following frame.
 
-![Fig. 10 — Neon. The text path on the left depends on nothing but the bitstream and reaches the panel without touching SDRAM; the graphics path on the right is fed by commands, not pixels, and the CPU's only per-frame work is patching a list it built once.](figures/fig-10-neon.svg)
+![F.neon.Neon. The text path on the left depends on nothing but the bitstream and reaches the panel without touching SDRAM; the graphics path on the right is fed by commands, not pixels, and the CPU's only per-frame work is patching a list it built once.](figures/fig-10-neon.svg)
 LEGEND: Trace legend: <svg class="ls" viewBox="0 0 30 8" aria-hidden="true"><line class="dt" x1="1" y1="4" x2="29" y2="4"/></svg><span class="m">pixel and command paths</span> · <svg class="ls" viewBox="0 0 30 8" aria-hidden="true"><line class="pw" x1="1" y1="4" x2="29" y2="4"/></svg><span class="g">the EC's service port and bitstream initialisation</span> · <svg class="ls" viewBox="0 0 30 8" aria-hidden="true"><line class="dts" x1="1" y1="4" x2="29" y2="4"/></svg>interrupts and the paths software should not use.

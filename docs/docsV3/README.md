@@ -21,6 +21,10 @@ tools/prerender.js  assembles the printable edition ahead of time, for a PDF
                     formatter — page numbers live there, see Printing
 tools/links.js      the cross-reference listing: source sheet -> linked section,
                     per sheet or whole-document, and the broken links, see Routes
+tools/numbers.js    assigns the figure and table numbers across the reading order
+                    and writes numbering.json — see Figure and table numbers
+numbering.json      those numbers, the one derived thing this document stores
+                    because a single sheet cannot work it out; committed
 style.css           docsV2's stylesheet, plus the few rules these two pages add
 content/*.md        the prose — one file per sheet
 figures/*.svg       the diagrams, one file each
@@ -108,8 +112,54 @@ cover's drop — how far down the page the title block sits — is
 stylesheet drops the sidebar and the navigation the way it always did. The sheet
 index becomes a working table of contents, because on that page every
 cross-reference is an in-page jump: ids are prefixed with their sheet
-(`#sec_p-e2`) so that E.2 in sheet E and E2 in sheet P stop colliding. The
+(`#sec_p-e2`, `#sec_ai_f-f-memmap`) so that E.2 in sheet E and E2 in sheet P stop
+colliding, and so that two sheets may each anchor a figure of their own. The
 sidebar of the paged edition links to it at the bottom of the sheet list.
+
+### Figure and table numbers
+
+A caption declares an identifier and never a number:
+
+```markdown
+![F.memmap.Memory structure. The SRAM hangs off the CPU's own nets.](figures/fig-4-memory-map.svg)
+
+![T.banks.The sixteen banks and what each holds]
+
+| Bank | Holds |
+|---|---|
+```
+
+and the prose points at that identifier — `![F.memmap]`, `![T.banks]` — which
+renders as `Figure 7` or `Table 3`, linked. **No number is ever written by
+hand**, so inserting a figure renumbers the set and leaves every cross-reference
+already correct. An identifier is `[A-Za-z0-9_-]+` and **may not contain a
+dot**, which is what lets the first dot after `F.`/`T.` close it. A table with
+no caption above it is not numbered and does not reach the list of tables —
+most tables are a paragraph's worth of detail, not a numbered exhibit.
+
+The numbering runs across the whole document in the reading order `prepare`
+resolves, figures and tables in separate sequences. That is the one thing a
+single sheet cannot work out for itself: `index.html` renders one sheet at a
+time, and the number of a figure in sheet F depends on how many stand ahead of
+it everywhere else. So it is worked out once, ahead of time:
+
+```
+node tools/numbers.js            assign the numbers, write numbering.json
+node tools/numbers.js --check    verify it is current — exit 1 if not
+```
+
+`numbering.json` **is committed**, unlike `print.html` and `pdfs/`: GitHub Pages
+serves `docs/` verbatim with no build step, so an artefact left out of the
+commit is a 404 in production. Run `--check` before committing and before a PDF,
+alongside `tools/links.js --broken`; it also catches a duplicate identifier, a
+reference that resolves to nothing, a caption with no table under it, and a
+missing SVG. Without the file the pages still render — every number shows as
+`?` and every reference as `⟨F.memmap⟩` — because the markdown may well land in
+a checkout before the artefact is regenerated, and a document that refused to
+render would be the worse failure.
+
+`FIGURES` and `TABLES` put the generated lists in a sheet ([Z2](content/sec_ai_z2.md)),
+which is why those appendices hold no table of their own.
 
 ### Page numbers
 
@@ -224,13 +274,15 @@ letter and number are not repeated here — they live in `manifest.json`.
 | `!!! APPLE II MILESTONE — …` | the milestone banner — a framed band with a `■` at its head |
 | `!! AVISO — …` + the lines under it | the warning box — see below |
 | `\| Term \| Meaning \|` + `\|---\|---\|` | `table.simple` |
-| `![Fig. 1 — caption](figures/f.svg)` | the figure, its SVG inlined so the stylesheet reaches it |
+| `![F.id.Description](figures/f.svg)` | the figure, its SVG inlined so the stylesheet reaches it — captioned `Figure 7.` and anchored at `#f-id` |
+| `![T.id.Description]` above a `\|`-table | the table's caption, `Table 3.`, anchored at `#t-id` |
 | `LEGEND: …` after a figure | the small trace legend under the caption |
 | ` ```c ` … ` ``` ` | a code listing, highlighted for that language — see below |
 | ` ~~~bash ` … ` ~~~ ` | the same, for a listing that itself contains a line of backticks |
 | `---` on its own line | nothing — a rule, dropped, since the sheets space themselves |
 | `<!-- file: srv/dev/bin/dev -->` + a fence | a file of the kit: the listing under a caption naming it — see below |
 | `INDEX` | the sheet-index table, built from `manifest.json` |
+| `FIGURES` · `TABLES` | the list of figures, or of tables, built from `numbering.json` |
 | `TAGS:` + `- [g] …` list | the masthead tag row (index page only) |
 
 Checkbox states: `[ ]` pending · `[x]` done · `[~]` in progress · `[?]` optional.
@@ -343,6 +395,7 @@ does so without leaving its number:
 | `[[open]]` | an outline chip |
 | `[[!blocking]]` | a filled chip |
 | `((an aside))` | an inline `.note`, for when it sits mid-sentence |
+| `![F.id]` · `![T.id]` | `Figure 7` · `Table 3`, linked to it — never a number written by hand |
 | raw HTML | passed through — the escape hatch, used by the figure legends for their line samples |
 
 ## Adding a sheet

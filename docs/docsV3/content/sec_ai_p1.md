@@ -5,7 +5,7 @@ Three phases now, not two. The **S-series** of this sheet builds a training rig 
 
 The rig exists to use calendar time that would otherwise be idle. It gates nothing. If the carrier arrives first, what is left of the S-series is abandoned in place ([P1.17](sec_ai_p1#p117)).
 
-![Fig. 7a — The three build phases with **Phase 0** highlighted: the Spartan-6 training rig above, the single-ECP5 carrier in the middle, and the target board below with both milestones at their exact point.](figures/fig-7a-stages-phase0.svg)
+![F.phase0.The three build phases with **Phase 0** highlighted: the Spartan-6 training rig above, the single-ECP5 carrier in the middle, and the target board below with both milestones at their exact point.](figures/fig-7a-stages-phase0.svg)
 
 ## The three phases
 

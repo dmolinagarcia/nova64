@@ -21,8 +21,13 @@
     return '#' + p[0] + (p[1] ? '-' + p[1] : '');
   };
 
+  /* Figures and tables are anchored too — `f-memmap`, `t-pins` — and those ids
+     are unique only within a sheet in exactly the way an item's is. Matched on
+     the attribute's value rather than on `<figure id="`, so it does not depend
+     on where the id sits among the tag's attributes. */
   function prefixIds(html, file) {
-    return html.replace(/<li id="/g, '<li id="' + file + '-');
+    return html.replace(/<li id="/g, '<li id="' + file + '-')
+               .replace(/ id="([ft]-)/g, function (_, k) { return ' id="' + file + '-' + k; });
   }
 
   function indexTable() {
@@ -68,7 +73,10 @@
            '<h2>' + doc.title + '</h2>' +
            '<span class="aim">' + doc.aim + '</span>' +
            '<span class="sheet">SHEET ' + sheet.num + '</span></div>' +
-           prefixIds(doc.html, sheet.file) + '</section>';
+           /* the lists of figures and tables live in an ordinary sheet, not on
+              the index page, so the substitution has to happen here too — and
+              inside prefixIds, which stays the last thing applied to a sheet */
+           prefixIds(NovaShell.expandLists(doc.html, M), sheet.file) + '</section>';
   }
 
   function masthead(doc) {
@@ -106,7 +114,10 @@
       var docOf = {};
       M.sheets.forEach(function (s, i) { docOf[s.file] = docs[i + 1]; });
       el.body.innerHTML =
-        index.html.replace('<div data-index></div>', index.hasIndex ? indexTable() : '') +
+        NovaShell.expandLists(
+          index.html.replace('<div data-index></div>', function () {
+            return index.hasIndex ? indexTable() : '';
+          }), M) +
         M.groups.map(function (g) {
           if (!g.sheets.length) return '';
           return partBand(g.part) + g.areas.map(function (a) {

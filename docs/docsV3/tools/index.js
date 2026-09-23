@@ -35,6 +35,15 @@ const ROOT = path.resolve(__dirname, '..');
 global.window = global;
 require(path.join(ROOT, 'shell.js'));
 
+/* `prepare` also resolves {figures} and {tables} in the masthead line, but only
+   if the numbers are in hand — it must not require the artefact tools/numbers.js
+   writes, since that tool calls prepare itself. Handing it over here is what
+   keeps this listing's last line from reading `{figures} figures`. */
+const numbering = path.join(ROOT, 'numbering.json');
+if (fs.existsSync(numbering)) {
+  global.NovaNumbers = JSON.parse(fs.readFileSync(numbering, 'utf8'));
+}
+
 const flags = new Set(process.argv.slice(2));
 const title = flags.has('--nav') ? 'nav' : 'index';
 

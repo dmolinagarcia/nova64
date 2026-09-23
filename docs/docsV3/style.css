@@ -142,10 +142,18 @@
   table.simple th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(var(--ink-rgb),.55);text-align:left;padding:6px 8px;border-bottom:1px solid rgba(var(--ink-rgb),.4);}
   table.simple td{font-size:12px;color:rgba(var(--ink-rgb),.86);padding:6px 8px;border-bottom:1px solid rgba(var(--ink-rgb),.14);vertical-align:top;}
   table.simple td:first-child{color:var(--ink);font-weight:700;}
+  /* A table's caption reads above it, where the eye arrives; a figure's reads
+     under the drawing, where it has always been. Same type either way. */
+  table.simple caption{caption-side:top;text-align:left;margin-bottom:6px;
+    color:rgba(var(--ink-rgb),.55);font-size:11px;letter-spacing:1px;}
 
   figure{margin:16px 0 4px;}
   figure svg{width:100%;height:auto;display:block;}
   figcaption{margin-top:8px;color:rgba(var(--ink-rgb),.55);font-size:11px;letter-spacing:1px;}
+  /* `Figure 7.` — the number is the renderer's, never the author's. Not
+     `.lbl`: that one belongs to the labels inside the diagrams. */
+  figcaption .capn,table.simple caption .capn{color:var(--ink);font-weight:700;}
+  .xref{white-space:nowrap;}
   .legend{color:rgba(var(--ink-rgb),.5);font-size:10.5px;margin-top:2px}
   /* A legend names a trace by drawing it. The sample carries the figure's own
      classes, so it is rendered by the rules above and the two can never drift
@@ -294,6 +302,11 @@
     .side,.pager{display:none}
     .shell{display:block}
     .main{max-width:none}
+    /* Symmetric, because a page printed from a browser is not bound. The
+       book margins are mirrored — inner wider than outer, and the sides
+       swapped on the verso — and `tools/pdfs.js` states them per trim as
+       `@page :left` and `@page :right`, which no browser print path
+       implements anyway. */
     @page{ margin:14mm; }
 
     /* ── the trim knobs ──────────────────────────────────────────────────
@@ -325,7 +338,8 @@
     /* text → pure black */
     a,.lead,.itx,.itx .cont,.itx .note,.aim,.sheet,.masthead .sub,.idx .cap,.idx .no,.idx td,
     figcaption,.legend,.cj>div,.cj .big,table.simple th,table.simple td,
-    table.simple td:first-child,b,strong{ color:#000; }
+    table.simple caption,table.simple td:first-child,b,strong,
+    figcaption .capn,table.simple caption .capn{ color:#000; }
     a{ text-decoration:none; }
 
     /* frames → pure black */
@@ -473,6 +487,10 @@
     body.full .main{ padding-top:var(--cover-air); }
     body.full .coverback{ display:block;height:1px;break-before:page; }
     body.full .idx{ break-before:page; }
+    /* …but a list of figures follows the paragraph that introduces it, inside
+       an appendix that has already opened a page of its own. Breaking again
+       would leave that paragraph alone on the leaf before it. */
+    body.full .idx.lst{ break-before:auto; }
     body.full .partband{ break-before:page; }
     body.full .areaband{ break-before:page; }
     /* a part opens a page and its first area follows on the same one: a band
@@ -501,6 +519,7 @@
        long item with a listing under it could leave most of a page blank */
     .sechead{ break-after:avoid; }
     figure,.hito,.aviso,table.simple tr{ break-inside:avoid; }
+    table.simple caption{ break-after:avoid; }
 
     /* An item is a flex row on screen, and Vivliostyle lays a flex box out
        whole: it never breaks one across pages, and one taller than the page is
@@ -578,6 +597,13 @@
   .status.err code{color:var(--gold);background:rgba(var(--gold-rgb),.09);}
   @media print{ .status{display:none} }
 
+  /* A reference whose number could not be found. Unlike the blocks above this
+     one is **not** hidden on paper: a banner is a screen affordance, but a
+     dangling `⟨F.memmap⟩` sits mid-sentence, and a PDF that quietly dropped it
+     would read as though the sentence had always been that way. */
+  .xref.miss{color:var(--warn);border-bottom:1px dotted rgba(var(--warn-rgb),.6);}
+  @media print{ .xref.miss{ color:#000; } }
+
   /* ── light theme — screen only, so printing never sees it ───────────── */
   @media screen{
     :root[data-theme="light"]{
@@ -588,6 +614,12 @@
       --gold:#7A5400;   --gold-rgb:122,84,0;
       --warn:#A33310;   --warn-rgb:163,51,16;
     }
+    /* `Figure 7.` is the one piece of text that is plain black rather than
+       the ink: it prints black, and the light theme matches so the screen and
+       the PDF read the same. Dark keeps the full ink — black would vanish. */
+    :root[data-theme="light"] figcaption .capn,
+    :root[data-theme="light"] table.simple caption .capn{ color:#000; }
+
     /* diagram shapes that carry their colour as an attribute, not a class —
        the same list the print block has to restate, for the same reason */
     :root[data-theme="light"] svg [fill="#0E3A2C"]{ fill:var(--panel); }

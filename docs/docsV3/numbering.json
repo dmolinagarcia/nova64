@@ -1,0 +1,110 @@
+{
+  "figures": {
+    "arch": {
+      "n": 1,
+      "sheet": "sec_ai_b",
+      "anchor": "f-arch",
+      "desc": "Global architecture. Four inhabitants of the shared bus; the RP2354B governs configuration and reset from outside.",
+      "svg": "figures/fig-1-architecture.svg"
+    },
+    "powertree": {
+      "n": 2,
+      "sheet": "sec_ai_c",
+      "anchor": "f-powertree",
+      "desc": "Power tree REV C: USB-C + CH224K → BQ25896 power-path → SYS, and the five converters hanging off it. The AON rail has no enable; every other rail is switched by the EC and reports PG back.",
+      "svg": "figures/fig-2-power.svg"
+    },
+    "pwrctl": {
+      "n": 3,
+      "sheet": "sec_ai_s",
+      "anchor": "f-pwrctl",
+      "desc": "The power control path. Two level pins carry attention between the EC and Helium, the debug agent's SPI link carries the detail, and telemetry travels the same link into a staging bank that is committed and latched into two atomic snapshots before the CPU ever reads it.",
+      "svg": "figures/fig-9-power-control.svg"
+    },
+    "bootseq": {
+      "n": 4,
+      "sheet": "sec_ai_d1",
+      "anchor": "f-bootseq",
+      "desc": "Boot sequence. States S0–S6 are executed by the EC; from S6 onward the 65816 takes over, and the rule down the left-hand edge names the phase in force. Nothing outside the EC's own package is read before the CPU runs.",
+      "svg": "figures/fig-3-ec.svg"
+    },
+    "debugport": {
+      "n": 5,
+      "sheet": "sec_ai_d2",
+      "anchor": "f-debugport",
+      "desc": "The integrated debug port. The probe hangs off the debug port's own VBUS and is an electrical island: six nets reach the EC, every driven one terminated at both ends, and the only line pointing back into the probe is held high-impedance until the EC sees VBUS on the port.",
+      "svg": "figures/fig-13-debug-port.svg"
+    },
+    "dbgagent": {
+      "n": 6,
+      "sheet": "sec_ai_r",
+      "anchor": "f-dbgagent",
+      "desc": "The debug agent as a requester inside Helium. The RP2354B commands over SPI and never drives the bus; internal accesses go through the cache, external cycles are taken with PHI2 stalled and BE low.",
+      "svg": "figures/fig-8-debug-agent.svg"
+    },
+    "memmap": {
+      "n": 7,
+      "sheet": "sec_ai_f",
+      "anchor": "f-memmap",
+      "desc": "Memory structure. The SRAM hangs off the CPU's own data and low-address nets; Helium drives only the translated half, and owns the SDRAM alone.",
+      "svg": "figures/fig-4-memory-map.svg"
+    },
+    "fieldwidth": {
+      "n": 8,
+      "sheet": "sec_ai_k",
+      "anchor": "f-fieldwidth",
+      "desc": "Field-width asymmetry. The virtual split falls out of the CPU's 24 bits; the physical one is chosen by the MMU, and the offset crosses untranslated.",
+      "svg": "figures/fig-5-translation.svg"
+    },
+    "xlate": {
+      "n": 9,
+      "sheet": "sec_ai_l",
+      "anchor": "f-xlate",
+      "desc": "Address translation: TLB with ASID, hardware walker over the flat table in SRAM, and the ABORTB fault path.",
+      "svg": "figures/fig-6-page-fault.svg"
+    },
+    "neon": {
+      "n": 10,
+      "sheet": "sec_ai_t1",
+      "anchor": "f-neon",
+      "desc": "Neon. The text path on the left depends on nothing but the bitstream and reaches the panel without touching SDRAM; the graphics path on the right is fed by commands, not pixels, and the CPU's only per-frame work is patching a list it built once.",
+      "svg": "figures/fig-10-neon.svg"
+    },
+    "blitter": {
+      "n": 11,
+      "sheet": "sec_ai_t3",
+      "anchor": "f-blitter",
+      "desc": "The blitter and the bank partition. Three read channels and one write channel meet in the minterm LUT; the partition below is what keeps every ACTIVATE inside another bank's data phase, and it is worth a factor of two in delivered bandwidth.",
+      "svg": "figures/fig-11-blitter.svg"
+    },
+    "wstack": {
+      "n": 12,
+      "sheet": "sec_ai_v",
+      "anchor": "f-wstack",
+      "desc": "The windowing stack. Pixels and command lists cross into VRAM through the mappable `$FE` aperture; starting a list crosses into `$FF:8000`, which no user task can reach — so the privilege boundary falls on command emission rather than on the framebuffer.",
+      "svg": "figures/fig-12-wserver.svg"
+    },
+    "phase0": {
+      "n": 13,
+      "sheet": "sec_ai_p1",
+      "anchor": "f-phase0",
+      "desc": "The three build phases with **Phase 0** highlighted: the Spartan-6 training rig above, the single-ECP5 carrier in the middle, and the target board below with both milestones at their exact point.",
+      "svg": "figures/fig-7a-stages-phase0.svg"
+    },
+    "phase1": {
+      "n": 14,
+      "sheet": "sec_ai_p2",
+      "anchor": "f-phase1",
+      "desc": "The same three phases with **Phase 1** highlighted: this sheet is the middle track, between the disposable rig above it and the target board it commits to below.",
+      "svg": "figures/fig-7b-stages-phase1.svg"
+    },
+    "phase2": {
+      "n": 15,
+      "sheet": "sec_ai_p3",
+      "anchor": "f-phase2",
+      "desc": "The same three phases with **Phase 2** highlighted: this sheet is the bottom track, where both milestones are closed, with the two prototypes that rehearse it above.",
+      "svg": "figures/fig-7c-stages-phase2.svg"
+    }
+  },
+  "tables": {}
+}

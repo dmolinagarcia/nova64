@@ -15,6 +15,62 @@
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
+  /* ── figure and table numbers ─────────────────────────────────────────
+     A caption declares an id — `![F.memmap.Memory structure…](f.svg)` — and the
+     prose points at that id rather than at a number — `![F.memmap]` — so no
+     number is ever written by hand and inserting a figure renumbers nothing.
+
+     The numbers are correlative across the whole document, which is precisely
+     what a single sheet cannot know: `tools/numbers.js` walks the manifest's
+     reading order and writes `numbering.json`, and shell.js hands it over as
+     `NovaNumbers` before the first parse. Absent or stale, the document still
+     renders — with `?` where the number goes, which is what the renderer states
+     in style.css exist to make loud rather than silent. */
+  var KIND = { F: { set: 'figures', word: 'Figure' },
+               T: { set: 'tables',  word: 'Table'  } };
+
+  var XREF   = /^!\[([FT])\.([A-Za-z0-9_-]+)\](?!\()/;   // ![F.id] in the prose
+  var FIGCAP = /^F\.([A-Za-z0-9_-]+)\.([\s\S]+)$/;       // inside ![…](path)
+  var TABCAP = /^!\[T\.([A-Za-z0-9_-]+)\.([\s\S]+)\]$/;  // a line of its own
+
+  /* Read at call time, never captured: md.js loads before the artefact does. */
+  function entry(k, id) {
+    var N = global.NovaNumbers;
+    return (N && N[KIND[k].set] && N[KIND[k].set][id]) || null;
+  }
+
+  /* What this document declared and what it pointed at, in source order.
+     tools/numbers.js parses with this very renderer rather than with a regex of
+     its own, so the generator cannot drift from what the page shows. */
+  var marks = null;
+  function mark(m) { if (marks) marks.push(m); return m; }
+
+  var warned = {};
+
+  function xref(k, id) {
+    var e = entry(k, id);
+    mark({ role: 'ref', kind: k, id: id });
+    if (e) {
+      return '<a class="xref" href="' + global.NovaLink(e.sheet + '#' + e.anchor) + '">' +
+             KIND[k].word + ' ' + e.n + '</a>';
+    }
+    var key = k + '.' + id;
+    if (!warned[key] && global.console && console.warn) {
+      warned[key] = 1;
+      console.warn('docsV3: no number for ' + key + ' — run `node tools/numbers.js`');
+    }
+    return '<span class="xref miss">⟨' + escapeCode(key) + '⟩</span>';
+  }
+
+  /* `Figure 4. ` and the description beside it. The label is its own span so the
+     stylesheet can hold it steady while the description wraps under it. */
+  function caption(k, id, desc, svg) {
+    var e = entry(k, id);
+    mark({ role: 'def', kind: k, id: id, desc: desc, svg: svg || '' });
+    return '<span class="capn">' + KIND[k].word + ' ' + (e ? e.n : '?') + '.</span> ' +
+           inline(desc);
+  }
+
   /* End of a `((…))` note: the first `))` at paren balance zero, so a note
      that itself ends in a parenthesis — "(→ Q23)" — does not close early. */
   function noteEnd(s, from) {
@@ -55,6 +111,15 @@
       if (c === '*') {                                    // *italic*
         j = s.indexOf('*', i + 1);
         if (j > 0) { out += '<i>' + inline(s.slice(i + 1, j)) + '</i>'; i = j + 1; continue; }
+      }
+      /* ![F.id] · ![T.id] — a reference, which is where a number used to be
+         written by hand. The `(?!\()` in XREF is load-bearing: without it this
+         would swallow the opening of a `![Fig. 1 — …](path)` written mid-line,
+         which the `[text](target)` case below has always handled. Tested first
+         for the same reason — `!` never enters that case's scan. */
+      if (c === '!' && s[i + 1] === '[') {
+        var xm = XREF.exec(s.slice(i));
+        if (xm) { out += xref(xm[1], xm[2]); i += xm[0].length; continue; }
       }
       if (c === '[') {                                    // [text](target)
         var m = /^\[([^\]]*)\]\(([^)\s]*)\)/.exec(s.slice(i));
@@ -220,11 +285,13 @@
     return { html: html + '</div>', next: f.next };
   }
 
-  /* Parses a whole document into { title, aim, html, tags, hasIndex }. */
+  /* Parses a whole document into { title, aim, html, tags, hasIndex, marks }. */
   function parse(src) {
     var lines = src.replace(/\r/g, '').split('\n');
-    var doc = { title: '', aim: '', tags: null, hasIndex: false, html: '' };
-    var out = [], i = 0;
+    var doc = { title: '', aim: '', tags: null, hasIndex: false, html: '', marks: [] };
+    var out = [], i = 0, pendingCap = null;
+
+    marks = doc.marks;
 
     if (/^#\s+/.test(lines[0] || '')) { doc.title = lines[i].replace(/^#\s+/, '').trim(); i++; }
     if (/^>\s+/.test(lines[i] || '')) { doc.aim = lines[i].replace(/^>\s+/, '').trim(); i++; }
@@ -242,6 +309,15 @@
 
       if (t === 'INDEX') {                                          // sheet-index table
         doc.hasIndex = true; out.push('<div data-index></div>'); i++; continue;
+      }
+
+      /* The list of figures, and the list of tables — the same arrangement as
+         INDEX: a placeholder here, filled by whichever edition is assembling,
+         because the contents come from the whole document and not from this
+         sheet. Unlike INDEX these carry no `doc.has…` flag: the substitution is
+         a global regex, so a sheet may hold both. */
+      if (t === 'FIGURES' || t === 'TABLES') {
+        out.push('<div data-list="' + t.toLowerCase() + '"></div>'); i++; continue;
       }
 
       if (t === 'TAGS:') {                                          // masthead tags
@@ -298,16 +374,37 @@
         i = trh.next; continue;
       }
 
+      /* A figure, in either form: `![F.id.Description](f.svg)` carries an id and
+         is numbered, `![caption](f.svg)` is the older hand-numbered one and is
+         left exactly as it was. One regex serves both — the discrimination is on
+         what stands inside the brackets, not on a second block form. */
       var fig = /^!\[(.*)\]\(([^)]+)\)$/.exec(t);                   // figure
       if (fig) {
-        var f = '<figure data-svg="' + fig[2] + '"><div class="svg-slot"></div>' +
-                '<figcaption>' + inline(fig[1]) + '</figcaption>';
+        var nf = FIGCAP.exec(fig[1]);
+        var f = '<figure data-svg="' + fig[2] + '"' + (nf ? ' id="f-' + nf[1] + '"' : '') + '>' +
+                '<div class="svg-slot"></div>' +
+                '<figcaption>' + (nf ? caption('F', nf[1], nf[2], fig[2]) : inline(fig[1])) +
+                '</figcaption>';
         i++;
         if (i < lines.length && /^LEGEND:/.test(lines[i].trim())) {
           f += '<div class="legend">' + inline(lines[i].trim().slice(7).trim()) + '</div>';
           i++;
         }
         out.push(f + '</figure>'); continue;
+      }
+
+      /* A table's caption stands on its own line above the table, which is where
+         it reads in the source and where it prints. A table without one is not
+         numbered and does not reach the list of tables — most of them are a
+         paragraph's worth of detail, not a numbered exhibit. */
+      var tc = TABCAP.exec(t);
+      if (tc) {
+        var k = i + 1;
+        while (k < lines.length && !lines[k].trim()) k++;
+        if (k < lines.length && lines[k].trim()[0] === '|') { pendingCap = tc; i = k; continue; }
+        mark({ role: 'orphan', kind: 'T', id: tc[1], desc: tc[2] });
+        out.push('<p class="lead">' + inline(t) + '</p>');          // --check names it
+        i++; continue;
       }
 
       if (t[0] === '|') {                                           // table
@@ -317,7 +414,12 @@
           if (!/^[\s|:-]+$/.test(lines[i])) rows.push(cells.map(function (c) { return c.trim(); }));
           i++;
         }
-        var html = '<table class="simple"><thead><tr>' +
+        var cap = pendingCap;
+        pendingCap = null;               // or a caption whose table was deleted
+        var html = '<table class="simple"' +                        // drifts onto the next
+          (cap ? ' id="t-' + cap[1] + '"><caption>' + caption('T', cap[1], cap[2]) + '</caption>'
+               : '>') +
+          '<thead><tr>' +
           rows[0].map(function (c) { return '<th>' + inline(c) + '</th>'; }).join('') +
           '</tr></thead><tbody>';
         for (var r = 1; r < rows.length; r++) {
@@ -368,7 +470,8 @@
     }
 
     doc.html = out.join('\n');
-    return doc;
+    marks = null;                  // `inline` is exported on its own; a bare call
+    return doc;                    // must not append to the document just parsed
   }
 
   /* Link targets are routes, not files — app.js owns the mapping. */

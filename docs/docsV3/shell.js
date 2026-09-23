@@ -112,10 +112,19 @@
       g.areas.forEach(function (a) { if (a.name) areas++; });
     });
     var counts = { parts: groups.length, areas: areas, sheets: M.sheets.length };
+
+    /* `{figures}` and `{tables}` answer from numbering.json, which prepare() is
+       deliberately not allowed to require — tools/index.js runs on the manifest
+       alone. Absent, the token is left standing rather than resolved to a lie. */
+    var N = global.NovaNumbers;
+    if (N) {
+      counts.figures = Object.keys(N.figures || {}).length;
+      counts.tables = Object.keys(N.tables || {}).length;
+    }
     if (M.footer && M.footer.referenceIndex) {
       M.footer.referenceIndex = M.footer.referenceIndex.replace(
-        /\{(parts|areas|sheets)\}/g,
-        function (_, k) { return counts[k]; });
+        /\{(parts|areas|sheets|figures|tables)\}/g,
+        function (m, k) { return counts[k] === undefined ? m : counts[k]; });
     }
     return M;
   }
@@ -132,13 +141,80 @@
            '<div class="ver">' + footer.version + ' \u00b7 ' + footer.date + '</div></div>';
   }
 
+  /* ── figure and table numbers ───────────────────────────────────────────
+     `numbering.json` is the one derived thing this document stores, and it is
+     stored because it cannot be derived from one sheet: a figure's number comes
+     from the reading order of all of them. `tools/numbers.js` writes it, it is
+     committed like any other served file, and md.js reads it through the global
+     set here — before the first parse, which is why this lives in loadManifest
+     and not in prepare(). tools/index.js and tools/numbers.js call prepare()
+     directly, and neither can depend on the artefact one of them generates.
+
+     A missing file is not an error: the pages must still render from a checkout
+     where the markdown landed before the artefact was regenerated. md.js then
+     prints `?` for every number, which the renderer states make loud. */
+  function loadNumbering() {
+    return fetch('numbering.json').then(function (res) {
+      return res.ok ? res.json() : null;
+    }, function () { return null; });
+  }
+
+  /* One row per numbered figure or table, in numeric order, reusing the sheet
+     index's own table so the print rules that put a page number on every row
+     reach it unchanged. **Exactly one <a> per row**: `target-counter` fires per
+     link, and a second one would print the page number twice. */
+  function marksTable(kind, M) {
+    var N = global.NovaNumbers;
+    var word = kind === 'figures' ? 'FIGURES' : 'TABLES';
+    if (!N) {
+      return '<div class="status err"><b>Index of ' + kind + ' unavailable</b> — ' +
+             '<code>numbering.json</code> is missing or unreadable. Run ' +
+             '<code>node tools/numbers.js</code> and commit it.</div>';
+    }
+    var letter = {};
+    (M.sheets || []).forEach(function (s) { letter[s.file] = s.letter; });
+
+    var rows = Object.keys(N[kind] || {}).map(function (id) {
+      var e = N[kind][id];
+      return { n: e.n, letter: letter[e.sheet] || '·', desc: e.desc,
+               href: global.NovaLink(e.sheet + '#' + e.anchor) };
+    }).sort(function (a, b) { return a.n - b.n; });
+
+    var h = '<nav class="idx lst" aria-label="Index of ' + kind + '">' +
+            '<div class="cap">INDEX OF ' + word + '</div><table><tbody>';
+    if (!rows.length) {
+      h += '<tr><td colspan="3"><span class="pnote">none carry a caption yet</span></td></tr>';
+    }
+    rows.forEach(function (r) {
+      h += '<tr><td class="no">' + r.n + '</td><td class="de">' + r.letter + '</td>' +
+           '<td><a href="' + r.href + '">' + global.NovaMarkdown.inline(r.desc) + '</a></td></tr>';
+    });
+    return h + '</tbody></table></nav>';
+  }
+
+  /* Both editions substitute the same way, so they cannot disagree about it.
+     The replacement is a **function**: a string one would interpret `$&` and
+     `$'`, and this document is full of `$FF`. */
+  function expandLists(html, M) {
+    return html.replace(/<div data-list="(figures|tables)"><\/div>/g, function (_, kind) {
+      return marksTable(kind, M);
+    });
+  }
+
   function loadManifest() {
-    return fetch('manifest.json').then(function (res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status + ' on manifest.json');
-      return res.json();
-    }).then(prepare);
+    return Promise.all([
+      fetch('manifest.json').then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' on manifest.json');
+        return res.json();
+      }),
+      loadNumbering()
+    ]).then(function (r) {
+      global.NovaNumbers = r[1];
+      return prepare(r[0]);
+    });
   }
 
   global.NovaShell = { inlineFigures: inlineFigures, fail: fail, revCell: revCell,
-                       loadSheet: loadSheet, loadManifest: loadManifest, prepare: prepare };
+                       loadSheet: loadSheet, loadManifest: loadManifest, prepare: prepare,
+                       marksTable: marksTable, expandLists: expandLists };
 })(window);

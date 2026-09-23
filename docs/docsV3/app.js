@@ -112,7 +112,12 @@
   }
 
   function content(r, doc) {
-    var html = doc.html.replace('<div data-index></div>', doc.hasIndex ? indexTable() : '');
+    /* Function replacements throughout: a string one interprets `$&` and `$'`,
+       and both the sheet index and the figure list carry `$FF`-shaped text. */
+    var html = NovaShell.expandLists(
+      doc.html.replace('<div data-index></div>', function () {
+        return doc.hasIndex ? indexTable() : '';
+      }), M);
     if (r.isIndex) return html;
     var s = sheetOf(r.file);
     return '<section class="hoja" id="' + s.letter.toLowerCase() + '">' +

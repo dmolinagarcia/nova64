@@ -33,4 +33,4 @@ All system memory lives behind FPGA-A (Helium): the CPU never sees SRAM or SDRAM
   NOTE: **Neon has a second memory, and the division between them is strict.** Its 32 EBR blocks — 16 KB, fully allocated — hold everything that must be reachable with no wait state and everything scanout needs at single-cycle latency: the 8 KB text buffer, the 4 KB font, the palette, the scanout line buffers, the blitter's burst buffers and the command FIFO. The SDRAM holds everything large and nothing latency-critical. That split is what lets Mode 0 exist with the memory controller unwritten (→ [T1.11](sec_ai_t1#t111)).
 - F.13 — Layout note: SRAM and SDRAM in a short comb hugging Helium — the SDRAM side runs at ~100 MHz and the shared side has three loads; neither tolerates long stubs.
 
-![Fig. 4 — Memory structure. The SRAM hangs off the CPU's own data and low-address nets; Helium drives only the translated half, and owns the SDRAM alone.](figures/fig-4-memory-map.svg)
+![F.memmap.Memory structure. The SRAM hangs off the CPU's own data and low-address nets; Helium drives only the translated half, and owns the SDRAM alone.](figures/fig-4-memory-map.svg)

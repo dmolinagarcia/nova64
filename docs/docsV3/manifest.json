@@ -15,7 +15,7 @@
     }
   ],
   "footer": {
-    "referenceIndex": "{parts} parts · {areas} areas · {sheets} sheets · Figs. 1–13",
+    "referenceIndex": "{parts} parts · {areas} areas · {sheets} sheets · {figures} figures",
     "rules": "All 3.3V · hand-solderable · open toolchain",
     "revs": [
       "ARCHITECTURE REV A",

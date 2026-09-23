@@ -34,5 +34,5 @@ An Amiga-style shared bus with four inhabitants: the physical CPU, two always-pr
   NOTE: **One exception is electrical, not logical.** `RDY` is not an input: it is **bidirectional and open-drain**, pulled low by the CPU on `WAI`. So it needs ~3.3 kΩ where the rest take 10 kΩ, or the rising edge is slow and `WAI` is slow to release. Every other control net is push-pull from one device, its pull-up only for the blank case.
   NOTE: **`NEON_BUS_BSY` is the one exception to "nothing reads as asserted"**: there the safe state *is* the asserted one, and its pull-up means busy ([B.6](sec_ai_b#b6)).
 
-![Fig. 1 — Global architecture. Four inhabitants of the shared bus; the RP2354B governs configuration and reset from outside.](figures/fig-1-architecture.svg)
+![F.arch.Global architecture. Four inhabitants of the shared bus; the RP2354B governs configuration and reset from outside.](figures/fig-1-architecture.svg)
 LEGEND: Trace legend: <svg class="ls" viewBox="0 0 30 8" aria-hidden="true"><line class="dt" x1="1" y1="4" x2="29" y2="4"/></svg><span class="m">data</span> · <svg class="ls" viewBox="0 0 30 8" aria-hidden="true"><line class="op" x1="1" y1="4" x2="29" y2="4"/></svg>EC control and configuration · <svg class="ls" viewBox="0 0 30 8" aria-hidden="true"><line class="dts" x1="1" y1="4" x2="29" y2="4"/></svg>optional or future.

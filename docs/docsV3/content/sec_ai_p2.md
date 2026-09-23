@@ -5,7 +5,7 @@ The **P-series** builds a prototype carrier around a commercial Colorlight i9 mo
 
 It is **Phase 1** of the three phases of [sheet P1](sec_ai_p1): the training rig of [S0](sec_ai_p1#s0)–[S11](sec_ai_p1#s11) runs before it and is disposable, and the target board of [sheet P3](sec_ai_p3) follows it. The laptop stages and the host filesystem track that used to close this sheet are [sheet P4](sec_ai_p4).
 
-![Fig. 7b — The same three phases with **Phase 1** highlighted: this sheet is the middle track, between the disposable rig above it and the target board it commits to below.](figures/fig-7b-stages-phase1.svg)
+![F.phase1.The same three phases with **Phase 1** highlighted: this sheet is the middle track, between the disposable rig above it and the target board it commits to below.](figures/fig-7b-stages-phase1.svg)
 
 ## The prototype board — one ECP5 carrying two devices
 

@@ -5,7 +5,7 @@ The **E-series** builds the machine this document specifies: three iCE40 parts o
 
 Everything before it is rehearsal. The training rig of [sheet P1](sec_ai_p1) proves protocol and firmware on disposable hardware, the carrier of [sheet P2](sec_ai_p2) proves the gateware and the whole software stack on borrowed silicon, and what is left here is the board itself — the layout, the power path, the panel, and the two things neither prototype can answer: whether the target devices are large enough, and whether they are fast enough.
 
-![Fig. 7c — The same three phases with **Phase 2** highlighted: this sheet is the bottom track, where both milestones are closed, with the two prototypes that rehearse it above.](figures/fig-7c-stages-phase2.svg)
+![F.phase2.The same three phases with **Phase 2** highlighted: this sheet is the bottom track, where both milestones are closed, with the two prototypes that rehearse it above.](figures/fig-7c-stages-phase2.svg)
 
 ## Target board · E0–E8
 
@@ -24,7 +24,7 @@ Nine stages, each with concrete hardware/gateware/software and a verification cr
 - [x] E0.5 — **Pin budget across the three TQ-144 parts** — closed, it fits. This is what proved the architecture buildable, and what forced the shared-bus topology when it did not.
 - [ ] E0.6 — **Freeze the block diagram** as the schematic's hierarchical reference.
   TEST: every block on the frozen diagram maps to exactly one of [E1.1](sec_ai_p3#e11)'s six sheets, and nothing on the board sits outside one.
-  NOTE: **This is not Fig. 1, and the distinction is what the stage is for.** [Sheet B](sec_ai_b)'s figure is the *architecture* — who inhabits the shared bus and who governs it from outside — and it is current. What E0.6 owes is the *schematic's* hierarchy: the same machine cut along the six sheets of [E1.1](sec_ai_p3#e11), so that every block on the drawing is a page in KiCad and nothing on the board sits outside one. The REV B drawing this used to track has been retired rather than brought forward.
+  NOTE: **This is not ![F.arch], and the distinction is what the stage is for.** [Sheet B](sec_ai_b)'s figure is the *architecture* — who inhabits the shared bus and who governs it from outside — and it is current. What E0.6 owes is the *schematic's* hierarchy: the same machine cut along the six sheets of [E1.1](sec_ai_p3#e11), so that every block on the drawing is a page in KiCad and nothing on the board sits outside one. The REV B drawing this used to track has been retired rather than brought forward.
 - [ ] E0.7 — **Repository and documentation skeleton** — gateware, firmware, kernel, hardware, docs, with the decision log at the centre of it. One place where every artifact lands, which is cheap on day one and expensive on day two hundred.
   TEST: a fresh clone builds the gateware, the firmware and the 65816 binaries with no path pointing outside the repository.
 - [ ] E0.8 — **The 65816 toolchain audited, not merely installed.** Calypsi C and ca65, with the calling convention and the direct-page pseudo-register usage checked against actual compiled output and written down as the ABI the kernel is built on.

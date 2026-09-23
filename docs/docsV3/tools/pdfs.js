@@ -8,9 +8,10 @@
  * after style.css and so on top of it — and runs the formatter. Once per
  * trim, into pdfs/.
  *
- *   node tools/pdfs.js                 -> all four trims
- *   node tools/pdfs.js 6x9 8x10        -> just those
+ *   node tools/pdfs.js                 -> every trim
+ *   node tools/pdfs.js 6x9 A4          -> just those
  *   node tools/pdfs.js --scale 1.2     -> the same trims, type 20% larger
+ *   node tools/pdfs.js --gutter 5      -> the same trims, a wider binding edge
  *   node tools/pdfs.js --list          -> the table below, and nothing else
  *   node tools/pdfs.js --help          -> the same, for someone at a prompt
  *
@@ -32,13 +33,29 @@ const outDir = path.join(root, 'pdfs');
 
 /* ── the trims ───────────────────────────────────────────────────────────
    A trim is three numbers. Everything style.css declares as a knob is
-   derived from them below, so a trim that is not here yet is one line. */
+   derived from them below, so a trim that is not here yet is one line.
+
+   The four book trims are quoted in inches, which is how the trade names
+   them; A4 is quoted in mm, which is how everyone who prints one names it.
+   A trim therefore carries the unit it is quoted in, and an `as` for the
+   cases where the leaf has a name of its own — the rest are known by their
+   two numbers and say so. Everything downstream works in mm. */
 const trims = [
   { w: 6,   h: 9,    margin: 14 },
   { w: 7.5, h: 9.25, margin: 16 },
   { w: 8,   h: 10,   margin: 17 },
   { w: 8.5, h: 11,   margin: 18 },
+  /* 210 × 297 mm. The margin follows the same ratio the four above hold to
+     — a twelfth of the width, near enough — and 210mm sits a hair under
+     8.5in, so it takes the same 18mm. That leaves a 174mm measure, just
+     inside the middle table tier: see tableTier below, and move the margin
+     to 17mm if the wider tier is wanted instead. */
+  { w: 210, h: 297,  margin: 18, unit: 'mm', as: 'A4' },
 ];
+
+/* A trim's leaf in mm, whichever unit it is quoted in. */
+const mmW = (t) => (t.unit === 'mm' ? t.w : t.w * 25.4);
+const mmH = (t) => (t.unit === 'mm' ? t.h : t.h * 25.4);
 
 /* ── scale ───────────────────────────────────────────────────────────────
    `--scale s` sets `zoom` on the root element, which is a real property in
@@ -53,14 +70,44 @@ const trims = [
    mm inside the root element is multiplied by s on its way to the paper —
    so the two cotas are computed in the unzoomed frame and divided by s.
 
-   node tools/pdfs.js --scale 1.25   ->  pdfs/nova64_6_9_s1.25.pdf
+   node tools/pdfs.js --scale 1.25   ->  pdfs/nova64_6_9_s1.25_20260923-1704.pdf
    Page count grows with about s², since type scales in both directions. */
+
+/* ── the gutter ──────────────────────────────────────────────────────────
+   A bound book is not read flat: a few mm of the inner edge of every leaf
+   disappear into the spine, and a text block centred on the leaf therefore
+   reads as pushed towards the gutter. So the margin a trim declares is not
+   the left and right margin — it is their mean, and the two sides are that
+   mean plus and minus one gutter:
+
+     inner = margin + gutter      the binding edge
+     outer = margin - gutter      the thumb edge
+
+   Which side that is alternates, and CSS paged media already knows it:
+   `@page :right` is the recto — the odd page, whose inner edge is on the
+   left — and `@page :left` is the verso. So the rule is stated once per
+   side and every leaf of the book gets it right.
+
+   Taking the gutter off the outer margin rather than adding it to the total
+   is what keeps this change free: the two sides still sum to 2 × margin, so
+   the measure is the one every number below was calibrated against, and the
+   page count does not move. The head and foot margins are not touched.
+
+   Default 3mm, so inner and outer stand 6mm apart. That is a normal shift
+   for a perfect-bound book of this thickness; `--gutter` takes another
+   number for a proof, and 0 gives back the symmetric margins. */
+const GUTTER = 3;
+
+/* Under this the thumb edge stops being a margin: 3mm or so goes to the
+   trimming tolerance, and what is left has to still read as white space. */
+const OUTER_FLOOR = 8;
 
 /* How tall the closing title block lays out, in mm, over a given measure.
    Measured rather than derived — it wraps, so it is taller on a narrow page
-   — by rendering the block alone at each of the four trim widths. Linear
-   between those, flat outside them. Redo it the same way if the block's
-   text in manifest.json changes length.
+   — by rendering the block alone at each of the four book trim widths.
+   Linear between those, flat outside them: A4's 174mm measure falls inside
+   them and interpolates. Redo it the same way if the block's text in
+   manifest.json changes length.
 
    These four were measured with WeasyPrint, which lays the block out a hair
    taller than Vivliostyle does, and that is the safe direction: the drop
@@ -90,8 +137,8 @@ function tableTier(measure) {
    `measure` and `avail` are the type area as the type sees it: the physical
    area divided by the zoom, since that is the frame the layout happens in. */
 function knobs(t, scale) {
-  const measure = (t.w * 25.4 - 2 * t.margin) / scale;
-  const avail = (t.h * 25.4 - 2 * t.margin) / scale;
+  const measure = (mmW(t) - 2 * t.margin) / scale;
+  const avail = (mmH(t) - 2 * t.margin) / scale;
   const tbl = tableTier(measure);
   return {
     measure, avail, tbl,
@@ -110,17 +157,34 @@ function knobs(t, scale) {
   };
 }
 
-const name = (t) => t.w + 'x' + t.h;
-const file = (t, scale) =>
-  'nova64_' + t.w + '_' + t.h + (scale === 1 ? '' : '_s' + scale) + '.pdf';
+const name = (t) => t.as || t.w + 'x' + t.h;
+
+/* ── the stamp ───────────────────────────────────────────────────────────
+   Every file carries the moment its run started, as local YYYYMMDD-HHMM.
+   One stamp for the whole run, taken once here rather than per trim, so the
+   trims of a build sort together and read as the one thing they are.
+   Nothing is ever overwritten, which is the point: a build is a dated
+   artifact, and the previous one stays on disk to compare against. */
+const pad = (n) => String(n).padStart(2, '0');
+const now = new Date();
+const stamp = now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) +
+              '-' + pad(now.getHours()) + pad(now.getMinutes());
+
+const file = (t, scale, gutter) =>
+  'nova64_' + name(t).replace('x', '_') +
+  (scale === 1 ? '' : '_s' + scale) +
+  (gutter === GUTTER ? '' : '_g' + gutter) +
+  '_' + stamp + '.pdf';
 
 /* The trim, as the stylesheet that states it. `@page size` is written out
    rather than held in a custom property because a formatter is entitled not
    to resolve `var()` inside `@page`, and a dropped page size is silent. */
-function sheet(t, scale) {
+function sheet(t, scale, gutter) {
   const k = knobs(t, scale);
   return `@media print{
-  @page{ size:${t.w}in ${t.h}in; margin:${t.margin}mm; }
+  @page{ size:${t.w}${t.unit || 'in'} ${t.h}${t.unit || 'in'}; margin:${t.margin}mm; }
+  @page :right{ margin-left:${t.margin + gutter}mm; margin-right:${t.margin - gutter}mm; }
+  @page :left{ margin-left:${t.margin - gutter}mm; margin-right:${t.margin + gutter}mm; }
   :root{
     zoom:${scale};
     --cover-air:${k.coverAir}mm;
@@ -154,14 +218,23 @@ options
                anything from 0.2 to 5. The page box is outside what scales,
                so the margins hold still and the type grows inside the same
                area — the page count goes with about s², not s. A scaled
-               build is written to its own name and never overwrites the
-               canonical one.
+               build is written to its own name, apart from the canonical
+               one.
+  --gutter mm  how far the inner margin stands above the outer one, in mm.
+               Default ${GUTTER}, anything from 0 to 10. The trim's margin is
+               the mean of the two, so a gutter moves paper from the thumb
+               edge to the binding edge and leaves the type area, and the
+               page count, exactly where they were. 0 prints the margins
+               symmetric, which is what a loose-leaf proof wants.
   --list       print what each trim resolves to, and build nothing
   --help, -h   this
 
-output         pdfs/nova64_<width>_<height>.pdf, in inches, and _s<scale>
-               on the end of the name when --scale is not 1. The directory
-               is a build artifact; docs/.gitignore already knows it.
+output         pdfs/nova64_<width>_<height>_<stamp>.pdf, the trim in inches
+               and the stamp the local YYYYMMDD-HHMM the run started at, with
+               _s<scale> and _g<gutter> before it when either is not the
+               default. The whole run shares the one stamp, so a build never
+               overwrites the one before it. The directory is a build
+               artifact; docs/.gitignore knows it.
 
 The formatter is Vivliostyle, fetched through npx on first use, and it is not
 interchangeable: WeasyPrint drops \`fill\` and \`stroke\` as CSS properties, and
@@ -180,10 +253,21 @@ if (at !== -1) {
   }
 }
 
+let gutter = GUTTER;
+const ag = argv.indexOf('--gutter');
+if (ag !== -1) {
+  gutter = Number(argv.splice(ag, 2)[1]);
+  if (!(gutter >= 0 && gutter <= 10)) {
+    console.error('--gutter wants a number between 0 and 10');
+    process.exit(1);
+  }
+}
+
 if (argv.includes('--list')) {
   trims.forEach((t) => {
     const k = knobs(t, scale);
-    console.log(`${name(t).padEnd(9)} ${file(t, scale).padEnd(26)} margin ${t.margin}mm · ` +
+    console.log(`${name(t).padEnd(9)} ${file(t, scale, gutter).padEnd(40)} ` +
+                `margin ${t.margin - gutter}/${t.margin + gutter}mm out/in · ` +
                 `type area ${k.measure.toFixed(1)} × ${k.avail.toFixed(1)} mm` +
                 (scale === 1 ? '' : ` (at zoom ${scale})`) +
                 ` · cover ${k.coverAir}mm · drop ${k.cajetinDrop}mm`);
@@ -197,6 +281,17 @@ if (!wanted.length) {
   process.exit(1);
 }
 
+/* A gutter this wide would eat the thumb edge of the narrowest trim asked
+   for. Said here rather than at parse time, because it depends on which
+   trims this run is building. */
+const tight = wanted.filter((t) => t.margin - gutter < OUTER_FLOOR);
+if (tight.length) {
+  console.error(`--gutter ${gutter} leaves ${tight.map(name).join(', ')} an outer margin ` +
+                `under ${OUTER_FLOOR}mm; the widest that fits is ` +
+                `${Math.min(...tight.map((t) => t.margin)) - OUTER_FLOOR}`);
+  process.exit(1);
+}
+
 fs.mkdirSync(outDir, { recursive: true });
 
 /* print.html has to sit beside style.css and figures/, so every trim is
@@ -207,9 +302,9 @@ const css = path.join(os.tmpdir(), 'nova64-trim.css');
 
 let failed = 0;
 for (const t of wanted) {
-  const out = path.join(outDir, file(t, scale));
+  const out = path.join(outDir, file(t, scale, gutter));
   process.stderr.write(`${name(t)} in · `);
-  fs.writeFileSync(css, sheet(t, scale), 'utf8');
+  fs.writeFileSync(css, sheet(t, scale, gutter), 'utf8');
   try {
     execFileSync(process.execPath, [path.join(__dirname, 'prerender.js'), '--head', css, html],
                  { stdio: ['ignore', 'ignore', 'inherit'] });
