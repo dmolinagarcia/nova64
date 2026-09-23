@@ -1,7 +1,7 @@
 # Vision and philosophy
 > What this project is - what for - why - constraints
 
-Welcome to the nova64 synthesis document. Before you dive in, let's establish some ground rules for the project. They are not written in stone, and may change over time, but they should remain quite stable.
+Welcome to the noVa64 synthesis document. Before you dive in, let's establish some ground rules for the project. They are not written in stone and may change over time, but they should remain quite stable.
 
 - A2.1 — **What is noVa64.** It is a portable computer built around the W65C816S, a CPU whose design dates from 1983 — a kind of anachronistic laptop, accompanied by modern technology. It is not a commercial product, though; it is a means to an end. The purpose of noVa64 is to be a vehicle for learning — electronics, PCB design, FPGA programming, computer architecture, OS development — including virtual memory, modern filesystems, and USB devices. Everything is meant to be **designed and built from scratch**.
   NOTE: The real **deliverable of the project is knowledge**. Building it around already available components would be much, much faster, but that's not the real objective here. There may be some exceptions, though (I won't be manufacturing my own ICs!!), and when that choice is made, it will be recorded in [sheet X1](sc_x1).
@@ -16,12 +16,12 @@ Welcome to the nova64 synthesis document. Before you dive in, let's establish so
 - A2.5 — **Compatible with nothing.** This machine is completely new, and does not intend to emulate or be compatible with any existing machine or software. That is a freedom, not a gap: there is no need for a cycle-exact CPU, so the software design does not depend on exact instruction timing. It also allows us to stall the clock to reach devices with variable latency, and it is what licenses a softcore that need not match the silicon cycle for cycle (→ [A2.3](sc_a2#a23)). Several later decisions rest on this one and would collapse without it.
   The BIOS, the operating system, the memory system, drivers, video, audio — everything is unconstrained by precedent, which is where the didactic opportunities come from. It also makes this documentation the only source of truth: with nothing to be compatible with, there is no external specification to defer to, and nothing about the inner workings of noVa64 is written down anywhere else.
 - A2.6 — **Restrictions and principles.**
-  The final build must be 100% hand-solderable, at least by me. I can hand-solder 0.4 mm pitch QFNs, 0.5 mm TSOPs, 0603 SMD components, and of course, everything bigger than that.
-  The system will run on 3.3 V. The FPGAs may need other voltages, but the main bus will be driven at 3.3 V.
-  The toolchain will be 100% open source (KiCad · Yosys · nextpnr · IceStorm · pico-sdk)
-  An incremental approach will be used for the build, with each stage building upon the success of the previous ones, and an explicit verification criterion for every stage.
-  Unpopulated footprints will be used to preserve room for future expansion.
-  Documentation, documentation, documentation. I want to learn as much as possible from this project, but I also want all the effort to be useful to someone else.
+  - The final build must be 100% hand-solderable, at least by me. I can hand-solder 0.4 mm pitch QFNs, 0.5 mm TSOPs, 0603 SMD components, and of course, everything bigger than that.
+  - The system will run on 3.3 V. The FPGAs may need other voltages, but the main bus will be driven at 3.3 V.
+  - The toolchain will be 100% open source (KiCad · Yosys · nextpnr · IceStorm · pico-sdk).
+  - An incremental approach will be used for the build, with each stage building upon the success of the previous ones, and an explicit verification criterion for every stage.
+  - Unpopulated footprints will be used to preserve room for future expansion.
+  - Documentation, documentation, documentation. I want to learn as much as possible from this project, but I also want all the effort to be useful to someone else.
   NOTE: These restrictions have already taken their toll on the project. More capable FPGAs have been discarded, as they are only available in BGA packages that I can't solder, although I am planning on trying.
-- A2.7 — **Scope of this document.** This document is the specification for noVa64. Anything related to noVa64 outside of this document does not belong to the specification, even if I am the one who wrote it. **Nothing in this project is documented anywhere else**, and a claim that cannot be found in these sheets should be treated as not having been made. As the project is not set in stone, there will be many choices along the way; [sheet X1](sc_x1) will log all of them.
+- A2.7 — **Scope of this document.** This document is the specification for noVa64. Anything related to noVa64 outside of this document does not belong to the specification, even if I am the one who wrote it. **Nothing in this project is documented anywhere else**, and a claim that cannot be found in these sheets should be treated as not having been made. As the project is not set in stone, there will be many choices along the way; [sheet X1](sc_x1) logs them.
   NOTE: The converse is the working rule: a decision taken but not written down is not a decision. Every decision starts as an open question, and those are listed in [sheet X2](sc_x2) and marked as resolved once the decision is made.

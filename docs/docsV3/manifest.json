@@ -31,7 +31,7 @@
       "EMU REV B",
       "PROTOTYPE REV A"
     ],
-    "version": "DOC v0.2.4",
+    "version": "DOC v0.2.5",
     "date": "SEP 2026"
   },
   "sheets": [
@@ -48,6 +48,13 @@
       "part": "introduction",
       "nav": "Vision and philosophy",
       "index": "Project vision and philosophy"
+    },
+    {
+      "file": "sc_a3",
+      "letter": "A3",
+      "part": "introduction",
+      "nav": "How to read this document",
+      "index": "How to read this document"
     },
     {
       "file": "sc_v7",
@@ -76,14 +83,6 @@
       "part": "appendices",
       "nav": "Changelog",
       "index": "Changelog"
-    },
-    {
-      "file": "sec_ai_a",
-      "letter": "A",
-      "part": "ai",
-      "area": "Introduction",
-      "nav": "Vision and philosophy",
-      "index": "Project vision and philosophy · how to read this document"
     },
     {
       "file": "sec_ai_b",
