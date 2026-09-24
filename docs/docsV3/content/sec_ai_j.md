@@ -3,7 +3,7 @@
 
 Small monolithic kernel, written in C with assembly only where it hurts. It consumes the BIOS for a few milliseconds and then provides everything else.
 
-- J.1 — Model: preemptive kernel resident in virtual bank `$01` (64 KB, pinned in SRAM), mapped identically and privileged in every process's page table.
+- J.1 — Model: preemptive kernel resident at the top of the virtual map — fixed base in bank `$FD`, growing downward to a floor at `$F0` ([D102](sec_ai_q#d102)) — with its entry, fault and MMU paths pinned in SRAM, and mapped identically and privileged in every process's page table.
   NOTE: Mapped identically in every process's table means a syscall changes privilege, not address space — the kernel is already resident at those addresses when the `COP` vector is fetched ([L.12](sec_ai_l#l12)).
 - J.2 — How it uses the BIOS: only the info block and the `JSL` table during the transition; its drivers replace the console and SD, and from then on the BIOS goes inert.
 - J.3 — Syscall mechanism: `COP`, with the service number **in the accumulator**, loaded by the libc stub immediately before the instruction. The handler indexes its dispatch table straight from A; arguments stay wherever the C compiler's calling convention left them. So the stable ABI is exactly "**calling convention + a number in A**" — nothing is marshalled, and the stubs that carry it are three lines each (→ [O.7](sec_ai_o#o7)). ((The inline signature byte is still emitted, but no longer read: it survives for disassembly, tracing and static verification of a binary. Taking the number from A instead of walking the stack for it saves 20–30 cycles on every single call.))
