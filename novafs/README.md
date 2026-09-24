@@ -14,6 +14,9 @@ still has to answer an inode-keyed, POSIX-shaped table. That also produces
 the first evidence about the table itself, recorded in
 [`common/fsops.md`](common/fsops.md).
 
+New to it? [HOWTO.md](HOWTO.md) explains, in Spanish and from scratch, how
+to plug an SD block reader into the library and call it from a shell.
+
 ## Layers (Y4.4)
 
 | Layer | Files | Rule |
