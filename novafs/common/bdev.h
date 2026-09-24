@@ -1,5 +1,5 @@
 /*
- * bdev.h — L0, the block device (DN-FS-FUSE-001 §4.3, sheet Y4.9/Y4.10).
+ * bdev.h — L0, the block device (sheet Y4.4, Y4.9, Y4.10).
  *
  * The only layer that knows what the backing store is. Everything above
  * it asks for whole sectors by number; the backend behind the read hook
@@ -33,6 +33,7 @@ struct bdev {
         const uint8_t *mem;                 /* bdev_mem                     */
         void          *ptr;                 /* anything else                */
     } priv;
+    uint32_t       part_lba;                /* bdev_part_open: first sector */
     uint32_t       sector_size;             /* bytes, a power of two >= 512 */
     uint32_t       sector_count;            /* addressable sectors          */
     uint32_t       reads;                   /* backend calls, for the tests */
@@ -44,6 +45,11 @@ struct bdev {
  * reported success would turn damage into plausible data. */
 int  bdev_read(bdev_t *bd, uint32_t lba, void *buf, uint32_t nsec);
 void bdev_close(bdev_t *bd);
+
+/* Partition view: sectors lba .. lba+count-1 of `parent`, renumbered from
+ * 0, so that a volume inside a partition is mounted like a whole device.
+ * The parent must stay open while the view is used. */
+int  bdev_part_open(bdev_t *view, bdev_t *parent, uint32_t lba, uint32_t count);
 
 /* Memory backend: the device is `bytes` bytes at `base`. */
 int  bdev_mem_open(bdev_t *bd, const void *base, uint32_t bytes,

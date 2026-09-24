@@ -5,12 +5,15 @@
  * external tools. The image-based tests live in tests/run_tests.py.
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "bdev.h"
 #include "endian.h"
+#include "fat32_fsops.h"
 #include "fat32_ondisk.h"
 #include "fat32_priv.h"
+#include "fsops.h"
 #include "mbr.h"
 
 static unsigned failures, checks, corrupt_reports;
@@ -76,6 +79,18 @@ static void test_bdev(void)
     CHECK(bdev_read(&bd, 3, buf, 0xFFFFFFFFuL) == BDEV_ERANGE);
     CHECK(bdev_read(&bd, 100, buf, 0) == BDEV_OK);                 /* no-op */
     CHECK(bd.reads == 1 && bd.sectors_read == 2);
+
+    {
+        bdev_t view;
+
+        CHECK(bdev_part_open(&view, &bd, 2, 4) == BDEV_OK);
+        CHECK(view.sector_count == 4);
+        CHECK(bdev_read(&view, 0, buf, 2) == BDEV_OK && buf[0] == 2 && buf[512] == 3);
+        CHECK(bdev_read(&view, 3, buf, 2) == BDEV_ERANGE);      /* inside the parent */
+        CHECK(bdev_part_open(&view, &bd, 6, 3) == BDEV_ERANGE);
+        CHECK(bdev_part_open(&view, &bd, 8, 1) == BDEV_ERANGE);
+        CHECK(bdev_part_open(&view, &bd, 0, 0) == BDEV_ERANGE);
+    }
 }
 
 static void test_mbr(void)
@@ -361,6 +376,18 @@ static void test_datetime(void)
     CHECK(fat32_decode_datetime(0, 0, 0, &dt) == 0 && dt.year == 1980);
     CHECK(fat32_decode_datetime(0xFF9F, 0xBF7D, 0, &dt) == 1);  /* 2107-12-31 23:59:58 */
     CHECK(dt.year == 2107 && dt.month == 12 && dt.day == 31 && dt.second == 58);
+
+    /* Seconds, with no zone: the reference values are Python's timegm. */
+    CHECK(fat32_datetime_to_unix(&dt) == 0xFFFFFFFFuL);           /* saturates */
+    fat32_decode_datetime(date, time, 0, &dt);
+    CHECK(fat32_datetime_to_unix(&dt) == 1709214358uL);
+    fat32_decode_datetime(0, 0, 0, &dt);
+    CHECK(fat32_datetime_to_unix(&dt) == 315532800uL);             /* 1980-01-01 */
+    fat32_decode_datetime((uint16_t)(((2000 - 1980) << 9) | (3 << 5) | 1), 0, 0, &dt);
+    CHECK(fat32_datetime_to_unix(&dt) == 951868800uL);             /* after 2000-02-29 */
+    fat32_decode_datetime((uint16_t)(((2106 - 1980) << 9) | (2 << 5) | 7),
+                          (uint16_t)((6 << 11) | (28 << 5) | 7), 0, &dt);
+    CHECK(fat32_datetime_to_unix(&dt) == 4294967294uL);            /* the last one */
 }
 
 /* ---- Long names ----------------------------------------------------------------- */
@@ -487,6 +514,188 @@ static void test_lfn(void)
     }
 }
 
+/* ---- L2 and the table, on a volume built in memory ----------------------------- */
+
+#define V_CLUSTERS  66000u                      /* just above the FAT32 minimum */
+#define V_SECTORS   (T_DATA_START + V_CLUSTERS)
+#define V_OFFSET    2048u                       /* partition start, MBR case */
+
+static void put_de(uint8_t *de, const char *name11, uint8_t attr,
+                   uint32_t cluster, uint32_t size)
+{
+    make_de(de, name11, attr, 0);
+    put16(de + DIR_FstClusHI_OFF, (uint16_t)(cluster >> 16));
+    put16(de + DIR_FstClusLO_OFF, (uint16_t)cluster);
+    put32(de + DIR_FileSize_OFF, size);
+}
+
+/* A FAT32 volume: HELLO.TXT (cluster 3, "hello") and SUB (cluster 4)
+ * holding an empty INNER.TXT, under a volume label. */
+static void make_volume(uint8_t *v)
+{
+    uint8_t *fsi = v + 512, *root, *sub;
+    unsigned f;
+
+    make_bpb(v, V_SECTORS);
+    put32(fsi + FSI_LeadSig_OFF, FSI_LEADSIG);
+    put32(fsi + FSI_StrucSig_OFF, FSI_STRUCSIG);
+    put32(fsi + FSI_TrailSig_OFF, FSI_TRAILSIG);
+    put32(fsi + FSI_Free_Count_OFF, V_CLUSTERS - 3u);
+    put32(fsi + FSI_Nxt_Free_OFF, 5);
+    for (f = 0; f < 2; f++) {
+        uint8_t *fat = v + (32u + f * 780u) * 512u;
+        put32(fat + 0, 0x0FFFFFF8uL);
+        put32(fat + 4, 0x0FFFFFFFuL);
+        put32(fat + 8, 0x0FFFFFFFuL);           /* root */
+        put32(fat + 12, 0x0FFFFFFFuL);          /* HELLO.TXT */
+        put32(fat + 16, 0x0FFFFFFFuL);          /* SUB */
+    }
+    root = v + T_DATA_START * 512u;
+    put_de(root, "NOVA64     ", FAT_ATTR_VOLUME_ID, 0, 0);
+    put_de(root + 32, "HELLO   TXT", FAT_ATTR_ARCHIVE, 3, 5);
+    put_de(root + 64, "SUB        ", FAT_ATTR_DIRECTORY, 4, 0);
+    memcpy(v + (T_DATA_START + 1u) * 512u, "hello", 5);
+    sub = v + (T_DATA_START + 2u) * 512u;
+    put_de(sub, ".          ", FAT_ATTR_DIRECTORY, 4, 0);
+    put_de(sub + 32, "..         ", FAT_ATTR_DIRECTORY, 0, 0);
+    put_de(sub + 64, "INNER   TXT", FAT_ATTR_ARCHIVE, 0, 0);
+}
+
+static void test_mount(void)
+{
+    static fat_fs_t fs;
+    uint8_t *disk = calloc(V_OFFSET + V_SECTORS, 512);
+    uint8_t buf[512];
+    bdev_t bd;
+    uint32_t lba, count;
+    char label[FAT_SHORT_NAME_BUF];
+
+    if (!disk) {
+        CHECK(disk != 0);
+        return;
+    }
+    /* Whole device. */
+    make_volume(disk);
+    bdev_mem_open(&bd, disk, V_SECTORS * 512u, 512);
+    CHECK(fat_probe(&bd, buf, &lba, &count) == FS_OK && lba == 0 && count == V_SECTORS);
+    CHECK(fat_mount_auto(&fs, &bd) == FS_OK && fs.g.cluster_count == V_CLUSTERS);
+    CHECK(fs.fsinfo_valid && fs.fsinfo_free == V_CLUSTERS - 3u);
+    CHECK(fat_label(&fs, label) == FS_OK && strcmp(label, "NOVA64") == 0);
+
+    /* The same volume in the second partition of an MBR disk, after one
+     * that holds nothing, so that probing has to skip it. */
+    memmove(disk + V_OFFSET * 512u, disk, V_SECTORS * 512u);
+    memset(disk, 0, V_OFFSET * 512u);
+    disk[446 + 4] = 0x83;
+    put32(disk + 446 + 8, 64);
+    put32(disk + 446 + 12, 100);
+    disk[462 + 4] = 0x0C;
+    put32(disk + 462 + 8, V_OFFSET);
+    put32(disk + 462 + 12, V_SECTORS);
+    disk[510] = 0x55;
+    disk[511] = 0xAA;
+    bdev_mem_open(&bd, disk, (V_OFFSET + V_SECTORS) * 512u, 512);
+    CHECK(fat_probe(&bd, buf, &lba, &count) == FS_OK && lba == V_OFFSET);
+    CHECK(fat_mount_auto(&fs, &bd) == FS_OK && fs.part_lba == V_OFFSET);
+    CHECK(fat_mount(&fs, &bd, 0, 0) != FS_OK);      /* the MBR is no volume */
+
+    /* A volume larger than its device. */
+    bdev_mem_open(&bd, disk, (V_OFFSET + V_SECTORS - 1u) * 512u, 512);
+    CHECK(fat_mount(&fs, &bd, V_OFFSET, 0) == FS_ECORRUPT);
+    free(disk);
+}
+
+static void test_fsops(void)
+{
+    static fat32_mount_t m;
+    const fsops_t *ops = &fat32_fsops;
+    uint8_t *disk = calloc(V_SECTORS, 512);
+    fs_dir_cursor_t *c[FAT32_FSOPS_DIRS + 1];
+    fs_file_t *f;
+    fs_dirent_t de;
+    fs_attr_t a;
+    fs_ino_t hello, sub, ino;
+    uint64_t blocks, bfree, files, ffree;
+    uint32_t bsize;
+    char buf[16];
+    size_t got;
+    unsigned i;
+    bdev_t bd;
+
+    if (!disk) {
+        CHECK(disk != 0);
+        return;
+    }
+    make_volume(disk);
+    bdev_mem_open(&bd, disk, V_SECTORS * 512u, 512);
+
+    CHECK(ops->mount(&m, &bd, 0) == FS_EROFS);          /* refused, not downgraded */
+    CHECK(ops->mount(&m, &bd, FS_MOUNT_RDONLY) == FS_OK);
+    CHECK(ops->write == 0 && ops->create == 0 && ops->mkdir == 0 &&
+          ops->unlink == 0 && ops->rmdir == 0 && ops->rename == 0 &&
+          ops->truncate == 0 && ops->setattr == 0 && ops->sync == 0);
+
+    CHECK(ops->statfs(&m, &blocks, &bfree, &files, &ffree, &bsize) == FS_OK);
+    CHECK(blocks == V_CLUSTERS && bfree == V_CLUSTERS - 3u && bsize == 512 && files == 0);
+
+    CHECK(ops->lookup(&m, FS_INO_ROOT, "hello.txt", &hello) == FS_OK);
+    CHECK(ops->lookup(&m, FS_INO_ROOT, "SUB", &sub) == FS_OK);
+    CHECK(ops->lookup(&m, FS_INO_ROOT, "SUB/INNER.TXT", &ino) == FS_EINVAL);
+    CHECK(ops->lookup(&m, FS_INO_ROOT, "nope", &ino) == FS_ENOENT);
+    CHECK(ops->lookup(&m, hello, "x", &ino) == FS_ENOTDIR);
+    CHECK(ops->lookup(&m, sub, "..", &ino) == FS_OK && ino == FS_INO_ROOT);
+    CHECK(ops->lookup(&m, sub, ".", &ino) == FS_OK && ino == sub);
+    CHECK(ops->readlink(&m, hello, buf, sizeof buf) == FS_EINVAL);
+
+    CHECK(ops->getattr(&m, FS_INO_ROOT, &a) == FS_OK);
+    CHECK(a.ino == FS_INO_ROOT && a.mode == (FS_S_IFDIR | 0755u) && a.nlink == 3);
+    CHECK(a.size == 512 && a.mtime == 0);
+    CHECK(ops->getattr(&m, sub, &a) == FS_OK && a.nlink == 2);
+    CHECK(ops->getattr(&m, hello, &a) == FS_OK);
+    CHECK(a.mode == (FS_S_IFREG | 0644u) && a.nlink == 1 && a.size == 5 && a.blocks == 1);
+    CHECK(a.uid == 0 && a.gid == 0 && a.mtime == 315532800);   /* date 0: 1980 */
+
+    /* Listings start with "." and "..", for the root as for SUB. */
+    CHECK(ops->opendir(&m, FS_INO_ROOT, &c[0]) == FS_OK);
+    CHECK(ops->readdir(&m, c[0], &de) == FS_OK && strcmp(de.name, ".") == 0 &&
+          de.ino == FS_INO_ROOT && de.type == FS_DT_DIR);
+    CHECK(ops->readdir(&m, c[0], &de) == FS_OK && strcmp(de.name, "..") == 0 &&
+          de.ino == FS_INO_ROOT);
+    CHECK(ops->readdir(&m, c[0], &de) == FS_OK && strcmp(de.name, "HELLO.TXT") == 0 &&
+          de.ino == hello && de.type == FS_DT_REG && de.name_len == 9);
+    CHECK(ops->readdir(&m, c[0], &de) == FS_OK && de.ino == sub);
+    CHECK(ops->readdir(&m, c[0], &de) == FS_ENOENT);
+    CHECK(ops->closedir(&m, c[0]) == FS_OK);
+    CHECK(ops->closedir(&m, c[0]) == FS_EINVAL);        /* already closed */
+    CHECK(ops->opendir(&m, sub, &c[0]) == FS_OK);
+    CHECK(ops->readdir(&m, c[0], &de) == FS_OK && de.ino == sub);
+    CHECK(ops->readdir(&m, c[0], &de) == FS_OK && de.ino == FS_INO_ROOT);
+    CHECK(ops->readdir(&m, c[0], &de) == FS_OK && strcmp(de.name, "INNER.TXT") == 0);
+    CHECK(ops->closedir(&m, c[0]) == FS_OK);
+    CHECK(ops->opendir(&m, hello, &c[0]) == FS_ENOTDIR);
+
+    /* The pools run out cleanly. */
+    for (i = 0; i < FAT32_FSOPS_DIRS; i++)
+        CHECK(ops->opendir(&m, FS_INO_ROOT, &c[i]) == FS_OK);
+    CHECK(ops->opendir(&m, FS_INO_ROOT, &c[i]) == FS_EMFILE);
+    for (i = 0; i < FAT32_FSOPS_DIRS; i++)
+        CHECK(ops->closedir(&m, c[i]) == FS_OK);
+
+    CHECK(ops->open(&m, hello, FS_O_RDWR, &f) == FS_EROFS);
+    CHECK(ops->open(&m, sub, FS_O_RDONLY, &f) == FS_EISDIR);
+    CHECK(ops->open(&m, hello, FS_O_RDONLY, &f) == FS_OK);
+    CHECK(ops->read(&m, f, buf, sizeof buf, 0, &got) == FS_OK && got == 5);
+    CHECK(memcmp(buf, "hello", 5) == 0);
+    CHECK(ops->read(&m, f, buf, sizeof buf, 3, &got) == FS_OK && got == 2);
+    CHECK(ops->read(&m, f, buf, sizeof buf, 0x100000000uLL, &got) == FS_OK && got == 0);
+    CHECK(ops->close(&m, f) == FS_OK);
+    CHECK(ops->read(&m, f, buf, sizeof buf, 0, &got) == FS_EINVAL);
+
+    CHECK(ops->unmount(&m) == FS_OK);
+    CHECK(ops->getattr(&m, FS_INO_ROOT, &a) == FS_EINVAL);
+    free(disk);
+}
+
 int main(void)
 {
     fs_set_corrupt_logger(quiet_logger);
@@ -499,6 +708,8 @@ int main(void)
     test_dirent();
     test_datetime();
     test_lfn();
+    test_mount();
+    test_fsops();
 
     printf("unit: %u checks, %u failed\n", checks, failures);
     return failures ? 1 : 0;

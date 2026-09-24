@@ -1,9 +1,9 @@
 /*
- * fs_err.h — filesystem-level error codes (DN-FS-FUSE-001 §4.4, sheet Y4.8).
+ * fs_err.h — filesystem-level error codes (sheet Y4.8).
  *
- * L2 reports its own error enum so that filesystem semantics are not
- * confused with POSIX semantics; whatever binds the library to an OS maps
- * it once, at the boundary.
+ * L2 reports its own error enum, deliberately narrower than sheet Y1.15's
+ * error space, and whatever binds it to an OS (the FUSE binding here, the
+ * VFS on the machine) maps it once, at the boundary.
  *
  * FS_ECORRUPT is the one code with behaviour attached: it is always
  * raised through fs_corrupt(), which logs, because damage reported
@@ -26,7 +26,8 @@ typedef enum {
     FS_ENAMETOOLONG,
     FS_EINVAL,          /* bad argument from the caller               */
     FS_ENOTSUP,         /* format or feature this driver refuses      */
-    FS_ELOOP            /* structural cycle or depth bound exceeded   */
+    FS_ELOOP,           /* structural cycle or depth bound exceeded   */
+    FS_EMFILE           /* no free open-file or directory slot        */
 } fs_err_t;
 
 const char *fs_strerror(fs_err_t e);

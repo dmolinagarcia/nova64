@@ -1,179 +1,192 @@
-# novafs — read-only FAT32
+# novafs — the filesystem host track
 
-A C library that mounts a FAT32 volume and reads it: path resolution,
-directory listing with long file names, file reads at any offset, free
-space. It never writes.
+This is the code of the host track in
+[sheet Y4](../docs/docsV3/content/sec_ai_y4.md). So far it holds the first
+of its three filesystems: **FAT32, read-only**, which is gate FUS-03. The
+FAT32 driver sits behind the `fsops` table, and that table is what the track
+delivers (Y4.5). It is discovered by implementing filesystems behind it, and
+then lifted into [sheet Y1](../docs/docsV3/content/sec_ai_y1.md) (Y4.23).
 
-It is built the way [DN-FS-FUSE-001](../docs/docsV3/raw/DN-FS-FUSE-001-filesystem-learning-track.md)
-and [sheet Y4](../docs/docsV3/content/sec_ai_y4.md) lay the host track out:
-layered, with no allocation, 32-bit arithmetic throughout and correct with a
-16-bit `int`, and hostile to damaged images rather than trusting them. It
-covers the library half of gate FUS-03; the FUSE binding and the kernel
-differential pass (FUS-03.m, FUS-03.n) are not here yet.
+FAT32 runs on the host and never on the machine
+([D98](../docs/docsV3/content/sec_ai_q.md)). What this gate buys is the
+synthesis problem (Y4.15): a format with no inodes, owners or mode bits
+still has to answer an inode-keyed, POSIX-shaped table. That also produces
+the first evidence about the table itself, recorded in
+[`common/fsops.md`](common/fsops.md).
 
-## Layout
+## Layers (Y4.4)
 
 | Layer | Files | Rule |
 |---|---|---|
-| L0 block device | `common/bdev.[ch]`, `common/bdev_file.c` | The only layer that knows what the store is. Range-checks every request. |
-| L1 on-disk decoding | `fat32/fat32_ondisk.[ch]`, `common/mbr.[ch]`, `common/endian.h` | No I/O. Offsets and accessors, never a packed struct. |
-| L2 filesystem logic | `fat32/fat32_fs.h` (the API), `fat32_fs.c`, `fat32_fat.c`, `fat32_dir.c`, `fat32_lfn.c`, `fat32_file.c` | Its own error enum (`common/fs_err.h`). |
-| Tool | `tools/fat32tool.c` | Command-line front end, used by the tests. |
-| Tests | `tests/unit/`, `tests/run_tests.py` | See [Testing](#testing). |
+| L0 block device | `common/bdev.[ch]`, `common/bdev_file.c` | The only layer that knows the store. Checks every request against the device and fails it rather than reading short (Y4.9, Y4.10). |
+| L1 on-disk decoding | `fat32/fat32_ondisk.[ch]`, `common/mbr.[ch]`, `common/endian.h` | No I/O. Offsets and accessors, never a packed struct (Y4.7; Q173 is open). |
+| L2 filesystem logic | `fat32/fat32_fs.h`, `fat32_{fs,fat,dir,lfn,file,attr}.c` | Its own error enum (`common/fs_err.h`, Y4.8). No FUSE type anywhere. |
+| The table | `common/fsops.h`, `fat32/fat32_fsops.[ch]` | Keyed on inode numbers; `lookup` takes a parent and one component (Y4.6). |
+| L3 FUSE binding | — | Not written yet: FUS-03.m and FUS-03.n. |
 
-## Building
+The code follows the track's rules. It never allocates. It uses 32-bit
+arithmetic, and `make check16` compiles it with a 16-bit `int`. Every value
+read from disk is checked before it becomes an address. It is
+single-threaded (Y4.13).
+
+## Building and testing
 
 ```sh
 make            # build/libnovafs_fat32.a, build/fat32tool, build/test_unit
 make test       # unit tests, then the image tests
 make san        # the same under AddressSanitizer and UBSan
-make check16    # type-check the portable sources for a 16-bit-int target
+make check16    # compile the portable sources with a 16-bit int and size_t
 ```
 
-The image tests need `python3`, `dosfstools` and `mtools`; `check16` needs
+The image tests need `python3`, `dosfstools` and `mtools`. `check16` needs
 `clang`.
 
 ## Using it
 
-```c
-#include "bdev.h"
-#include "fat32_fs.h"
-
-static fat_fs_t fs;                 /* holds the sector buffers */
-bdev_t bd;
-fat_file_t f;
-uint8_t buf[512];
-uint32_t got;
-
-bdev_file_open(&bd, "card.img", 512);
-if (fat_mount_auto(&fs, &bd) != FS_OK)          /* whole disk or MBR */
-    ...;
-if (fat_open(&fs, "/docs/readme.txt", &f) == FS_OK)
-    while (fat_file_read(&f, buf, sizeof buf, &got) == FS_OK && got > 0)
-        fwrite(buf, 1, got, stdout);
-```
-
-Listing a directory:
+Through the table, the way a VFS or the FUSE binding would use it. The
+caller resolves paths, one component per `lookup` (Y1.11):
 
 ```c
-fat_dir_t d;
-fat_dirent_t de;                    /* ~830 bytes: keep it off a small stack */
-fs_err_t e;
+static fat32_mount_t m;
+const fsops_t *ops = &fat32_fsops;
+fs_ino_t ino;
+fs_file_t *f;
+size_t got;
 
-if (fat_opendir(&fs, "/docs", &d) == FS_OK) {
-    while ((e = fat_dir_read(&d, &de)) == FS_OK)
-        printf("%-12s %10u %s\n", de.short_name, de.node.size, de.name);
-    /* e is FS_ENOENT at the end, anything else is an error */
-}
+ops->mount(&m, bd, FS_MOUNT_RDONLY);         /* bd is the volume itself */
+ops->lookup(&m, FS_INO_ROOT, "docs", &ino);
+ops->lookup(&m, ino, "readme.txt", &ino);
+ops->open(&m, ino, FS_O_RDONLY, &f);
+ops->read(&m, f, buf, sizeof buf, 0, &got);
+ops->close(&m, f);
 ```
 
-Everything is a caller-owned structure and nothing needs releasing except
-the device. A node (`fat_node_t`) is a plain value: a decoded copy of a
-directory entry. Alongside the path functions there is an inode-keyed set
-(`fat_root`, `fat_lookup`, `fat_parent`, `fat_node_from_ino`) for the
-`fsops` table sheet Y4 builds.
+The volume is found below the driver. `fat_probe` checks for a whole-disk
+volume first, then for the first MBR partition that holds FAT32.
+`bdev_part_open` gives that partition as a device of its own.
 
-The `fat32tool` front end does the same from a shell:
+L2 can also be called directly: `fat_mount_auto`, `fat_open`,
+`fat_file_read`, `fat_opendir`, `fat_dir_read`. This is the FAT view, with
+short names and FAT attributes.
+
+`build/fat32tool` does both from a shell. `ls`, `tree`, `stat` and `cat` go
+through the table; `info` and `dir` go through L2:
 
 ```sh
-build/fat32tool card.img info
-build/fat32tool card.img ls /docs
-build/fat32tool card.img tree
-build/fat32tool card.img cat /docs/readme.txt
-build/fat32tool -o 2048 card.img stat /docs      # volume at sector 2048
+build/fat32tool card.img ls /docs            # what a caller is told
+build/fat32tool card.img dir /docs           # what FAT stores
+build/fat32tool card.img stat /docs/readme.txt
+build/fat32tool -o 2048 card.img tree        # volume at sector 2048
 ```
 
-## Porting
+## Where FUS-03 stands
 
-L0 is one read hook: fill a `bdev_t` with `read`, `sector_size` and
-`sector_count` and the rest is unchanged. That is where the SD block driver
-of sheet G goes. Build with `NOVAFS_FREESTANDING` to drop stdio and the file
-backend. Memory is set at compile time:
+| Step | State |
+|---|---|
+| a. BPB decoded | Done. Geometry matches `fsck.fat -v` on the three whole-disk images. |
+| b. FSInfo | Done. All three signatures are checked, and absurd counts are dropped. |
+| c. FAT access | Done. Out-of-range, free and bad successors are refused; a direct-mapped cache sits over the FAT. |
+| d. Chain iterator | Done. Bounded by the volume size; cycles caught with Brent's algorithm. The looping images end in an error. |
+| e. Short entries | Done. Order matches `mdir`. |
+| f. Long names | Done, including orphaned runs, checksum mismatches and surrogates. |
+| g. Inode numbers | Done. See below. |
+| h. Path resolution | Done. `ENOTDIR` is kept distinct from `ENOENT`. |
+| i. Attribute synthesis | The rules are in place (`fat32_attr.c`). Agreement with a kernel mount is untested. |
+| j. Listing | Content matches the source tree and order matches `mdir`. No kernel mount yet. |
+| k. Open and read | Done. Whole-file CRCs and partial reads match the source tree. |
+| l. Free space | Matches `fsck.fat`. No kernel mount yet. |
+| m. Mount options | Belong to the FUSE binding, which is not written. |
+| n. Differential pass | Not done. It needs a kernel `vfat` mount, which this environment cannot provide. |
+| o. Damage | Done. 23 named kinds of damage plus random damage: no crash, no hang, no sanitizer report. |
+
+Several parts of FUS-02 were built on the way, but not every one of its
+acceptance tests has run:
+
+- the block layer and its range tests;
+- the accessors;
+- the corruption logger;
+- the `fsops` header, proven through the tool and the unit tests rather
+  than a pass-through filesystem;
+- a generated damage corpus.
+
+## Behaviour worth knowing
+
+- **Attributes are made up under stated rules** (FUS-03.i, the comment at the
+  top of `fat32_attr.c`), and none of them asks the host anything (Y4.20):
+  - mode is 0644 for files and 0755 for directories, as in Y1.16. The
+    read-only attribute clears the write bits.
+  - uid and gid are 0.
+  - A directory's link count is 2 plus its subdirectories.
+  - A directory's size is its cluster chain.
+  - Times are local time with no zone applied. The root has none.
+- **Inode numbers** are `2 + (cluster − 2) × entries_per_cluster + index` of
+  the short entry, and 1 for the root. They are unique while the file exists
+  and stable until it moves. They fit in 32 bits for data regions up to
+  128 GiB. The table refuses a larger volume; L2 mounts it and gives every
+  node `FAT_INO_NONE`.
+- **Listings through the table start with `.` and `..`**, for the root too,
+  as the Linux driver's do. `fat_dir_read` in L2 leaves both out.
+- **Read-only.** A read-write mount is refused rather than downgraded
+  (Y1.13), and every write slot is `NULL` (Y1.9).
+- **FAT32 only, decided by cluster count.** A volume with fewer than
+  65 525 clusters is refused, including one made with `mkfs.vfat -F 32`,
+  which Linux would mount. Clusters are at most 32 KiB. exFAT and GPT are not
+  supported.
+- **Damage is reported, never absorbed.** Every case returns `FS_ECORRUPT`
+  through `fs_corrupt()`, which logs (Y4.8). Chains are bounded and checked
+  for cycles. A directory stops at 65 536 entries. A chain shorter than its
+  file's size is an error, not a short read. An orphaned long name is not an
+  error: it gives way to the short name, as it does in the kernel.
+- **Names.** Short names are decoded as code page 437. Long names are UTF-16
+  converted to UTF-8. Lookups fold ASCII case only. A long name too big for
+  the table's 255 bytes is returned as its 8.3 alias
+  ([finding 1](common/fsops.md)).
+- **Free space** is counted from the FAT once, then cached. The FSInfo count
+  is only a hint, as it is in the Linux driver by default.
+
+## Configuration
 
 | Macro | Default | Effect |
 |---|---|---|
 | `FAT_CFG_MAX_SECTOR` | 4096 | Largest logical sector; sizes every buffer |
 | `FAT_CFG_FAT_CACHE` | 4 | FAT sector cache slots, a power of two |
-| `FAT_CFG_NAME_MAX` | 765 | Longest UTF-8 name returned |
+| `FAT_CFG_NAME_MAX` | 765 | Longest UTF-8 name L2 returns |
+| `FAT32_FSOPS_DIRS`, `FAT32_FSOPS_FILES` | 8, 16 | Cursor and open-file pools per mount |
 
-With the defaults, `fat_fs_t` is about 20 KiB. With 512, 2 and 255 it is
-1.6 KiB and `fat_dirent_t` is 320 bytes. `fat_dir_t` is 568 bytes either
-way, because it holds the long name being assembled. `make check16`
-type-checks the portable sources with a 16-bit `int` and `size_t` under
-`-Wconversion -Werror`.
+With the defaults, `fat_fs_t` is about 20 KiB. Set to 512, 2 and 255, it is
+1.6 KiB. Building with `NOVAFS_FREESTANDING` leaves out stdio and the file
+backend.
 
-## Behaviour worth knowing
+## Tests
 
-- **FAT32 only, decided by cluster count.** A volume with fewer than 65 525
-  clusters is FAT12 or FAT16 whatever its boot sector says, and it is
-  refused. This includes a small volume made with `mkfs.vfat -F 32`, which
-  Linux would mount.
-- **Damage is reported, never absorbed.** Every value read from disk is
-  range-checked before it is used as an address. Cluster chains are bounded
-  by the volume size and checked for cycles with Brent's algorithm, so they
-  cost no extra FAT reads. A directory stops at 65 536 entries. A file whose
-  chain is shorter than its size is an error, not a short read. Every such
-  case returns `FS_ECORRUPT` through `fs_corrupt()`, which logs. The default
-  log goes to stderr, and `fs_set_corrupt_logger()` replaces it.
-- **Orphaned long names are not errors.** A long-name run with a broken
-  ordinal sequence, or a checksum that does not match its short entry, is
-  dropped in favour of the short name, as the kernel does.
-- **`fat_dir_read` never returns `.` or `..`.** Neither the root nor
-  subdirectories return them, so all directories behave alike. `fat_lookup`
-  and paths resolve them to real nodes. For `..`, that means reading the
-  grandparent to find the parent's own entry.
-- **Inode numbers come from the position of the short entry**:
-  `2 + (cluster − 2) × entries_per_cluster + index`, and 1 for the root. They
-  are unique while a file exists and stable until it moves. They fit in
-  32 bits for data regions up to 128 GiB. Past that, the volume still mounts
-  and every number is `FAT_INO_NONE`.
-- **Lookups fold ASCII case only.** Both the long and the short name match.
-- **Short names are decoded as code page 437**, which is the Linux default.
-  The NT lowercase flags are applied. Long names are UTF-16 turned into
-  UTF-8, with surrogate pairs joined and unpaired halves replaced by U+FFFD.
-- **Timestamps are returned as calendar fields with no zone**, because FAT
-  stores local time. An invalid date decodes to 1980-01-01 00:00:00.
-- **Free space is counted from the FAT** on the first `fat_statfs` and then
-  cached. The FSInfo counter is only kept as a hint (`fs.fsinfo_free`),
-  which is also the kernel's default.
-- **Mirroring**: when `BPB_ExtFlags` turns it off, only the active FAT is
-  read.
-- **Sectors**: a logical sector may span several device sectors (a 4 KiB
-  sector volume on a 512-byte device) but never the other way round.
-- **Partitions**: `fat_mount_auto` takes a whole-disk volume, or else the
-  first MBR primary partition that holds FAT32, whatever its type byte says.
-  GPT, extended partitions and exFAT are not supported.
+`tests/unit/test_fat32.c` runs on byte arrays, with no image files and no
+tools:
 
-## Testing
-
-`tests/unit/test_fat32.c` covers L0 and L1 on static byte arrays: range
-checks, BPB validation and FAT type boundaries, FSInfo, directory entry
-kinds, short names, timestamps, and long-name assembly including orphans,
-surrogates and overflow.
+- L0: range checks and partition views;
+- L1: BPB validation at the FAT12/16/32 boundaries, FSInfo, directory entry
+  kinds, short names, timestamps and their conversion to seconds;
+- long-name assembly, including orphans and surrogates;
+- a FAT32 volume built in memory, mounted whole and inside an MBR, then
+  driven through every slot of the table.
 
 `tests/run_tests.py` builds a source tree and writes it with `mkfs.vfat` and
 `mtools` into four images:
 
 - 4 KiB clusters;
 - 512-byte clusters;
-- 4 KiB logical sectors, opened with both 512- and 4096-byte device sectors;
+- 4 KiB logical sectors, opened with both sector sizes;
 - an MBR disk whose first partition is not FAT.
 
-Each image has a fragmented file and deleted entries. Some long names are
-patched in by hand, because mtools cannot write them. The tool's output is
-checked against three oracles:
+Each image has a fragmented file and deleted entries. The long names mtools
+cannot write are patched in by hand. The tool's output is checked against
+three oracles:
 
-- the source tree: every name, size, CRC-32 and timestamp, and directory
-  order as `mdir` reports it;
-- `fsck.fat -v`: geometry and cluster usage;
-- the library itself (`fat32tool check`): lookup by long, short and
-  case-folded name, inode round trips and uniqueness, parents, and backward
-  reads compared with forward ones.
+- the source tree (names, sizes, CRCs, times) and `mdir` (order);
+- `fsck.fat -v` (geometry and cluster usage);
+- the library itself: `fat32tool check` compares the table with L2 on every
+  entry.
 
-It also checks partial reads at boundaries and error codes.
-
-The same script then damages the image in 23 named ways, and then at random.
-It requires the named errors, and never a crash, a hang or a sanitizer
-report. The damage includes chain cycles, free, bad or out-of-range
-successors, short chains, a directory entry pointing at its own ancestor,
-and a truncated image.
+The script also checks the synthesised attributes, partial reads, error
+codes, and a FAT with mirroring switched off. Then it damages an image in
+23 named ways and at random, and requires a clean error or a clean pass
+every time (FUS-03.o, Y4.12).

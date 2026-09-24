@@ -13,7 +13,7 @@ reference tools, and checks fat32tool against three oracles:
 
 Then it damages the small image in named ways, and at random, and
 requires a clean error or a clean pass: never a crash, a hang or a
-sanitizer report (DN-FS-FUSE-001 step 37).
+sanitizer report (FUS-03.o, Y4.12).
 
 Needs python3, dosfstools (mkfs.vfat, fsck.fat) and mtools.
 """
@@ -297,14 +297,22 @@ def check_geometry(img, label, fsck_args=(), **kw):
     ok(info["label"].strip() == "NOVA64", "%s: volume label" % label)
 
 
-# attributes, size, date, time, short name, then the name to the end
-LS_LINE = re.compile(r"^\S{5} +\d+ \S+ \S+  \S+ +(.*)$")
+# dir: attributes, size, date, time, short name, then the name to the end
+DIR_LINE = re.compile(r"^\S{5} +\d+ \S+ \S+  \S+ +(.*)$")
+# ls: mode, links, uid, gid, size, date, time, then the name to the end
+LS_LINE = re.compile(r"^\S{10} +\d+ \d+ \d+ +\d+ \S+ \S+  (.*)$")
 
 
 def check_order(img, label, dirs, target, **kw):
+    """Directory order: L2 against mdir, and the table against L2 with
+    '.' and '..' in front."""
     for d in dirs:
+        r = tool(img, "dir", d, **kw)
+        ours = [DIR_LINE.match(line).group(1) for line in r.text().splitlines()]
         r = tool(img, "ls", d, **kw)
-        ours = [LS_LINE.match(line).group(1) for line in r.text().splitlines()]
+        table = [LS_LINE.match(line).group(1) for line in r.text().splitlines()]
+        ok(table == [".", ".."] + ours,
+           "%s: the table lists %s as L2 does, after '.' and '..'" % (label, d))
         ref = sh("mdir", "-a", "-b", "-i", target, "::" + d, check=False).stdout.decode()
         theirs = [p.rstrip("/").rsplit("/", 1)[-1] for p in ref.splitlines()
                   if p.startswith("::")]
@@ -363,7 +371,45 @@ def check_errors(img, label):
     ok(ino("/LONGFI~1.TXT") == ino("/Long File Name With Spaces.txt"), "%s: short alias" % label)
     ok("--h-a" in tool(img, "stat", "/hidden.txt").text(), "%s: hidden attribute" % label)
     ok("-r--a" in tool(img, "stat", "/readonly.txt").text(), "%s: read-only attribute" % label)
-    ok("ÑAND.TXT" in tool(img, "ls", "/").text(), "%s: code page 437 short name" % label)
+    ok("ÑAND.TXT" in tool(img, "dir", "/").text(), "%s: code page 437 short name" % label)
+
+
+def check_attrs(img, exp, label, cluster):
+    """Attribute synthesis under the rules of fat32_attr.c (FUS-03.i)."""
+    def st(path):
+        return stat(img, path)
+
+    def blocks(size):
+        return -(-size // cluster) * cluster // 512
+
+    hello = st("/hello.txt")
+    ok(hello["mode"].startswith("0100644") and hello["nlink"] == "1" and
+       hello["uid"] == "0" and hello["gid"] == "0",
+       "%s: a file is 0644, one link, owned by 0:0 (%s)" % (label, hello))
+    ok(st("/readonly.txt")["mode"].startswith("0100444"),
+       "%s: the read-only attribute clears the write bits" % label)
+    big = st("/big/random.bin")
+    ok(int(big["blocks"]) == blocks(len(exp["/big/random.bin"][0])),
+       "%s: blocks round up to whole clusters" % label)
+    ok(big["mtime"] == time.strftime("%Y-%m-%d %H:%M:%S",
+                                     time.gmtime(exp["/big/random.bin"][1])),
+       "%s: mtime in seconds, no zone applied" % label)
+    ok(st("/empty.bin")["size"] == "0" and st("/empty.bin")["blocks"] == "0",
+       "%s: an empty file" % label)
+
+    root = st("/")
+    top = sum(1 for p, v in exp.items() if v is None and p.count("/") == 1)
+    ok(root["mode"].startswith("040755") and root["nlink"] == str(2 + top),
+       "%s: the root is 040755 with 2 + %d links (%s)" % (label, top, root["nlink"]))
+    ok(root["mtime"] == root["ctime"] == root["atime"] == "1970-01-01 00:00:00",
+       "%s: the root has no entry, so no times" % label)
+    ok(st("/deep")["nlink"] == "3" and st("/many")["nlink"] == "2",
+       "%s: a directory counts its subdirectories" % label)
+    im = Image(img)
+    many = st("/many")
+    ok(int(many["size"]) == len(im.chain(int(many["cluster"]))) * cluster and
+       int(many["blocks"]) == int(many["size"]) // 512,
+       "%s: a directory's size is its cluster chain" % label)
 
 
 # ---- Damage -------------------------------------------------------------------------
@@ -479,7 +525,7 @@ def corruption_suite(img, label, fuzz_rounds, rng):
          ["cat", "/hello.txt"], 1, "larger than the volume"),
         ("LFN checksum mismatch",
          lambda: im.poke(im.entry_off(int(lfn["ino"]) - 1) + 13, b"\x00"),
-         ["ls", "/"], 0, "LONGFI~1.TXT  LONGFI~1.TXT"),
+         ["dir", "/"], 0, "LONGFI~1.TXT  LONGFI~1.TXT"),
         ("LFN run without its short entry",
          lambda: im.poke(im.entry_off(int(lfn["ino"])), b"\xe5"), ["tree"], 0, None),
         ("end marker mid-directory",
@@ -587,8 +633,10 @@ def main():
 
         img, exp = built["4k-clusters"]
         check_partial_reads(img, exp, "4k-clusters", rng, 4096)
+        check_attrs(img, exp, "4k-clusters", 4096)
         img, exp = built["512-clusters"]
         check_partial_reads(img, exp, "512-clusters", rng, 512)
+        check_attrs(img, exp, "512-clusters", 512)
         check_errors(img, "512-clusters")
 
         # An explicit offset instead of the probe.

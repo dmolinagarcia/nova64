@@ -46,6 +46,7 @@ const char *fs_strerror(fs_err_t e)
     case FS_EINVAL:       return "invalid argument";
     case FS_ENOTSUP:      return "not supported";
     case FS_ELOOP:        return "too many levels";
+    case FS_EMFILE:       return "too many open files";
     }
     return "unknown error";
 }

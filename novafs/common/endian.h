@@ -4,7 +4,8 @@
  * FAT32 is little-endian on disk and several of its fields sit on odd
  * offsets (BPB_BytsPerSec is a 16-bit field at byte 11), so fields are
  * always read through these accessors and never through a packed struct
- * cast over a sector buffer (DN-FS-FUSE-001 §4.2, sheet Y4.7).
+ * cast over a sector buffer (sheet Y4.7). Sheet Y3 specifies overlays for
+ * the machine instead; which idiom the target inherits is Q173.
  *
  * Every shift is done on a type that is at least as wide as the result,
  * so the code is also correct with a 16-bit int.

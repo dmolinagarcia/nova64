@@ -112,7 +112,7 @@ fs_err_t fat_mount(fat_fs_t *fs, bdev_t *bd, uint32_t lba, uint32_t count)
     return FS_OK;
 }
 
-fs_err_t fat_mount_auto(fat_fs_t *fs, bdev_t *bd)
+fs_err_t fat_probe(bdev_t *bd, uint8_t *buf, uint32_t *lba, uint32_t *count)
 {
     fat32_geom_t g;
     mbr_part_t part[4];
@@ -124,40 +124,55 @@ fs_err_t fat_mount_auto(fat_fs_t *fs, bdev_t *bd)
         return FS_ENOTSUP;
     if (bd->sector_count == 0)
         return FS_EINVAL;
-    if (bdev_read(bd, 0, fs->buf, 1) != BDEV_OK)
+    if (bdev_read(bd, 0, buf, 1) != BDEV_OK)
         return FS_EIO;
 
-    /* Probing is quiet: a partition that is not FAT32 is not damage. */
-    e0 = fat32_parse_bpb(fs->buf, &g, 0);
+    *lba = 0;
+    *count = bd->sector_count;
+    e0 = fat32_parse_bpb(buf, &g, 0);
     if (e0 == FS_OK)
-        return fat_mount(fs, bd, 0, 0);
-    boot_jump = (fs->buf[0] == 0xEBu && fs->buf[2] == 0x90u) || fs->buf[0] == 0xE9u;
-    is_mbr = mbr_parse(fs->buf, part);
+        return FS_OK;
+    boot_jump = (buf[0] == 0xEBu && buf[2] == 0x90u) || buf[0] == 0xE9u;
+    is_mbr = mbr_parse(buf, part);
 
     for (i = 0; is_mbr && i < 4u; i++) {
-        uint32_t lba = part[i].lba, count = part[i].count;
+        uint32_t plba = part[i].lba, pcount = part[i].count;
 
         if (part[i].type == MBR_TYPE_EMPTY || mbr_type_is_container(part[i].type))
             continue;
-        if (lba == 0 || lba >= bd->sector_count || count == 0)
+        if (plba == 0 || plba >= bd->sector_count || pcount == 0)
             continue;
-        if (bdev_read(bd, lba, fs->buf, 1) != BDEV_OK)
+        if (bdev_read(bd, plba, buf, 1) != BDEV_OK)
             return FS_EIO;
-        if (fat32_parse_bpb(fs->buf, &g, 0) != FS_OK)
+        if (fat32_parse_bpb(buf, &g, 0) != FS_OK)
             continue;
         /* A table that overstates the partition is left for fat_mount()
          * to judge against the volume's own size. */
-        if (count > bd->sector_count - lba)
-            count = bd->sector_count - lba;
-        return fat_mount(fs, bd, lba, count);
+        if (pcount > bd->sector_count - plba)
+            pcount = bd->sector_count - plba;
+        *lba = plba;
+        *count = pcount;
+        return FS_OK;
     }
 
-    /* No partition holds a volume, and sector 0 starts with the jump
-     * every FAT boot sector has: it is a damaged volume rather than a
-     * partition table, and mounting it says what is wrong with it. */
+    /* Sector 0 starts with the jump every FAT boot sector has, and no
+     * partition holds a volume: a damaged volume, not a partition table. */
     if (boot_jump && e0 == FS_ECORRUPT)
-        return fat_mount(fs, bd, 0, 0);
+        return FS_OK;
     return FS_ENOTSUP;
+}
+
+fs_err_t fat_mount_auto(fat_fs_t *fs, bdev_t *bd)
+{
+    uint32_t lba, count;
+    fs_err_t e;
+
+    if (!dev_sector_ok(bd))
+        return FS_ENOTSUP;
+    e = fat_probe(bd, fs->buf, &lba, &count);
+    if (e != FS_OK)
+        return e;
+    return fat_mount(fs, bd, lba, count);
 }
 
 void fat_unmount(fat_fs_t *fs)

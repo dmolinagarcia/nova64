@@ -36,6 +36,28 @@ void bdev_close(bdev_t *bd)
     bd->close = 0;
 }
 
+static int part_read(bdev_t *bd, uint32_t lba, void *buf, uint32_t nsec)
+{
+    bdev_t *parent = (bdev_t *)bd->priv.ptr;
+
+    /* In range of the view, so in range of the parent: see bdev_part_open. */
+    return bdev_read(parent, bd->part_lba + lba, buf, nsec);
+}
+
+int bdev_part_open(bdev_t *view, bdev_t *parent, uint32_t lba, uint32_t count)
+{
+    memset(view, 0, sizeof *view);
+    if (lba >= parent->sector_count || count == 0 ||
+        count > parent->sector_count - lba)
+        return BDEV_ERANGE;
+    view->read = part_read;
+    view->priv.ptr = parent;
+    view->part_lba = lba;
+    view->sector_size = parent->sector_size;
+    view->sector_count = count;
+    return BDEV_OK;
+}
+
 static int mem_read(bdev_t *bd, uint32_t lba, void *buf, uint32_t nsec)
 {
     /* One sector at a time, so that no length exceeds a 16-bit size_t.

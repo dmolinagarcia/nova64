@@ -79,8 +79,8 @@ fs_err_t fat_count_free(fat_fs_t *fs, uint32_t *out)
 }
 
 /*
- * Chains are walked with two independent safeguards (DN-FS-FUSE-001
- * step 25). The step bound alone guarantees termination: a chain longer
+ * Chains are walked with two independent safeguards (FUS-03.d, Y4.10).
+ * The step bound alone guarantees termination: a chain longer
  * than the volume must loop. Brent's algorithm finds the loop in about
  * twice its length instead of the volume's, and unlike Floyd's it needs
  * no second walker, so it costs no extra FAT reads.

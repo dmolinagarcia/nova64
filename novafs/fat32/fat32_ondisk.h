@@ -3,7 +3,7 @@
  *
  * Everything declared here decodes bytes that are already in memory and
  * performs no I/O at all, so it can be unit-tested against static arrays
- * (DN-FS-FUSE-001 §4.1 rule 1). Field names follow the Microsoft FAT
+ * (sheet Y4.4: L1 decodes and never reads). Field names follow the FAT
  * specification so each line can be checked against it.
  */
 #ifndef NOVAFS_FAT32_ONDISK_H
@@ -204,5 +204,11 @@ typedef struct fat_datetime {
  * (a field the writer never set) decodes to. */
 int fat32_decode_datetime(uint16_t date, uint16_t time, uint8_t tenth,
                           fat_datetime_t *out);
+
+/* Seconds since 1970-01-01 00:00:00 of a decoded timestamp, taking its
+ * local time as if it were UTC. The zone is the caller's to apply,
+ * because FAT stores none and a driver never asks the host (Y1.17).
+ * Saturates at 0xFFFFFFFF, which FAT reaches in February 2106. */
+uint32_t fat32_datetime_to_unix(const fat_datetime_t *dt);
 
 #endif /* NOVAFS_FAT32_ONDISK_H */

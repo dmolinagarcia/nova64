@@ -325,15 +325,40 @@ void fat32_lfn_units(const uint8_t *de, uint16_t out[LFN_UNITS_PER_ENTRY])
 
 /* ---- Timestamps -------------------------------------------------------- */
 
+static int is_leap(uint16_t y)
+{
+    return (y % 4u) == 0 && ((y % 100u) != 0 || (y % 400u) == 0);
+}
+
 static uint8_t days_in_month(uint16_t year, uint8_t month)
 {
     static const uint8_t dim[12] = { 31, 28, 31, 30, 31, 30,
                                      31, 31, 30, 31, 30, 31 };
 
-    /* 2100 is the one century year inside FAT's 1980..2107 range. */
-    if (month == 2 && (year % 4u) == 0 && year != 2100u)
+    if (month == 2 && is_leap(year))
         return 29;
     return dim[month - 1u];
+}
+
+uint32_t fat32_datetime_to_unix(const fat_datetime_t *dt)
+{
+    static const uint16_t before[12] = { 0, 31, 59, 90, 120, 151,
+                                         181, 212, 243, 273, 304, 334 };
+    uint32_t y = dt->year;
+    uint32_t days, rest;
+
+    /* Leap days in 1970 .. y-1: 1969/4 = 492, 1969/100 = 19, 1969/400 = 4. */
+    days = 365u * (y - 1970u) + ((y - 1u) / 4u - 492u)
+         - ((y - 1u) / 100u - 19u) + ((y - 1u) / 400u - 4u);
+    days += before[dt->month - 1u] + (uint32_t)dt->day - 1u;
+    if (dt->month > 2u && is_leap(dt->year))
+        days++;
+    rest = (uint32_t)dt->hour * 3600u + (uint32_t)dt->minute * 60u + dt->second;
+
+    /* 49710 days is the last whole day that fits in 32 bits. */
+    if (days > 49710u || days * 86400uL > 0xFFFFFFFFuL - rest)
+        return 0xFFFFFFFFuL;
+    return (uint32_t)(days * 86400uL + rest);
 }
 
 int fat32_decode_datetime(uint16_t date, uint16_t time, uint8_t tenth,

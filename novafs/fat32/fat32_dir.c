@@ -19,7 +19,7 @@ void fat_root(const fat_fs_t *fs, fat_node_t *out)
 }
 
 /*
- * Inode numbers (DN-FS-FUSE-001 step 28): the index of the short entry
+ * Inode numbers (FUS-03.g, Y4.6): the index of the short entry
  * counted across the data region, plus 2, so that 1 stays the root's.
  * It fits in 32 bits for data regions up to 128 GiB; beyond that the
  * volume still mounts, with every number FAT_INO_NONE.

@@ -20,7 +20,8 @@ BUILD   ?= build
 # Portable sources: everything except the host backend.
 PORT_SRCS := common/bdev.c common/fs_err.c common/mbr.c \
              fat32/fat32_ondisk.c fat32/fat32_fat.c fat32/fat32_lfn.c \
-             fat32/fat32_dir.c fat32/fat32_file.c fat32/fat32_fs.c
+             fat32/fat32_dir.c fat32/fat32_file.c fat32/fat32_fs.c \
+             fat32/fat32_attr.c fat32/fat32_fsops.c
 LIB_SRCS  := $(PORT_SRCS) common/bdev_file.c
 LIB_OBJS  := $(LIB_SRCS:%.c=$(BUILD)/%.o)
 LIB       := $(BUILD)/libnovafs_fat32.a
@@ -54,7 +55,7 @@ san:
 	        LDFLAGS="$(SAN)" test
 
 # clang with a 16-bit int and 16-bit size_t catches every implicit
-# promotion that would be wrong on the machine (DN-FS-FUSE-001 §4.7).
+# promotion that would be wrong under the machine's compiler (Y4.7).
 check16:
 	clang --target=msp430-none-elf -ffreestanding -fsyntax-only \
 	      -DNOVAFS_FREESTANDING -DFAT_CFG_MAX_SECTOR=512u \

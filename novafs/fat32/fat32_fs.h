@@ -5,15 +5,21 @@
  * it: path resolution, directory listing with long file names, file
  * reads at any offset, free-space reporting.
  *
- * Design rules, from DN-FS-FUSE-001 and sheet Y4:
- *   - No allocation. Every object is a caller-owned structure, so the
- *     library runs unchanged where there is no heap worth using.
- *   - 32-bit arithmetic throughout, and correct with a 16-bit int.
+ * This is L2 of the host track (sheet Y4.4): filesystem logic, above the
+ * decoding of fat32_ondisk.h and the device of bdev.h, and below the
+ * fsops table that fat32_fsops.h puts it behind. It follows the track's
+ * rules:
+ *   - No allocation. Every object is a caller-owned structure.
+ *   - 32-bit arithmetic throughout, and correct with a 16-bit int (Y4.7).
  *   - Nothing decoded from disk is used as an address before it has been
- *     checked; every chain walk is bounded and detects cycles; damage is
- *     reported as FS_ECORRUPT through fs_corrupt(), never absorbed.
- *   - Single-threaded. A mount and everything opened on it must be used
- *     from one thread at a time.
+ *     checked, and every chain walk is bounded and detects cycles
+ *     (Y4.10). Damage is reported as FS_ECORRUPT through fs_corrupt(),
+ *     never absorbed (Y4.8).
+ *   - Single-threaded (Y4.13). A mount and everything opened on it must
+ *     be used from one thread at a time.
+ *
+ * FAT32 runs on the host and never on the machine (D98). What survives
+ * is the table and what was learnt behind it (Y4.23).
  *
  * Names are UTF-8. Long names are rebuilt from their UTF-16 fragments;
  * short names are decoded as code page 437. Lookups fold ASCII case only.
@@ -26,6 +32,7 @@
 #include "bdev.h"
 #include "fat32_ondisk.h"
 #include "fs_err.h"
+#include "fsops.h"
 
 /* ---- Build-time configuration ---------------------------------------- */
 
@@ -52,7 +59,7 @@
 
 /* FAT has no inodes, so numbers are synthesised from the position of the
  * short directory entry: unique while the file exists, stable until it
- * is renamed or moved, and 1 for the root (DN-FS-FUSE-001 step 28). */
+ * is renamed or moved, and 1 for the root (FUS-03.g, Y4.6). */
 typedef uint32_t fat_ino_t;
 
 #define FAT_INO_NONE    0u  /* volume too large for 32-bit numbering */
@@ -105,8 +112,15 @@ typedef struct fat_fs {
  * open, and `fs` must stay where it is, until fat_unmount(). */
 fs_err_t fat_mount(fat_fs_t *fs, bdev_t *bd, uint32_t lba, uint32_t count);
 
-/* Mounts a whole-device ("superfloppy") volume, or else the first MBR
- * primary partition that holds a FAT32 volume, whatever its type byte. */
+/* Finds the volume on a device: the whole device ("superfloppy"), or
+ * else the first MBR primary partition that holds FAT32, whatever its
+ * type byte. `buf` holds one device sector. Probing is quiet, since a
+ * partition that is not FAT32 is not damage; but when no partition
+ * holds a volume and sector 0 looks like a damaged FAT boot sector, the
+ * answer is the whole device, so that mounting it says what is wrong. */
+fs_err_t fat_probe(bdev_t *bd, uint8_t *buf, uint32_t *lba, uint32_t *count);
+
+/* fat_probe() followed by fat_mount(). */
 fs_err_t fat_mount_auto(fat_fs_t *fs, bdev_t *bd);
 
 /* Nothing to release; clears the structure so stale use fails loudly. */
@@ -130,6 +144,10 @@ fs_err_t fat_label(fat_fs_t *fs, char *out);
 /* ---- Nodes and names ---------------------------------------------------- */
 
 void fat_root(const fat_fs_t *fs, fat_node_t *out);
+
+/* The attributes a caller is told, synthesised under the rules stated
+ * in fat32_attr.c (FUS-03.i). */
+fs_err_t fat_getattr(fat_fs_t *fs, const fat_node_t *node, fs_attr_t *out);
 
 /* Rebuilds a node from its number, as an inode-keyed interface needs.
  * The number must come from this mount. FS_ENOENT if the entry is gone. */
