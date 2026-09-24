@@ -3,3 +3,5 @@
 nohup.out
 web.sh
 /nova64-emu-ongoing/*
+/novafs/build/
+/novafs/build-san/
