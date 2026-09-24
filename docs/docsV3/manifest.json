@@ -301,6 +301,14 @@
       "index": "Process management"
     },
     {
+      "file": "sec_ai_cn1",
+      "letter": "CN1",
+      "part": "ai",
+      "area": "Software",
+      "nav": "Console mode — boot to a prompt",
+      "index": "Console mode · the boot chain, the tty and the shell · the CON series"
+    },
+    {
       "file": "sec_ai_o",
       "letter": "O",
       "part": "ai",
