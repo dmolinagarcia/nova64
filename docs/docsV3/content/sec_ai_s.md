@@ -123,9 +123,16 @@ The hardware half of power management is [sheet C](sec_ai_c); this is the half s
 | `+$04`·`+$05` | `BATT_MV` | Cell voltage, mV | | `+$0E`·`+$0F` | `ICHG_MA` | Charge current, mA |
 | `+$06`·`+$07` | `BATT_RATE` | Signed tenths of %/hour; negative discharges | | | | |
 
-| `PWR_FLAGS` bit | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
-|---|---|---|---|---|---|---|---|---|
-| | `ON_ADAPTER` | `CHARGING` | `BATT_LOW` | `BATT_CRIT` | `PD_ACTIVE` | `GAUGE_FAULT` | `CHARGER_FAULT` | `BATT_ABSENT` |
+| `PWR_FLAGS` bit | Flag |
+|---|---|
+| 0 | `ON_ADAPTER` |
+| 1 | `CHARGING` |
+| 2 | `BATT_LOW` |
+| 3 | `BATT_CRIT` |
+| 4 | `PD_ACTIVE` |
+| 5 | `GAUGE_FAULT` |
+| 6 | `CHARGER_FAULT` |
+| 7 | `BATT_ABSENT` |
 
 - S.19 — `GAUGE_FAULT` is the flag that earns its bit: **an I2C failure must be visible as a fault, not as a plausible-looking zero.** The same reasoning as `TELEM_AGE`, applied to the instrument rather than to the link. Where this block sits inside bank `$FF` is still unassigned — it wants its own 256-byte wall on [Q22](sec_ai_q#q22)'s terms, and the base address blocks both the gateware and the kernel headers (→ [Q40](sec_ai_q#q40)).
   NOTE: A fault flag the driver ignores is a fault the user meets as a wrong number.
