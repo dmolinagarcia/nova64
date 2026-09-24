@@ -410,8 +410,13 @@
       if (t[0] === '|') {                                           // table
         var rows = [];
         while (i < lines.length && lines[i].trim()[0] === '|') {
-          var cells = lines[i].trim().replace(/^\|/, '').replace(/\|$/, '').split('|');
-          if (!/^[\s|:-]+$/.test(lines[i])) rows.push(cells.map(function (c) { return c.trim(); }));
+          /* `\|` is a pipe inside a cell, as in GFM — a shell pipeline in a
+             code span, a bitfield drawn as `op:8 | rd:4`. Split on the bare
+             ones only, then let the escaped ones through as plain pipes. */
+          var cells = lines[i].trim().replace(/^\|/, '').replace(/(^|[^\\])\|$/, '$1')
+                              .split(/(?<!\\)\|/);
+          if (!/^[\s|:-]+$/.test(lines[i]))
+            rows.push(cells.map(function (c) { return c.trim().replace(/\\\|/g, '|'); }));
           i++;
         }
         var cap = pendingCap;

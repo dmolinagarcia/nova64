@@ -331,6 +331,13 @@
     .cj>div{ min-width:var(--cj-cell); }
     table.simple th{ font-size:var(--tbl-head); letter-spacing:var(--tbl-head-track); padding:var(--tbl-pad); }
     table.simple td{ font-size:var(--tbl-cell); padding:var(--tbl-pad); }
+    /* A path or a command in a cell has no break in it, and a table is never
+       narrower than its widest unbreakable run: three of them side by side
+       and the table leaves the type area, into the binding. `anywhere` —
+       not `break-word` — is the one that also lowers the column's minimum,
+       so the table fits and the chip breaks only when it has to. Prose in
+       the cell keeps breaking between words. */
+    table.simple td code{ overflow-wrap:anywhere; }
     html,body{ background:#fff; color:#000; }
     body{ font-size:9.5pt; line-height:1.45; padding:0; }
     .wrap{ max-width:none; }
