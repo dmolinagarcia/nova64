@@ -94,6 +94,7 @@ Nine stages, each with concrete hardware/gateware/software and a verification cr
   NOTE: **[P4](sec_ai_p2#p4) moves that sentence.** The four requirements of [T1.19](sec_ai_t1#t119) are observable on the prototype and are a pass condition there, so the write-FIFO drain is not seen for the first time on a board that costs a respin. What remains genuinely first-time here is the **103.125 MHz closure on the HX8K** and Neon's own SDRAM — neither of which the merged die can rehearse, since it has one memory and a different fabric ([P2.13](sec_ai_p2#p213)).
 - [ ] E6 — **SD + minimal OS + HID.** SD handoff, block driver, an NVFS read path ([sheet Y2](sec_ai_y2)), kernel load, serial shell, basic USB keyboard.
   TEST: power on → prompt, with no PC connected.
+  NOTE: **The software is [sheet CN1](sec_ai_cn1)'s series, [CON-00](sec_ai_cn1#con-00)–[CON-04](sec_ai_cn1#con-04)**, run on the prototype first. "SD handoff" predates [D60](sec_ai_q#d60): the card has one owner and nothing is handed over, and the shell is on the screen, with the serial line as an optional `/dev/ttyS0` ([CN1.9](sec_ai_cn1#cn19)).
   NOTE: **The software reached this point at [P5](sec_ai_p2#p5)**, on borrowed silicon. That is not this milestone and must not be recorded as it: the machine booting on its own is the claim, and it needs a board. What the prototype removes is the risk that the *software* is what fails here.
 
 !!! APPLE II MILESTONE — the machine boots on its own to a prompt.
