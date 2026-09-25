@@ -227,6 +227,7 @@ cd: /nope: not found
 
 - [ ] CON-00 — **The kernel speaks.** Monolithic. A kernel image loaded through the bypass of [CN1.6](sec_ai_cn1#cn16) prints its banner and a summary of the information block.
   TEST: `panic()` demonstrably prints and halts.
+  NOTE: **The training plan of DN-PLAN-TRAINING-001, on [sheet TP1](sec_ai_tp1), prepares this gate twice, and neither of its checkpoints is a gate.** [TR2](sec_ai_tp1#tr2), from its M2, is the crt0 and linker configuration, the software half of this gate. [TR3](sec_ai_tp1#tr3), from its M3, is the emulator's debug port, proposed to come before it (→ [Q189](sec_ai_q#q189)).
 - [ ] CON-01 — **An interactive console with no filesystem.** Monolithic, in degraded mode ([CN1.7](sec_ai_cn1#cn17)).
   TEST: a scripted keystroke test exercises every rule of [CN1.12](sec_ai_cn1#cn112) and every keymap table — Shift, AltGr and dead keys · `help`, `echo`, `clear` and `sysinfo` work.
 - [ ] CON-02 — **A read-only prompt.** Monolithic. The BIOS loads the kernel from the boot partition, and NVFS is mounted read-only. **This is the text-mode checkpoint of [P2.h](sec_ai_p2#p2h)–[P2.l](sec_ai_p2#p2l)**: it boots to its own prompt, in text mode, from the card, with no MMU.
