@@ -26,7 +26,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | ASID | Address Space IDentifier — tag marking which process each TLB entry belongs to. Without it the whole TLB would be flushed on every context switch. |
 | Page fault | Exception raised on access to a page with `P=0`. Recoverable. Delivered as an ABORT; the handler grows a heap or stack, resolves a copy-on-write, or kills the process ([L.14](sec_ai_l#l14)). |
 | Demand paging | Loading pages only when touched rather than all up front. Deferred to post-v1. |
-| Eager loading | Mapping and filling every segment at `exec` time. What v1 does, in place of demand paging. |
+| Eager loading | Mapping and filling every segment at `spawn` time. What v1 does, in place of demand paging. |
 | Swapping | Evicting rarely used pages to storage in order to free frames. Order matters: flush the frame's dirty sub-blocks to SDRAM before writing it to the card ([L.16](sec_ai_l#l16)). |
 | Pinning | Marking a page as non-evictable. Required for the kernel, the interrupt vectors and the bank `$00` stack. It is a physical address range rather than a cache attribute, so an access there skips tag lookup entirely and completes at fixed latency. |
 | Memory protection | Preventing a process from reading or writing outside its own space. Achieved through the PTE flags, not through translation itself. |
@@ -207,7 +207,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | DMA | Direct Memory Access — a device reading or writing memory itself, without the CPU moving each byte. The SPI-SD engine is the only one on this board, and it is the whole reason `CACHE_INVAL_FRAME` exists ([M.12](sec_ai_m#m12)). |
 
 ## Operating system and toolchain
-  NOTE: → [sheet I](sec_ai_i) · [sheet J](sec_ai_j) · [sheet N](sec_ai_n) · [sheet CN1](sec_ai_cn1) · [sheet O](sec_ai_o)
+  NOTE: → [sheet I](sec_ai_i) · [sheet J](sec_ai_j) · [sheet N](sec_ai_n) · [sheet CN1](sec_ai_cn1) · [sheet O](sec_ai_o) · [sheet LB1](sec_ai_lb1)
 
 | Term | Meaning |
 |---|---|
@@ -215,7 +215,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | Info block | The structure the BIOS hands the kernel at load time: RAM size, device map, battery state, RTC time. Format still open ([Q5](sec_ai_q#q5)). |
 | Monitor | Minimal interactive debugger: examine and alter memory, load over serial. Two of them exist — one in the BIOS, running on the 65816, and the EC console of [sheet R](sec_ai_r), which covers the same ground from outside the CPU and is available a whole stage earlier. |
 | Kernel | The resident, privileged core of the OS. Lives at the top of the virtual map — based at `$FD`, growing down to `$F0` — with its entry, fault and MMU paths pinned in SRAM. Entered only through `COP` or an interrupt, both of which raise privilege on the vector fetch. |
-| Syscall | A service request from a process to the kernel. Invoked here through the `COP` instruction, with the service number in the accumulator. |
+| Syscall | A service request from a process to the kernel. Invoked here through the `COP` instruction, with the service number in Y ([D115](sec_ai_q#d115)) — not the accumulator, which carries the first argument. |
 | PCB | Process Control Block — the per-process record holding saved registers, ASID and page-table pointer. ((Not the printed circuit board, which this document always spells out.)) |
 | Context switch | Switching process; entails saving state to the PCB and pointing the MMU at a different page table. |
 | Preemptive | The kernel takes the CPU back on its own (on the timer tick) rather than waiting for the process to yield it. |
@@ -238,8 +238,17 @@ The document's terminology in one place. Every acronym is also expanded on first
 | Relocation | Patching a binary's addresses to match where it was actually loaded. The MMU removes the need: every process sees the same addresses. |
 | ABI | Application Binary Interface — the contract user binaries rely on. Drivers may be rewritten as long as it holds. |
 | JSL / RTL | The 65816's long call and return, crossing banks. The basis of the large memory model and of syscall stubs. |
-| Large model | Compiler model where code is addressed across all banks with JSL/RTL. Paired here with a fixed DBR so data access stays cheap. |
-| Toolchain | The full chain from source to loadable artefact. Open end to end here: KiCad · Yosys · nextpnr · IceStorm · pico-sdk · ca65/64tass. |
+| Large model | Compiler model where code is addressed across all banks with JSL/RTL. Paired here with the small data model, whose plain pointers address bank `$00` with DBR = 0, so data access stays cheap ([D120](sec_ai_q#d120)). |
+| Toolchain | The full chain from source to loadable artefact. Open end to end here: KiCad · Yosys · nextpnr · IceStorm · pico-sdk · ca65/64tass. **The exception is the 65816 C compiler**, Calypsi, which is free but closed, and so is its C library ([LB1.35](sec_ai_lb1#lb135)). |
+| libnova | noVa64's C runtime: the POSIX layer, the `_Stub_*` glue Calypsi's library needs, and `crt0`. The same objects in both console builds ([sheet LB1](sec_ai_lb1)). |
+| clib | Calypsi's ISO C library — stdio, string, stdlib, math — shipped as binary archives, one per memory model. noVa64 does not write it ([D112](sec_ai_q#d112)). |
+| `_Stub_*` hooks | The dozen functions through which Calypsi's library reaches an operating system — open, read, write, lseek, exit… libnova implements them over `sys_*` ([LB1.6](sec_ai_lb1#lb16)). |
+| `sys_*` | The raw syscall layer: one function per service, named and typed as the kernel handler behind it, returning ≥ 0 or −`E_*`. A `COP` stub in the user-mode build, the kernel's own function in the monolithic one ([D113](sec_ai_q#d113)). |
+| crt0 | The code that runs before `main`: it sets D and DBR, initialises stdio and the heap, hands `main` its arguments and passes its result to `exit` ([LB1.28](sec_ai_lb1#lb128)). |
+| Small data model | Calypsi's model where plain pointers are 16 bits and address bank `$00`. Here that is the process's own virtual bank `$00`, so every process has a private near-data bank of about 48 KB ([D120](sec_ai_q#d120)). |
+| NULL guard | The unmapped page at `$00:0000`, which turns a NULL dereference into a fault instead of a write to the direct page ([LB1.24](sec_ai_lb1#lb124)). |
+| elf2nova | The host tool that converts Calypsi's ELF output into the native executable, for programs and the kernel image alike ([LB1.32](sec_ai_lb1#lb132)). |
+| LIB-00–LIB-05 | The C library's series, from the toolchain audit to an SDK that builds a program outside the tree ([sheet LB1](sec_ai_lb1)). |
 
 ## Filesystems
   NOTE: → [sheet Y1](sec_ai_y1) · [sheet Y2](sec_ai_y2) · [sheet Y3](sec_ai_y3) · [sheet Y4](sec_ai_y4)

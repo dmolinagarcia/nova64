@@ -148,6 +148,7 @@ Each row is a convenience here that becomes a defect there.
 - [ ] P2.f — **Neon's text aperture written by the CPU** across the shared bus, with the four-step stall protocol of [P2.17](sec_ai_p2#p217) implemented rather than shortcut. The CPU prints to the screen.
 - [ ] P2.g — **CPU-visible UART in bank `$FF`** bridged to the EC's console UART — bidirectional interactive I/O between CPU code and your terminal.
 - [ ] P2.h — **crt0, user and kernel linker scripts and a minimal C runtime**; a C hello world printing through the UART register. The convention audited at [E0.8](sec_ai_p3#e08) now reaches real hardware.
+  NOTE: **This hello world runs with no kernel, so it uses [sheet LB1](sec_ai_lb1)'s pieces rather than its library**: a `crt0` in the pattern of [LB1.28](sec_ai_lb1#lb128) and Calypsi's own `clib` with a single `_Stub_write` aimed at the UART. libnova, which needs a kernel behind `sys_*`, arrives with the monolithic console ([LIB-03](sec_ai_lb1#lib-03)).
 - [ ] P2.i — **Native 65816 monitor resident in SRAM** — examine, deposit, go, disassemble. The machine is self-hosting for inspection, with no host attached.
 - [ ] P2.j — **microSD boot path** — the BIOS reads the kernel image from the card's boot partition and jumps to it ([CN1.5](sec_ai_cn1#cn15)).
   NOTE: This supersedes the EC reading an image from the card, which predates [D60](sec_ai_q#d60): the EC has no wires to the card, and the BIOS is the only thing that reads it at boot ([D107](sec_ai_q#d107)).
@@ -195,6 +196,7 @@ Each row is a convenience here that becomes a defect there.
   NOTE: **The FIFO path is enough for this stage and the DMA engine is not needed yet** — the driver is written against the register names of [G.6](sec_ai_g#g6) from the start, so the engine lands underneath it later with nothing above changing. What it cannot reach on the FIFO alone is paging (→ [D45](sec_ai_q#d45), [Q79](sec_ai_q#q79)).
 - [ ] P5.k — **Program loader and a shell** — type a name and a program runs in its own address space.
   NOTE: **[CON-04](sec_ai_cn1#con-04) is this step's pass condition**: the console's shell relinked against the `COP` stubs and running as PID 1 ([CN1.1](sec_ai_cn1#cn11)).
+  NOTE: **[LIB-04](sec_ai_lb1#lib-04) passes here too**: the programs the shell runs are built with libnova, `crt0` and the generated stubs of [sheet LB1](sec_ai_lb1), and [LIB-05](sec_ai_lb1#lib-05)'s SDK builds one from outside the tree.
 - [ ] P5.l — **`/dev/fb` with an ioctl mapping framebuffer pages into a process**, plus `/dev/audio` — a user program draws at memory speed and makes sound through the ordinary device contract.
   NOTE: **The compositor's cost model is measured at G2, not here** ([V.36](sec_ai_v#v36), [V.37](sec_ai_v#v37)). The number wanted is the blitter's own time for a full-screen pass, separated from emission and from whatever the client tasks are doing — and it is the project's first real software gate, so it is instrumented deliberately rather than inferred from a frame rate.
 

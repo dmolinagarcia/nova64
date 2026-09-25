@@ -136,7 +136,7 @@ It turns out Calypsi, the C compiler the noVa64 kernel will be built with, works
 
 ### What this means for noVa64
 
-The design note that came out of all this is [DN-SW-LIBC-001](https://github.com/dmolinagarcia/nova64/blob/main/docs/docsV3/raw/DN-SW-LIBC-001-c-library.md). The short version is that **noVa64's C library is three layers, and we only have to write the two thin ones.** ISO C comes with Calypsi. We write the POSIX layer, the glue Calypsi's library asks for, the startup code, and the stubs that cross into the kernel through `COP`, the 65816's equivalent of `syscall`.
+What came out of all this is a design note, now [sheet LB1]({{ '/docsV3/' | relative_url }}#/sec_ai_lb1) of the document. The short version is that **noVa64's C library is three layers, and we only have to write the two thin ones.** ISO C comes with Calypsi. We write the POSIX layer, the glue Calypsi's library asks for, the startup code, and the stubs that cross into the kernel through `COP`, the 65816's equivalent of `syscall`.
 
 One trick falls out of Linux's naming for free. The console is built twice ([sheet CN1]({{ '/docsV3/' | relative_url }}#/sec_ai_cn1)): once as a single image with no processes, and once with the shell as a real user process. If the stubs are named exactly like the kernel functions behind them (`sys_write` and so on), the first build needs no stubs at all. The linker finds the kernel's own `sys_write`, and everything above it is the same code in both builds.
 
@@ -148,7 +148,7 @@ Reading other people's Calypsi code also turned up three things in our own docum
 
 And one practical snag: Calypsi's Linux packages are x86-64 only, while [my devbox]({{ '/docsV3/' | relative_url }}#/sc_v7) is ARM64. The plan is to run the compiler under `qemu-user`.
 
-The note is a draft. Every decision in it is a proposal until I've reviewed it, and two of the three findings above rest on reading other people's code rather than on compiled output of my own. So the next step is to install Calypsi, compile a few functions, and check the calling convention against the real thing. That's gate LIB-00 in the note, and E0.8 in the build plan.
+The sheet is still in the AI part of the document. Every decision in it is a proposal until I've reviewed it, and two of the three findings above rest on reading other people's code rather than on compiled output of my own. So the next step is to install Calypsi, compile a few functions, and check the calling convention against the real thing. That's gate [LIB-00]({{ '/docsV3/' | relative_url }}#/sec_ai_lb1/lib-00) in the sheet, and E0.8 in the build plan.
 
 ### Try it yourself
 
