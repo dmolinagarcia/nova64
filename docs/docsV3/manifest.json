@@ -445,6 +445,14 @@
       "index": "Beyond the board · the laptop L1–L8"
     },
     {
+      "file": "sec_ai_tp1",
+      "letter": "TP1",
+      "part": "ai",
+      "area": "Project and build",
+      "nav": "The training plan",
+      "index": "Toolchain and systems-software training plan · modules M0–M8 · checkpoints TR0–TR8"
+    },
+    {
       "file": "sec_ai_q",
       "letter": "Q",
       "part": "ai",
