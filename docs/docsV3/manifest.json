@@ -413,6 +413,14 @@
       "index": "Building an emulator · a course in nineteen stages, with the code and the traps"
     },
     {
+      "file": "sec_ai_em8",
+      "letter": "EM8",
+      "part": "ai",
+      "area": "Emulation",
+      "nav": "Source-level debugging",
+      "index": "Source-level debugging · a DAP adapter, the ld65 source map, stepping and the DBG series"
+    },
+    {
       "file": "sec_ai_p1",
       "letter": "P1",
       "part": "ai",

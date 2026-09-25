@@ -17,4 +17,45 @@ Boot is assembly-first, but the compiler question is settled: C arrives as soon 
 - O.7 — libc: about twenty three-line syscall stubs — `COP #SYS_n` + `RTL` — with Calypsi's low-level libc hooks (`open`, `read`, `write`, `sbrk` …) pointed at them. Each stub loads the service number into A, then `COP`; the compiler emits an ordinary `JSL` and the `COP` never leaves the stub.
   NOTE: Which makes the stable ABI literally "the compiler's calling convention plus a number in A": arguments sit wherever Calypsi put them. Numbering the `SYS_*` constants is a prerequisite for writing any of it.
 - O.8 — Development flow: compile on the PC (Makefile) → custom binary → transfer over the EC's console UART or SD → run; debug via serial console + Helium debug port.
+  NOTE: **And at source level in the emulator first**: [sheet EM8](sec_ai_em8)'s adapter puts breakpoints, stepping and registers in the editor, and reaches the board later through the same Debug Agent commands the console uses ([D112](sec_ai_q#d112)).
 - O.9 — Gateware: Verilog-2005 ([D101](sec_ai_q#d101)) with Yosys + nextpnr-ice40 + IceStorm, linted by Verilator; simulation always before the board.
+- O.10 — **ca65 conventions, fixed before the boot images grow** ([D113](sec_ai_q#d113)–[D115](sec_ai_q#d115)). Three rules, each paid for with somebody's afternoon — most of them recorded in DN-SW-EMU-004, where a hobby 65816 OS arrived at the first two on its own.
+  1. **Register width is stated three ways.** `.smart +` makes ca65 follow `REP` and `SEP` through straight-line code and set the operand widths itself; the macros below emit the instruction and the directive together, so the two cannot disagree where smart mode cannot see; and **every routine opens with the width directives it expects on entry**, which is its contract with its callers — smart mode follows neither a branch nor a `JSR` from a caller that left the registers otherwise ([EM4.16](sec_ai_em4#em416)).
+  2. **One build, with debug information.** Every object is assembled with `-g` and a listing, and every image linked with a map, a label file and `--dbgfile`, since none of them changes a byte of the image. The `.dbg` is what [sheet EM8](sec_ai_em8) reads, and the label file what the monitor loads.
+  3. **No vector is ever zero.** All five native vectors of [E.12](sec_ai_e#e12) and the emulation set point at handlers, and a handler with nothing to do prints its own name and halts, as [CN1.8](sec_ai_cn1#cn18)'s panic does — never a `$0000` that sends a stray `COP` or `NMI` into whatever bank `$00` holds at that address.
+  ```asm
+  .macro  longa           ; 16-bit accumulator and memory
+          rep #$20
+          .a16
+  .endmacro
+  .macro  shorta          ; 8-bit accumulator and memory
+          sep #$20
+          .a8
+  .endmacro
+  .macro  longi           ; 16-bit index registers
+          rep #$10
+          .i16
+  .endmacro
+  .macro  shorti          ; 8-bit index registers
+          sep #$10
+          .i8
+  .endmacro
+  .macro  longr           ; both 16-bit
+          rep #$30
+          .a16
+          .i16
+  .endmacro
+  .macro  shortr          ; both 8-bit
+          sep #$30
+          .a8
+          .i8
+  .endmacro
+  ```
+  ```make
+  %.o: %.s
+  	ca65 --cpu 65816 -g -l $(@:.o=.lst) -o $@ $<
+
+  boot.bin: $(OBJS) boot.cfg
+  	ld65 -C boot.cfg -m boot.map -Ln boot.lbl --dbgfile boot.dbg -o $@ $(OBJS)
+  ```
+  NOTE: The macro names are the ones 65816-OS uses. Its build is the counter-example for the second rule — a separate `build-debug` target — and its vector table for the third, with `COP`, `BRK`, `ABORT` and `NMI` all left at `$0000`.

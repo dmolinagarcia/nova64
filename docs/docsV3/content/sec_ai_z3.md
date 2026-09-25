@@ -240,6 +240,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | JSL / RTL | The 65816's long call and return, crossing banks. The basis of the large memory model and of syscall stubs. |
 | Large model | Compiler model where code is addressed across all banks with JSL/RTL. Paired here with a fixed DBR so data access stays cheap. |
 | Toolchain | The full chain from source to loadable artefact. Open end to end here: KiCad · Yosys · nextpnr · IceStorm · pico-sdk · ca65/64tass. |
+| Smart mode | ca65's `.smart`, which follows `REP` and `SEP` and sets operand widths itself — in straight-line code only, which is why every routine still states the width it expects on entry ([O.10](sec_ai_o#o10)). |
 
 ## Filesystems
   NOTE: → [sheet Y1](sec_ai_y1) · [sheet Y2](sec_ai_y2) · [sheet Y3](sec_ai_y3) · [sheet Y4](sec_ai_y4)
@@ -297,7 +298,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | Upload | The escape hatch for imagery Neon's primitives cannot produce: the client rasterises into system RAM and the server pushes it through the aperture. **~15 ms for a 200 × 100 patch at 8 bpp** — correct to provide, correct to discourage. |
 
 ## Debug and instrumentation
-  NOTE: → [sheet R](sec_ai_r)
+  NOTE: → [sheet R](sec_ai_r) · [sheet EM8](sec_ai_em8)
 
 | Term | Meaning |
 |---|---|
@@ -317,6 +318,11 @@ The document's terminology in one place. Every acronym is also expanded on first
 | Clock domain crossing | Passing a signal between two unrelated clocks — here the SPI link and the Helium core. Needs synchronisers and a handshake, and is a classic home of intermittent faults. |
 | GDB stub | Firmware speaking the GDB remote serial protocol, letting a host debugger drive the target. Deferred until the command set stops moving (→ [R.24](sec_ai_r#r24)). |
 | Breakpoint · watchpoint | Halt on reaching an address · halt on touching a datum. The first is `BRK` or a trace-trigger comparator; the second is deferred. |
+| Debug Adapter Protocol · DAP | The JSON protocol between an editor and a debugger, which VS Code speaks; [sheet EM8](sec_ai_em8)'s adapter is a server for it. **Not CMSIS-DAP or DAPLink**, the probe protocols, which share only the letters. |
+| Source map | The two maps a source-level debugger needs — address to file and line, and file and line to every address it produced. Read for assembly from the ld65 debug file ([EM8.5](sec_ai_em8#em85)). |
+| `.dbg` file | What `ld65 --dbgfile` writes: segments, spans, lines and symbols as tab-separated text records. Produced by every build, never by a separate debug build ([D113](sec_ai_q#d113)). |
+| Shadow stack | A host-side record of call and interrupt frames kept beside the guest's stack, one per address space, from which the call stack is drawn. A frame goes when S passes it, not when a return opcode is seen ([EM8.15](sec_ai_em8#em815)). |
+| DBG-00–DBG-05 | The source-level debugger's series, from a source map to the same adapter driving the board ([sheet EM8](sec_ai_em8)). |
 
 ## Emulation and the host model
   NOTE: → [sheet EM1](sec_ai_em1) · [sheet EM4](sec_ai_em4) · [sheet EM7](sec_ai_em7)

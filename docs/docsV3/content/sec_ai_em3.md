@@ -13,6 +13,7 @@ An emulator has two faces. Toward the guest it must present devices the target w
 
 - EM3.3 — **The emulator exposes the same command set as the Helium Debug Agent of [sheet R](sec_ai_r).** The monitor, the host tooling and any scripted harness are then written once and run unmodified against both the emulator and real hardware, which is the whole return on the requirement. It is stated now rather than retrofitted because the Agent's command set is still being extended: **a command added to the Agent is added to the emulator in the same revision**, and one that cannot be meaningfully emulated is documented as such rather than silently stubbed.
   NOTE: Parity is a command-set property, not a fidelity one. The Agent's transport is SPI-only and deliberately outside bank `$FF` ([R.4](sec_ai_r#r4)); the emulator reproduces what the commands *do*, not the link they arrive on. It has not been built yet ([EM6.18](sec_ai_em6#em618)).
+  NOTE: **[Sheet EM8](sec_ai_em8)'s source-level debugger is the first client written against this requirement** ([D112](sec_ai_q#d112)): it drives the emulator only through the command set plus host-only extensions marked as such, so it can be pointed at the board later without a rewrite.
 
 ## The console — two host forms, one guest device.
 
