@@ -20,13 +20,17 @@
  * in this document is coloured by CSS class, so it prints all thirteen of
  * them as black rectangles. Vivliostyle is a real browser engine and gets
  * them right — and `--scale` needs one too.
+ *
+ * Every book trim, once built, goes through tools/kdp.js, which measures the
+ * ink on each page against KDP's paperback margins for that page count. A
+ * page that falls short is reported, not fatal: the PDF is still written.
  */
 'use strict';
 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawn } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
 const outDir = path.join(root, 'pdfs');
@@ -49,8 +53,9 @@ const trims = [
      — a twelfth of the width, near enough — and 210mm sits a hair under
      8.5in, so it takes the same 18mm. That leaves a 174mm measure, just
      inside the middle table tier: see tableTier below, and move the margin
-     to 17mm if the wider tier is wanted instead. */
-  { w: 210, h: 297,  margin: 18, unit: 'mm', as: 'A4' },
+     to 17mm if the wider tier is wanted instead. A4 is not a KDP trim, so
+     no build of it is checked against KDP's margins. */
+  { w: 210, h: 297,  margin: 18, unit: 'mm', as: 'A4', kdp: false },
 ];
 
 /* A trim's leaf in mm, whichever unit it is quoted in. */
@@ -199,6 +204,82 @@ function sheet(t, scale, gutter) {
 `;
 }
 
+/* ── progress ────────────────────────────────────────────────────────────
+   Vivliostyle knows exactly how far along it is: the viewer fires a
+   `paginationprogress` event as it sets each page, and the CLI puts the page
+   count and the fraction into its spinner — `(312 pages, 46%)`. But it only
+   draws that spinner when its own stderr is a terminal, and a pipe is not
+   one. Capture the formatter's output and the progress is not hidden from
+   you, it is never written at all.
+
+   So the formatter is handed a terminal to talk to: `script -qec`, from
+   util-linux, whose whole job is to be a pseudo-terminal wrapped around a
+   command. What it draws is read back here, one line, re-rendered as this
+   script's own bar over the whole run rather than one trim of it.
+
+   Where there is no `script` — a BSD one rejects `--version` and so takes
+   itself out — the formatter is run straight and the bar falls back to the
+   phases the CLI prints as plain lines. Coarse, but never wrong. */
+const pty = (() => {
+  try { execFileSync('script', ['--version'], { stdio: 'ignore' }); return true; }
+  catch { return false; }
+})();
+
+/* The phases the CLI announces, and how far into a trim each one is. The
+   long one is `Building pages` — typesetting, which is most of the wall
+   clock and the only phase that reports a fraction of its own; the span
+   from 0.05 to 0.85 is what that fraction is spread over. The rest are
+   milestones, and they are in ascending order because progress is only ever
+   allowed to move one way. */
+const PHASES = [
+  [/Start building/, 0.01],
+  [/Launching PDF build environment/, 0.03],
+  [/Building pages/, 0.05],
+  [/Building PDF/, 0.88],
+  [/Processing PDF/, 0.95],
+  [/Finished building/, 0.99],
+];
+const TYPESET = [0.05, 0.85];
+
+const BAR = 24;
+const tty = process.stderr.isTTY;
+
+const bar = (f) => {
+  const n = Math.round(BAR * Math.max(0, Math.min(1, f)));
+  return '▕' + '█'.repeat(n) + '░'.repeat(BAR - n) + '▏';
+};
+
+const clock = (ms) => {
+  const s = Math.max(0, Math.round(ms / 1000));
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+};
+
+/* One argument of a shell command line, quoted so that `script -c` hands it
+   to the formatter as the one word it is — `print.html` is a tame path, but
+   the output path carries whatever `--scale` was given. */
+const q = (a) => "'" + String(a).replace(/'/g, "'\\''") + "'";
+
+/* ── KDP ─────────────────────────────────────────────────────────────────
+   The built file against KDP's margins, by tools/kdp.js, whose report is
+   indented under the trim's line. A short page is a warning and not a failed
+   trim: the PDF is fine to proof, it is only not fine to upload. */
+let kdpShort = 0;
+function kdp(out) {
+  let text, ok = true;
+  try {
+    text = execFileSync(process.execPath, [path.join(__dirname, 'kdp.js'), out],
+                        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  } catch (err) {
+    ok = false;
+    text = err.stdout || 'kdp.js failed: ' + err.message.split('\n')[0];
+  }
+  if (!ok) kdpShort++;
+  const lines = text.trim().split('\n');
+  /* the file is already named on the line above; what is new is the rest */
+  lines[0] = lines[0].replace(/^[^:]*:\s*/, '');
+  console.error(lines.map((l) => '      kdp ' + l.trim()).join('\n'));
+}
+
 /* ── the run ─────────────────────────────────────────────────────────────*/
 const argv = process.argv.slice(2);
 
@@ -228,6 +309,21 @@ options
                symmetric, which is what a loose-leaf proof wants.
   --list       print what each trim resolves to, and build nothing
   --help, -h   this
+
+progress       one line per trim, rewritten in place: the bar, the pages set
+               so far and what the formatter has left to do. Redirected to a
+               file it becomes one line per tenth, a log rather than an
+               animation. The page count comes from the formatter itself and
+               needs a pseudo-terminal to reach us — without \`script\` on the
+               PATH the bar still moves, in the six steps the formatter
+               announces.
+
+kdp            every book trim is checked after it is built with
+               tools/kdp.js: the ink on each page against KDP's paperback
+               minimums for that page count — the inside margin grows with
+               the thickness, 0.625" from 301 pages and 0.75" from 501. A
+               table wider than its measure is what usually trips it. Pages
+               that fall short are listed; the PDF is written all the same.
 
 output         pdfs/nova64_<width>_<height>_<stamp>.pdf, the trim in inches
                and the stamp the local YYYYMMDD-HHMM the run started at, with
@@ -300,26 +396,100 @@ fs.mkdirSync(outDir, { recursive: true });
 const html = path.join(root, 'print.html');
 const css = path.join(os.tmpdir(), 'nova64-trim.css');
 
-let failed = 0;
-for (const t of wanted) {
-  const out = path.join(outDir, file(t, scale, gutter));
-  process.stderr.write(`${name(t)} in · `);
-  fs.writeFileSync(css, sheet(t, scale, gutter), 'utf8');
-  try {
-    execFileSync(process.execPath, [path.join(__dirname, 'prerender.js'), '--head', css, html],
-                 { stdio: ['ignore', 'ignore', 'inherit'] });
-    /* Vivliostyle gives up after 300 s by default, and the whole document
-       takes longer than that on the two-core ARM devbox; half an hour is
-       headroom, not an estimate. */
-    execFileSync('npx', ['--yes', '@vivliostyle/cli', 'build', html, '-o', out, '--timeout', '1800'],
-                 { stdio: ['ignore', 'ignore', 'ignore'] });
-    const mb = (fs.statSync(out).size / 1048576).toFixed(1);
-    console.error(`${path.relative(process.cwd(), out)} — ${mb} MB`);
-  } catch (err) {
-    failed++;
-    console.error('failed: ' + err.message.split('\n')[0]);
-  }
+/* One trim, with the formatter's own progress read back as it goes. The
+   promise settles when the formatter does; `st` is what the bar is drawn
+   from, and the reader only ever pushes it forwards. */
+function build(out, st, redraw) {
+  const cmd = ['npx', '--yes', '@vivliostyle/cli', 'build', html, '-o', out, '--timeout', '1800'];
+  /* Vivliostyle gives up after 300 s by default, and the whole document
+     takes longer than that on the two-core ARM devbox; half an hour is
+     headroom, not an estimate. */
+  const [bin, args] = pty
+    ? ['script', ['-qec', cmd.map(q).join(' '), '/dev/null']]
+    : [cmd[0], cmd.slice(1)];
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(bin, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+
+    /* The spinner redraws itself with a carriage return, so `\r` is what
+       separates one frame from the next. A frame can also be wrapped by the
+       pseudo-terminal, which puts a newline inside the very text we are
+       reading, so newlines go and carriage returns divide. */
+    const read = (chunk) => {
+      const frames = String(chunk)
+        .replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '')
+        .split('\r');
+      for (const frame of frames) {
+        const f = frame.replace(/\n/g, ' ');
+        for (const [re, w] of PHASES) if (re.test(f) && w > st.frac) st.frac = w;
+        const m = /(\d+) pages, (\d+)%/.exec(f);
+        if (m) {
+          st.pages = Number(m[1]);
+          const [lo, hi] = TYPESET;
+          st.frac = Math.max(st.frac, lo + (hi - lo) * Number(m[2]) / 100);
+        }
+      }
+      redraw();
+    };
+
+    child.stdout.on('data', read);
+    child.stderr.on('data', read);
+    child.on('error', reject);
+    child.on('close', (code) =>
+      code === 0 ? resolve() : reject(new Error('the formatter exited ' + code)));
+  });
 }
 
-fs.rmSync(css, { force: true });
-if (failed) { console.error(`\n${failed} of ${wanted.length} trims failed`); process.exit(1); }
+(async () => {
+  const t0 = Date.now();
+  let failed = 0;
+
+  for (let i = 0; i < wanted.length; i++) {
+    const t = wanted[i];
+    const out = path.join(outDir, file(t, scale, gutter));
+    const st = { frac: 0, pages: 0, t1: Date.now() };
+    let last = 0, step = -1;
+
+    /* On a terminal the line is rewritten in place, a few times a second —
+       any faster is flicker, and the formatter reports far faster than that.
+       Redirected to a file it is one line per tenth, which is a log rather
+       than an animation. */
+    const redraw = (force) => {
+      const now = Date.now();
+      if (!force && tty && now - last < 250) return;
+      if (!force && !tty && Math.floor(st.frac * 10) === step) return;
+      last = now; step = Math.floor(st.frac * 10);
+      const el = now - st.t1;
+      const line = `[${i + 1}/${wanted.length}] ${name(t).padEnd(9)}` +
+        `${tty ? ' ' + bar(st.frac) : ''} ${String(Math.round(st.frac * 100)).padStart(3)}%` +
+        (st.pages ? ` · ${st.pages} pages` : '') + ` · ${clock(el)}` +
+        (st.frac > 0.05 ? ` · eta ${clock(el / st.frac - el)}` : '');
+      process.stderr.write(tty ? '\r\x1b[2K' + line : line + '\n');
+    };
+
+    const done = (text) => {
+      if (tty) process.stderr.write('\r\x1b[2K');
+      console.error(`[${i + 1}/${wanted.length}] ${name(t).padEnd(9)} ${text}`);
+    };
+
+    redraw(true);
+    try {
+      fs.writeFileSync(css, sheet(t, scale, gutter), 'utf8');
+      execFileSync(process.execPath, [path.join(__dirname, 'prerender.js'), '--head', css, html],
+                   { stdio: ['ignore', 'ignore', 'inherit'] });
+      await build(out, st, redraw);
+      const mb = (fs.statSync(out).size / 1048576).toFixed(1);
+      done(`${path.relative(process.cwd(), out)} — ${mb} MB` +
+           (st.pages ? ` · ${st.pages} pages` : '') + ` · ${clock(Date.now() - st.t1)}`);
+      if (t.kdp !== false) kdp(out);
+    } catch (err) {
+      failed++;
+      done('failed: ' + err.message.split('\n')[0]);
+    }
+  }
+
+  fs.rmSync(css, { force: true });
+  console.error(`${wanted.length - failed} of ${wanted.length} trims in ${clock(Date.now() - t0)}` +
+                (kdpShort ? ` · ${kdpShort} not ready for KDP` : ''));
+  if (failed) process.exit(1);
+})();
