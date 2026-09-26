@@ -14,6 +14,7 @@ Where the parts of this site, and of the machine, came from.
 | 6502.org forum thread | [forum.6502.org](http://forum.6502.org/viewtopic.php?f=4&t=7434) |
 | Andre and Bil Herd on DRAM | [6502.org/users/andre](http://www.6502.org/users/andre/icaphw/design.html) |
 | Andre's MicroPET | [github.com/fachat/MicroPET](https://github.com/fachat/MicroPET) |
+| Alexander Hansen's 65816-OS, emulator and VS Code debugger | [github.com/alexanderbh/65816-OS](https://github.com/alexanderbh/65816-OS) |
 | Blog under GitHub Pages | [chadbaldwin.net](https://chadbaldwin.net/2021/03/14/how-to-build-a-sql-blog.html) |
 
 ## Logo colours
