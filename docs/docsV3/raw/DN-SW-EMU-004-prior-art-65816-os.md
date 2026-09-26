@@ -283,18 +283,18 @@ only for noVa64.
 
 | # | Item | Verdict | Lands in |
 |---|---|---|---|
-| 1 | A source-level debugger in VS Code speaking the Debug Adapter Protocol | **Adapt the idea** — the main result | [EM8], [D112] |
-| 2 | The ld65 `.dbg` reader: address ↔ file:line, symbols with sizes | **Adapt the logic**, fixing §6.2's defect and adding the staleness check | [EM8], [D113] |
+| 1 | A source-level debugger in VS Code speaking the Debug Adapter Protocol | **Adapt the idea** — the main result | [EM8], [D127] |
+| 2 | The ld65 `.dbg` reader: address ↔ file:line, symbols with sizes | **Adapt the logic**, fixing §6.2's defect and adding the staleness check | [EM8], [D128] |
 | 3 | A webview beside the editor with the display and keyboard capture by key code | **Adapt** — noVa64's browser shell of [EM5] is the display, and the table maps to HID usages | [EM8] |
-| 4 | Width macros that emit `REP`/`SEP` with the directive, `.smart`, an entry-width annotation per routine | **Adopt as is** | [O.10], [EM4.16], [D114] |
-| 5 | Always emit `-g`, `--dbgfile`, `-Ln` and a listing | **Adopt**, as one build rather than a second target | [O.10], [D113] |
+| 4 | Width macros that emit `REP`/`SEP` with the directive, `.smart`, an entry-width annotation per routine | **Adopt as is** | [O.10], [EM4.16], [D129] |
+| 5 | Always emit `-g`, `--dbgfile`, `-Ln` and a listing | **Adopt**, as one build rather than a second target | [O.10], [D128] |
 | 6 | One entry point, service number in A, `JMP (table,X)` | **Confirms** [D90] and [J.3]; nothing to copy | — |
 | 7 | Context switch by rewriting the interrupt frame; per-task D and S | **A lesson, not code**: keep the frame where the interrupt left it and store S | [N.2] |
 | 8 | `ps`, `perf`, the `[ -- ] → [ OK ]` boot log | Minor | — |
 | 9 | Calypsi `lc-sd` with a linker file | Confirms [O.3] | — |
 | 10 | The TypeScript CPU core | **No** — [EM7]'s bus-layer design is the better one, and §5.2 | — |
 | 11 | The hardware | **No** | — |
-| 12 | Vectors left at `$0000` | **A rule, by counter-example**: no vector is ever zero | [O.10], [D115] |
+| 12 | Vectors left at `$0000` | **A rule, by counter-example**: no vector is ever zero | [O.10], [D130] |
 
 On item 7 in particular: in noVa64 the MMU gives every process its own
 virtual bank `$00` ([L.10], [N.4]), so the per-task D and S that the project is
@@ -332,8 +332,8 @@ that [Q19] worries about, which live in memory the process owns.
 [J.3]: ../content/sec_ai_j.md
 [CN1.11]: ../content/sec_ai_cn1.md
 [D90]: ../content/sec_ai_q.md
-[D112]: ../content/sec_ai_q.md
-[D113]: ../content/sec_ai_q.md
-[D114]: ../content/sec_ai_q.md
-[D115]: ../content/sec_ai_q.md
+[D127]: ../content/sec_ai_q.md
+[D128]: ../content/sec_ai_q.md
+[D129]: ../content/sec_ai_q.md
+[D130]: ../content/sec_ai_q.md
 [Q19]: ../content/sec_ai_q.md

@@ -320,7 +320,7 @@ The document's terminology in one place. Every acronym is also expanded on first
 | Breakpoint · watchpoint | Halt on reaching an address · halt on touching a datum. The first is `BRK` or a trace-trigger comparator; the second is deferred. |
 | Debug Adapter Protocol · DAP | The JSON protocol between an editor and a debugger, which VS Code speaks; [sheet EM8](sec_ai_em8)'s adapter is a server for it. **Not CMSIS-DAP or DAPLink**, the probe protocols, which share only the letters. |
 | Source map | The two maps a source-level debugger needs — address to file and line, and file and line to every address it produced. Read for assembly from the ld65 debug file ([EM8.5](sec_ai_em8#em85)). |
-| `.dbg` file | What `ld65 --dbgfile` writes: segments, spans, lines and symbols as tab-separated text records. Produced by every build, never by a separate debug build ([D113](sec_ai_q#d113)). |
+| `.dbg` file | What `ld65 --dbgfile` writes: segments, spans, lines and symbols as tab-separated text records. Produced by every build, never by a separate debug build ([D128](sec_ai_q#d128)). |
 | Shadow stack | A host-side record of call and interrupt frames kept beside the guest's stack, one per address space, from which the call stack is drawn. A frame goes when S passes it, not when a return opcode is seen ([EM8.15](sec_ai_em8#em815)). |
 | DBG-00–DBG-05 | The source-level debugger's series, from a source map to the same adapter driving the board ([sheet EM8](sec_ai_em8)). |
 
