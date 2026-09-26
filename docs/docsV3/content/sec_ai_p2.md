@@ -149,10 +149,12 @@ Each row is a convenience here that becomes a defect there.
 - [ ] P2.g — **CPU-visible UART in bank `$FF`** bridged to the EC's console UART — bidirectional interactive I/O between CPU code and your terminal.
 - [ ] P2.h — **crt0, user and kernel linker scripts and a minimal C runtime**; a C hello world printing through the UART register. The convention audited at [E0.8](sec_ai_p3#e08) now reaches real hardware.
 - [ ] P2.i — **Native 65816 monitor resident in SRAM** — examine, deposit, go, disassemble. The machine is self-hosting for inspection, with no host attached.
-- [ ] P2.j — **microSD boot path** — the EC reads an image from the card into memory and releases the CPU from reset.
+- [ ] P2.j — **microSD boot path** — the BIOS reads the kernel image from the card's boot partition and jumps to it ([CN1.5](sec_ai_cn1#cn15)).
+  NOTE: This supersedes the EC reading an image from the card, which predates [D60](sec_ai_q#d60): the EC has no wires to the card, and the BIOS is the only thing that reads it at boot ([D107](sec_ai_q#d107)).
 - [ ] P2.k — **USB HID keyboard** on the EC, delivered to a CPU-visible register.
 - [ ] P2.l — **Text console driver** — Mode 0 plus the keyboard, wired to the monitor. Power on and the board reaches its own prompt on its own display.
   NOTE: **[P2.h](sec_ai_p2#p2h)–[P2.l](sec_ai_p2#p2l) are a checkpoint, not a milestone.** Text mode, no MMU, no graphics — worth having for the debugging and for the morale, and every piece of it is needed by [P3](sec_ai_p2#p3) and [P5](sec_ai_p2#p5) anyway, so nothing here is built twice. It is not [E6](sec_ai_p3#e6) and must not be recorded as it.
+  NOTE: **Its software is [CON-00](sec_ai_cn1#con-00)–[CON-02](sec_ai_cn1#con-02)** of [sheet CN1](sec_ai_cn1): the monolithic console, booting from the card to a read-only prompt.
 - [ ] P3 — **Translation active.** Helium's MMU, TLB and walker operational with the CPU executing through translation; cache controller against the external SRAM with plausible hit/miss counters.
   TEST: PHI2 stalling on a fill, bounded and measured · ABORTB raised on an unmapped page, handled, instruction resumed · context switch between two ASIDs with correct CTX_SET_PTBASE / CTX_SET_ASID ordering · the fill watchdog tripped deliberately instead of freezing the board.
   NOTE: *Pass condition: the virtual memory system is real, not simulated.* This is the stage the whole prototype was worth building for — [E4](sec_ai_p3#e4) arrives with its hardest gateware already debugged.
@@ -168,7 +170,7 @@ Each row is a convenience here that becomes a defect there.
 - [ ] P3.j — **Hardware page-table walker** reading 32-bit PTEs from the fixed, uncached SRAM region of [F.5](sec_ai_f#f5).
 - [ ] P3.k — **ABORTB on unmapped pages and permission violations**, an assembly handler that reports, and **instruction resumption verified correct** — faults detected, delivered to software, and recoverable.
 - [ ] P3.l — **Context registers** with the `CTX_SET_PTBASE` → `CTX_SET_ASID` ordering invariant enforced in hardware; two contexts switched from the monitor, two distinct 16 MB spaces coexisting.
-- [ ] P3.m — **Protection policy enforced** — bank `$FF` privileged and never user-mappable, bank `$00`'s vector and stub pages pinned in every context ([L.11](sec_ai_l#l11)), bank `$01` the resident kernel ([J.1](sec_ai_j#j1)), vectors mapped identically everywhere.
+- [ ] P3.m — **Protection policy enforced** — bank `$FF` privileged and never user-mappable, bank `$00`'s vector and stub pages pinned in every context ([L.11](sec_ai_l#l11)), banks `$F0`–`$FD` the resident kernel ([J.1](sec_ai_j#j1), [D102](sec_ai_q#d102)), vectors mapped identically everywhere.
 - [ ] P4 — **Graphics.** Framebuffer scanout from SDRAM stable at 1024 × 600, 18-bit palette lookup, blitter, hardware cursor.
   TEST: minterm logic verified against a reference implementation · cursor overlay tracking without involving the composite path · arbiter wait-time histograms showing no scanout underrun under blitter load · **a CPU read of the framebuffer returning exactly what was written, including immediately after a write** — the write-FIFO drain of [T1.19](sec_ai_t1#t119) — and **a read with Neon held in reset timing out into `$FF` plus a fault, not into a frozen machine**.
 - [ ] P4.a — **Framebuffer scanout from SDRAM at 1024 × 600, 8 bpp**, through the 18-bit palette of [P2.16](sec_ai_p2#p216) — Neon stage N1 ([T1.63](sec_ai_t1#t163)), in the same pixel format the production RGB path uses.
@@ -192,6 +194,7 @@ Each row is a convenience here that becomes a defect there.
 - [ ] P5.j — **microSD block driver and a read-only NVFS mount behind [sheet Y1](sec_ai_y1)** ([V2](sec_ai_y1#v2), [V3](sec_ai_y1#v3)) — files on the card visible to the OS through the real syscall path rather than a bespoke one.
   NOTE: **The FIFO path is enough for this stage and the DMA engine is not needed yet** — the driver is written against the register names of [G.6](sec_ai_g#g6) from the start, so the engine lands underneath it later with nothing above changing. What it cannot reach on the FIFO alone is paging (→ [D45](sec_ai_q#d45), [Q79](sec_ai_q#q79)).
 - [ ] P5.k — **Program loader and a shell** — type a name and a program runs in its own address space.
+  NOTE: **[CON-04](sec_ai_cn1#con-04) is this step's pass condition**: the console's shell relinked against the `COP` stubs and running as PID 1 ([CN1.1](sec_ai_cn1#cn11)).
 - [ ] P5.l — **`/dev/fb` with an ioctl mapping framebuffer pages into a process**, plus `/dev/audio` — a user program draws at memory speed and makes sound through the ordinary device contract.
   NOTE: **The compositor's cost model is measured at G2, not here** ([V.36](sec_ai_v#v36), [V.37](sec_ai_v#v37)). The number wanted is the blitter's own time for a full-screen pass, separated from emission and from whatever the client tasks are doing — and it is the project's first real software gate, so it is instrumented deliberately rather than inferred from a frame rate.
 

@@ -49,8 +49,9 @@ NVM32 is a 32-bit register virtual machine with a 24-bit address space, designed
 | `$00_0000`–`$00_FFFF` | 64 KB | Reserved host region: 65816 direct pages, 65816 stack, interpreter scratch, the VM state window, the trap mailbox, the system information block. Guest code may not touch it |
 | `$01_0000`–`$01_FFFF` | 64 KB | Interpreter code and dispatch table, read-only, shared, mapped identically in every process |
 | `$02_0000`–`$0F_FFFF` | ~896 KB | Guest code, read-execute |
-| `$10_0000`–`$EF_FFFF` | ~14 MB | Guest data, BSS and heap, read-write |
-| `$F0_0000`–`$FF_FFFF` | 1 MB | Guest stack, growing down from `$FF_FFFF`, guard page at the bottom |
+| `$10_0000`–`$DF_FFFF` | ~13 MB | Guest data, BSS and heap, read-write |
+| `$E0_0000`–`$EF_FFFF` | 1 MB | Guest stack, growing down from `$EF_FFFF`, guard page at the bottom |
+| `$F0_0000`–`$FF_FFFF` | 1 MB | The kernel, growing down from `$FD`, then the VRAM window and privileged I/O — never addressable by a guest ([D102](sec_ai_q#d102)) |
 
 - VM1.18 — **Two banks are reserved and the loader enforces it**, refusing to map guest segments over `$00`–`$01` while the MMU marks them no-access for guest pointers ([L.5](sec_ai_l#l5)). On a core executing NVM32 natively those banks are never generated as guest effective addresses at all — the region stays reserved **only so that one binary's memory map is valid on both executors**.
   NOTE: This is the item that has to reach the loader before the loader is written ([N.6](sec_ai_n#n6), [D91](sec_ai_q#d91)). It is cheap now and a migration later, which is the whole reason it is in [VM1.5](sec_ai_vm1#vm15)'s table.

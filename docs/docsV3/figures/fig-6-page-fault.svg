@@ -33,15 +33,17 @@
 
   <text x="700" y="222" class="eye">BANK MAP</text>
   <rect x="700" y="230" width="210" height="130" class="blk"/>
-  <line x1="700" y1="256" x2="910" y2="256" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
-  <line x1="700" y1="282" x2="910" y2="282" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
-  <line x1="700" y1="308" x2="910" y2="308" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
-  <line x1="700" y1="334" x2="910" y2="334" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
-  <text x="708" y="248" class="li10">$FF · privileged I/O</text>
-  <text x="708" y="274" class="li10">$FE · 64K VRAM window</text>
-  <text x="708" y="300" class="li10">$02–$FD · user</text>
-  <text x="708" y="326" class="li10">$01 · kernel 64 K pinned</text>
-  <text x="708" y="352" class="li10">$00 · stack·DP + priv. zone</text>
+  <line x1="700" y1="252" x2="910" y2="252" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
+  <line x1="700" y1="273" x2="910" y2="273" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
+  <line x1="700" y1="295" x2="910" y2="295" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
+  <line x1="700" y1="316" x2="910" y2="316" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
+  <line x1="700" y1="338" x2="910" y2="338" stroke="rgba(241,236,217,.35)" stroke-width="1"/>
+  <text x="708" y="246" class="li10">$FF · privileged I/O</text>
+  <text x="708" y="267" class="li10">$FE · 64K VRAM window</text>
+  <text x="708" y="289" class="li10">$F0–$FD · kernel, from $FD ↓</text>
+  <text x="708" y="310" class="li10">$02–$EF · user</text>
+  <text x="708" y="332" class="li10">$01 · VM interpreter</text>
+  <text x="708" y="354" class="li10">$00 · stack·DP + priv. zone</text>
 
   <text x="60" y="358" class="eye">PTE — 32 BITS</text>
   <rect x="60" y="370" width="400" height="44" class="blk"/>
