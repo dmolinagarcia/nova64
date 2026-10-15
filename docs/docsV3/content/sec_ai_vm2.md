@@ -292,7 +292,7 @@ h_syscall:
 ```
 
 - VM2.39 — **Pointer validation is the only barrier between a guest pointer and the reserved host region**, and it is three tests: high byte zero, inside the guest data or stack region, correct permission. There is no fourth test to add later — this is the boundary.
-- VM2.40 — **`vm_run` is not re-entrant for the same process.** A syscall that itself needs to execute bytecode — an `exec`, for instance ([N.6](sec_ai_n#n6)) — needs another PCB. **It must not nest.**
+- VM2.40 — **`vm_run` is not re-entrant for the same process.** A syscall that itself needs to execute bytecode — a `spawn`, for instance ([N.6](sec_ai_n#n6)) — needs another PCB. **It must not nest.**
 
 ## Optimizations, abandonment conditions and what is left open.
 
