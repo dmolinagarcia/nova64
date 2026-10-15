@@ -79,7 +79,7 @@ The machine is about to have two filesystems — NVFS on the system volume ([she
 | | | **Total, excluding per-process** | **≈ 1.4 KB** |
 
   NOTE: Small against the block cache's ~20 KB ([Y3.14](sec_ai_y3#y314)). The vnode cache size of 24 is a guess and should exceed the maximum number of simultaneously open files by a margin, since directory vnodes along active paths are held too (→ [Q94](sec_ai_q#q94)).
-  NOTE: **If the whole filesystem stack has to be resident, address space is the constraint rather than code size**, and it should be checked against the kernel's bank `$01` budget before the ext2 driver is started rather than after ([J.1](sec_ai_j#j1)).
+  NOTE: **If the whole filesystem stack has to be resident, address space is the constraint rather than code size**, and it should be checked against the kernel's reserve at the top of the map — `$F0`–`$FD` since [D102](sec_ai_q#d102) — before the ext2 driver is started rather than after ([J.1](sec_ai_j#j1)).
 
 ## Phasing · V0–V5 — V6 is the Amiga milestone and needs no work before it.
 

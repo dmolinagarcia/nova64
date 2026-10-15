@@ -9,7 +9,8 @@ The rig exists to use calendar time that would otherwise be idle. It gates nothi
 
 ## The three phases
 
-- P1.1 — **Phase 0 — the Spartan-6 training rig, this sheet.** A Xilinx Spartan-6 XC6SLX16-FTG256 board with 2.54 mm vertical headers, plus a HAT of our own carrying a CPU socket, a Pico socket, an SD socket and VGA. The HAT is trivial and cheap to fabricate. Toolchain is Xilinx ISE 14.7 in a VM. Status: proposed.
+- P1.1 — **Phase 0 — the Spartan-6 training rig, this sheet.** A Xilinx Spartan-6 XC6SLX16-FTG256 board with 2.54 mm vertical headers, plus a HAT of our own carrying a CPU socket, a Pico socket, an SD socket and VGA. The HAT is trivial and cheap to fabricate. Toolchain is Xilinx ISE 14.7 on the desktop PC the board is cabled to. Status: proposed.
+  NOTE: **Gateware is hardware work and runs on the desktop PC; the VM is for software only.** Every gateware flow ends with a board on a cable, so ISE here and the open flow of the later phases both live on the machine that cable reaches.
   NOTE: **This is the one place in the project where a proprietary toolchain is used, and it is admissible precisely because the rig is not noVa64.** [A2.6](sc_a2#a26) makes the open flow a principle rather than a preference, and nothing built under ISE ships: all Phase 0 RTL is disposable by construction ([P1.14](sec_ai_p1#p114)). The concession is smaller than [P2.25](sec_ai_p2#p225)'s, which contemplates a proprietary analyser checking gateware the open flow actually builds.
 - P1.2 — **Phase 1 — the prototype carrier, [sheet P2](sec_ai_p2).** One Colorlight i9 v7.2 module (LFE5U-45F ECP5) on a carrier of our own, with Helium and Neon merged into a single device as two separate top-level modules with a declared interface and separate PLL-derived clock domains. Unchanged by this sheet.
 - P1.3 — **Phase 2 — the target board, [sheet P3](sec_ai_p3).** Helium and Neon as separate iCE40 TQ144 parts on a board of our own. Unchanged by this sheet. Physical separation of the two devices reduces to serializer insertion plus pin reassignment ([E0.11](sec_ai_p3#e011)).
@@ -27,7 +28,7 @@ The rig earns its place by what it de-risks, and each row is chosen because the 
 | EC link protocol | Wire protocol and firmware for the HID and system endpoints, independent of FPGA family ([D3.12](sec_ai_d3#d312)). |
 | Debug agent protocol | **Endpoint `0x02` on the link**, not a slave of its own; wire protocol, command set and the bulk burst format ([sheet R](sec_ai_r), [R.25](sec_ai_r#r25)). |
 | Neon Mode 0, text only | Character buffer internal to Neon, hardware scroll, two-byte command port. |
-| SD through a hardware SPI master in the FPGA | Register block, SD init, sector read, and a FAT32 reader in 65816 assembly. |
+| SD through a hardware SPI master in the FPGA | [Sheet G](sec_ai_g)'s block-level register map, card init, block read, and a read-only FAT32 reader in 65816 assembly as a demonstration. |
 | USB HID keyboard on the Pico | Rig usability only, and it is the one item on this list that may transfer to nothing ([Q147](sec_ai_q#q147)). |
 
 ## Phase 0 scope — out
@@ -52,8 +53,9 @@ The rig earns its place by what it de-risks, and each row is chosen because the 
   NOTE: **The human debug path becomes PC → USB-serial → UART → Pico → SPI → the Helium debug agent.** That differs from the target path, which inserts an embedded RP2040 probe for chassis-closed recovery ([sheet D2](sec_ai_d2)) — but **the EC-as-interpreter role is preserved, and that is the part being exercised**.
 - P1.6 — **System RAM is served from SDRAM, not from BRAM, and this is the decision the rig is worth building for.** The XC6SLX16 has 72 KB of BRAM, which is enough to hold system RAM entirely on-chip. That is rejected. Serving 65816 reads and writes from SDRAM exercises PHI2 stalling under real row-activation, precharge and refresh timing — **the mechanism from which it follows that cycle counting no longer measures time**, and therefore that a fixed frequency reference readable by software and not derived from PHI2 is required. A BRAM-backed rig would never surface it (→ [D76](sec_ai_q#d76)).
   NOTE: Consequence: BRAM is limited to the text framebuffer, the font ROM, the boot ROM and controller FIFOs ([P1.13](sec_ai_p1#p113)).
-- P1.7 — **The SD register block is the transferable artefact, and the RTL is not.** The SPI master itself is trivial and will be rewritten for iCE40. The register map is not: `SPI_DATA`, `SPI_STATUS`, `SPI_CTRL`, `SPI_DIV`, `SPI_CS`, the ready/busy flag semantics and the CPU-side access protocol transfer verbatim into Helium, and the SD driver and FAT32 reader written in 65816 assembly against that map transfer without recompilation (→ [D77](sec_ai_q#d77), [sheet G](sec_ai_g)).
-  NOTE: [[!blocking]] **The register map is specified in its own design note before any Phase 0 RTL is written.** It is the artefact; the rig is how it was discovered.
+- P1.7 — **The SD register block is the transferable artefact, and the RTL is not.** The SPI master itself is trivial and will be rewritten for iCE40. The register map is not, and it is [sheet G](sec_ai_g)'s: **block-level, with the CPU issuing commands against the card and reading whole blocks**, never driving the SPI a byte at a time. The rig implements G's PIO path — `SD_LBA_L`/`SD_LBA_H`, `SD_PIO_READ`, the `SD_DATA` FIFO, `SD_STATUS`, `SD_CARD`, `SD_CTRL`, and `SD_CMD`/`SD_ARG_L`/`SD_ARG_H`/`SD_RESP` for the software-driven init of [G.11](sec_ai_g#g11) — and leaves out the DMA registers, which need frames and a cache the rig does not have. The offsets, the `BUSY` semantics and the CPU-side access protocol transfer verbatim into Helium, and the 65816 block driver written against them transfers without recompilation (→ [D77](sec_ai_q#d77)).
+  NOTE: [[!blocking]] **G's register map is reviewed and frozen before the rig's SD RTL is written.** It is the artefact; the rig is how it is proved. The base address is still [Q22](sec_ai_q#q22)'s to assign, so the rig may decode the block anywhere as long as the offsets are G's.
+  NOTE: **Byte-level SPI access survives only as an internal test of the master**, never as an interface software is written against: a byte-wide map would be a second interface to maintain, and the slower one.
 - P1.8 — **Helium has two distinct SPI roles and documentation never refers to "Helium's SPI" without qualification.** Helium is an SPI **slave** to the EC — for configuration, and for the one runtime link every endpoint rides on ([D3.9](sec_ai_d3#d39)) — and an SPI **master** to the SD card. Phase 0 exercises the master plus the runtime slave, and does not exercise the configuration slave at all (→ [D78](sec_ai_q#d78)).
   NOTE: **The rig loses a pin and a distinction at REV C.** Block D drops `DBG_CSN` and the HAT total falls from 53 to 52 ([P1.10](sec_ai_p1#p110)), and *the mailbox slave* and *the debug slave* stop being two things to bring up separately — which does not make bring-up simpler, only differently ordered ([S7](sec_ai_p1#s7), [S8](sec_ai_p1#s8)).
 - P1.9 — **Text mode geometry is 80 × 30 at 640 × 480.** With an 8 × 16 font that consumes the full active area exactly. The pixel clock is **25.000 MHz**, a divide-by-two of a 50 MHz oscillator, which needs no DCM and no fractional synthesis; monitors tolerate it in place of the nominal 25.175 MHz. Framebuffer: 80 × 30 × 2 = 4800 bytes (→ [D79](sec_ai_q#d79)).
@@ -91,12 +93,13 @@ The rig earns its place by what it de-risks, and each row is chosen because the 
 
 ## What transfers, and what does not
 
-- P1.14 — **Recorded so that Phase 0 output is not mistaken for rehearsal.** These four are non-transferable by construction, and knowing that in advance is what stops the rig from being over-invested in.
+- P1.14 — **Recorded so that Phase 0 output is not mistaken for rehearsal.** These five are non-transferable by construction, and knowing that in advance is what stops the rig from being over-invested in.
   NOTE: **All Phase 0 RTL.** Written for Spartan-6 under ISE — UCF constraints, DCM_SP and PLL_BASE clocking, Xilinx primitives — none of which has an equivalent in the iCE40 and ECP5 open flow. **The architecture transfers; the source does not.**
   NOTE: **The USB HID keyboard firmware.** The target keyboard is expected to be an internal matrix scanned by the EC ([L1](sec_ai_p4#l1)), which is a different problem end to end (→ [Q147](sec_ai_q#q147)).
   NOTE: **The FPGA configuration path.** JTAG on Spartan-6, SPI slave on iCE40 ([D61](sec_ai_q#d61)).
   NOTE: **The debug probe topology.** There is no embedded RP2040 probe in Phase 0 ([P1.5](sec_ai_p1#p15)).
-- P1.15 — **What does transfer is most of the value.** The SD register map ([P1.7](sec_ai_p1#p17)), the link's frame format and router behaviour, the endpoint and debug agent command sets, the EC firmware structure, the 65816 boot monitor, the SD and FAT32 driver, every simulation testbench, and the measured SDRAM bandwidth figure. **All of it is protocol, firmware or software — which is the same thing the carrier buys one device later, and the reason both are worth building.**
+  NOTE: **The FAT32 reader.** It is a basic read-only reader that exists to demonstrate SD access, and the rig's card is plain FAT32 for that reason. The machine's own card is NVFS in a partition of type `0x7F` ([G.3](sec_ai_g#g3), [D52](sec_ai_q#d52)), and FAT32 is implemented on the host and never on the machine ([D98](sec_ai_q#d98)), so nothing in the final filesystem builds on it.
+- P1.15 — **What does transfer is most of the value.** The SD register map ([P1.7](sec_ai_p1#p17)), the link's frame format and router behaviour, the endpoint and debug agent command sets, the EC firmware structure, the 65816 boot monitor, the SD block driver, every simulation testbench, and the measured SDRAM bandwidth figure. **All of it is protocol, firmware or software — which is the same thing the carrier buys one device later, and the reason both are worth building.**
 
 ## Abandonment conditions
 
@@ -104,7 +107,7 @@ Written down in advance, because a rig that gates nothing is a rig that can be s
 
 - P1.16 — **If slice utilisation exceeds the XC6SLX16 even after splitting into two bitstreams**, Neon Mode 0 is dropped from Phase 0 and text output is deferred to Phase 1. The rig retains its value for SDRAM, the link, the debug agent and SD.
 - P1.17 — **If the carrier reaches fabrication before Phase 0 is complete**, the remaining S-series work is abandoned in place and folded into Phase 1. Phase 0 exists to use calendar time that would otherwise be idle; **it does not gate Phase 1**.
-- P1.18 — **If ISE 14.7 proves unworkable in the available VM environment, Phase 0 is abandoned entirely rather than mitigated.** The rig is not worth toolchain archaeology, and [P1.1](sec_ai_p1#p11)'s concession only holds while it is cheap.
+- P1.18 — **If ISE 14.7 proves unworkable on the desktop PC — natively, or in a local VM with the JTAG cable passed through — Phase 0 is abandoned entirely rather than mitigated.** The rig is not worth toolchain archaeology, and [P1.1](sec_ai_p1#p11)'s concession only holds while it is cheap.
 
 ## Rig stages · S0–S11
 
@@ -130,9 +133,9 @@ Sequential, each gated on the one before it, consistent with the single-thread p
   NOTE: **The router is the single point of failure and cannot be debugged by the block that would normally debug it**, so it is proved alone first ([D3.12c](sec_ai_d3#d312c)). Unimplemented endpoints answer `NACK_EP_UNKNOWN`, which is what makes each step below testable in isolation.
 - [ ] S8 — **Debug agent as endpoint `0x02`**, sharing the one chip select.
   TEST: `DBG_ID` reading `$6516`, then physical read and write against SDRAM with the CPU held in reset ([R.8](sec_ai_r#r8), [R.22](sec_ai_r#r22)) · a `WRITE_BURST`/`READ_BURST` round trip over a pseudorandom block · a deliberately corrupted `FCRC` frame retransmitted verbatim converging ([R.25](sec_ai_r#r25)) · **the HID queue filled and left undrained while debug throughput on `0x02` is measured unaffected** ([D3.12a](sec_ai_d3#d312a)).
-- [ ] S9 — **SD register block, card init and sector read** — the map of [P1.7](sec_ai_p1#p17) before the driver written against it.
-  TEST: a sector read back byte-for-byte against the same sector read on a PC.
-- [ ] S10 — **FAT32 reader in 65816 assembly**, against the register map and not against the hardware.
+- [ ] S9 — **SD register block, card init and block read** — [sheet G](sec_ai_g)'s map as [P1.7](sec_ai_p1#p17) subsets it, before the driver written against it.
+  TEST: the card initialised from software through `SD_CMD`/`SD_RESP` ([G.11](sec_ai_g#g11)) with `SD_CARD` reporting it initialised · a block read through `SD_PIO_READ` and `SD_DATA` matching, byte for byte, the same block read on a PC.
+- [ ] S10 — **Read-only FAT32 reader in 65816 assembly**, a demonstration of SD access written against the block driver and not against the hardware. The card is plain FAT32 ([P1.14](sec_ai_p1#p114)).
   TEST: a file located by name and read out through the UART, matching the host's copy.
 - [ ] S11 — **USB HID keyboard host, and an interactive monitor prompt.**
   TEST: a key pressed on the keyboard echoes to the screen through the CPU, with the rig self-hosting for inspection and no PC attached beyond power.

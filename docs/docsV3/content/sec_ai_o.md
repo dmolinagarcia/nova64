@@ -17,4 +17,4 @@ Boot is assembly-first, but the compiler question is settled: C arrives as soon 
 - O.7 — libc: about twenty three-line syscall stubs — `COP #SYS_n` + `RTL` — with Calypsi's low-level libc hooks (`open`, `read`, `write`, `sbrk` …) pointed at them. Each stub loads the service number into A, then `COP`; the compiler emits an ordinary `JSL` and the `COP` never leaves the stub.
   NOTE: Which makes the stable ABI literally "the compiler's calling convention plus a number in A": arguments sit wherever Calypsi put them. Numbering the `SYS_*` constants is a prerequisite for writing any of it.
 - O.8 — Development flow: compile on the PC (Makefile) → custom binary → transfer over the EC's console UART or SD → run; debug via serial console + Helium debug port.
-- O.9 — Gateware: Verilog or VHDL (decision pending, it constrains the P65816 reference softcore) with Yosys + nextpnr-ice40 + IceStorm; simulation always before the board.
+- O.9 — Gateware: Verilog-2005 ([D101](sec_ai_q#d101)) with Yosys + nextpnr-ice40 + IceStorm, linted by Verilator; simulation always before the board.
