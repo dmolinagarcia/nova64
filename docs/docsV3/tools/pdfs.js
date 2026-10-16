@@ -12,6 +12,7 @@
  *   node tools/pdfs.js 6x9 A4          -> just those
  *   node tools/pdfs.js --scale 1.2     -> the same trims, type 20% larger
  *   node tools/pdfs.js --gutter 5      -> the same trims, a wider binding edge
+ *   node tools/pdfs.js --binding 0     -> without the extra band at the spine
  *   node tools/pdfs.js --list          -> the table below, and nothing else
  *   node tools/pdfs.js --help          -> the same, for someone at a prompt
  *
@@ -103,6 +104,22 @@ const mmH = (t) => (t.unit === 'mm' ? t.h : t.h * 25.4);
    number for a proof, and 0 gives back the symmetric margins. */
 const GUTTER = 3;
 
+/* ── the binding ─────────────────────────────────────────────────────────
+   The gutter above is free because it only moves paper, and so it runs out:
+   the thumb edge cannot give more than its floor allows. A book of this
+   many pages swallows more than that into the spine, so on top of it every
+   leaf gives the binding edge a further band of paper of its own:
+
+     inner = margin + gutter + binding
+     outer = margin - gutter
+
+   This one is not free. The two sides no longer sum to 2 × margin, so the
+   measure comes down by the binding, and knobs() works from that narrower
+   measure — the table tier, the title block's height and its cell floor all
+   follow it — and the page count grows with it. `--binding` takes another
+   number, and 0 gives back the type area the trims were calibrated on. */
+const BINDING = 10;
+
 /* Under this the thumb edge stops being a margin: 3mm or so goes to the
    trimming tolerance, and what is left has to still read as white space. */
 const OUTER_FLOOR = 8;
@@ -141,8 +158,8 @@ function tableTier(measure) {
 /* Everything style.css cannot work out for itself, for one trim at one scale.
    `measure` and `avail` are the type area as the type sees it: the physical
    area divided by the zoom, since that is the frame the layout happens in. */
-function knobs(t, scale) {
-  const measure = (mmW(t) - 2 * t.margin) / scale;
+function knobs(t, scale, binding) {
+  const measure = (mmW(t) - 2 * t.margin - binding) / scale;
   const avail = (mmH(t) - 2 * t.margin) / scale;
   const tbl = tableTier(measure);
   return {
@@ -175,21 +192,23 @@ const now = new Date();
 const stamp = now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) +
               '-' + pad(now.getHours()) + pad(now.getMinutes());
 
-const file = (t, scale, gutter) =>
+const file = (t, scale, gutter, binding) =>
   'nova64_' + name(t).replace('x', '_') +
   (scale === 1 ? '' : '_s' + scale) +
   (gutter === GUTTER ? '' : '_g' + gutter) +
+  (binding === BINDING ? '' : '_b' + binding) +
   '_' + stamp + '.pdf';
 
 /* The trim, as the stylesheet that states it. `@page size` is written out
    rather than held in a custom property because a formatter is entitled not
    to resolve `var()` inside `@page`, and a dropped page size is silent. */
-function sheet(t, scale, gutter) {
-  const k = knobs(t, scale);
+function sheet(t, scale, gutter, binding) {
+  const k = knobs(t, scale, binding);
+  const inner = t.margin + gutter + binding, outer = t.margin - gutter;
   return `@media print{
   @page{ size:${t.w}${t.unit || 'in'} ${t.h}${t.unit || 'in'}; margin:${t.margin}mm; }
-  @page :right{ margin-left:${t.margin + gutter}mm; margin-right:${t.margin - gutter}mm; }
-  @page :left{ margin-left:${t.margin - gutter}mm; margin-right:${t.margin + gutter}mm; }
+  @page :right{ margin-left:${inner}mm; margin-right:${outer}mm; }
+  @page :left{ margin-left:${outer}mm; margin-right:${inner}mm; }
   :root{
     zoom:${scale};
     --cover-air:${k.coverAir}mm;
@@ -307,7 +326,12 @@ options
                edge to the binding edge and leaves the type area, and the
                page count, exactly where they were. 0 prints the margins
                symmetric, which is what a loose-leaf proof wants.
-  --list       print what each trim resolves to, and build nothing
+  --binding mm extra paper on the inner margin only, on top of the gutter, in
+               mm. Default ${BINDING}, anything from 0 to 30. Unlike the
+               gutter it is not taken from the thumb edge: the type area
+               narrows by this much and the page count grows with it. 0 gives
+               back the type area the trims were calibrated on.
+  --list      print what each trim resolves to, and build nothing
   --help, -h   this
 
 progress       one line per trim, rewritten in place: the bar, the pages set
@@ -327,8 +351,8 @@ kdp            every book trim is checked after it is built with
 
 output         pdfs/nova64_<width>_<height>_<stamp>.pdf, the trim in inches
                and the stamp the local YYYYMMDD-HHMM the run started at, with
-               _s<scale> and _g<gutter> before it when either is not the
-               default. The whole run shares the one stamp, so a build never
+               _s<scale>, _g<gutter> and _b<binding> before it when any is not
+               the default. The whole run shares the one stamp, so a build never
                overwrites the one before it. The directory is a build
                artifact; docs/.gitignore knows it.
 
@@ -359,11 +383,21 @@ if (ag !== -1) {
   }
 }
 
+let binding = BINDING;
+const ab = argv.indexOf('--binding');
+if (ab !== -1) {
+  binding = Number(argv.splice(ab, 2)[1]);
+  if (!(binding >= 0 && binding <= 30)) {
+    console.error('--binding wants a number between 0 and 30');
+    process.exit(1);
+  }
+}
+
 if (argv.includes('--list')) {
   trims.forEach((t) => {
-    const k = knobs(t, scale);
-    console.log(`${name(t).padEnd(9)} ${file(t, scale, gutter).padEnd(40)} ` +
-                `margin ${t.margin - gutter}/${t.margin + gutter}mm out/in · ` +
+    const k = knobs(t, scale, binding);
+    console.log(`${name(t).padEnd(9)} ${file(t, scale, gutter, binding).padEnd(40)} ` +
+                `margin ${t.margin - gutter}/${t.margin + gutter + binding}mm out/in · ` +
                 `type area ${k.measure.toFixed(1)} × ${k.avail.toFixed(1)} mm` +
                 (scale === 1 ? '' : ` (at zoom ${scale})`) +
                 ` · cover ${k.coverAir}mm · drop ${k.cajetinDrop}mm`);
@@ -446,7 +480,7 @@ function build(out, st, redraw) {
 
   for (let i = 0; i < wanted.length; i++) {
     const t = wanted[i];
-    const out = path.join(outDir, file(t, scale, gutter));
+    const out = path.join(outDir, file(t, scale, gutter, binding));
     const st = { frac: 0, pages: 0, t1: Date.now() };
     let last = 0, step = -1;
 
@@ -474,7 +508,7 @@ function build(out, st, redraw) {
 
     redraw(true);
     try {
-      fs.writeFileSync(css, sheet(t, scale, gutter), 'utf8');
+      fs.writeFileSync(css, sheet(t, scale, gutter, binding), 'utf8');
       execFileSync(process.execPath, [path.join(__dirname, 'prerender.js'), '--head', css, html],
                    { stdio: ['ignore', 'ignore', 'inherit'] });
       await build(out, st, redraw);
