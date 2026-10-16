@@ -5,6 +5,7 @@ Two halves of one problem. The first is how C source becomes an NVX image: a ret
 
 - VM4.1 — **This is the Stage 2 deliverable and it blocks nothing before Stage 1 exists** ([VM1.4](sec_ai_vm1#vm14)). The C11 reference interpreter comes first, is PC-side, and makes every test below a fast host-side loop — so the compiler is validated long before any of it runs on hardware.
 - VM4.2 — **Four deliverables, all new work**: `vbccnvm32`, the NVM32 code generator in `machines/nvm32` · `vasmnvm32_std`, the NVM32 CPU module for vasm · a linker script, the `mknvx` packaging tool and the `vc` target configuration · and the runtime — `crt0`, libcall helpers, soft float and a C library port.
+  NOTE: **Debugger tooling is out of scope here, as it is in DN-SW-VMCC-001: see the planned DN-SW-DEBUG-001** (→ [Q189](sec_ai_q#q189)). Its inputs are in DN-PLAN-TRAINING-001 ([TP1.3](sec_ai_tp1#tp13)), which proposes deferring source-level debugging of bytecode until T2, and whose modules M6–M8 are timed against the gates of [VM4.31](sec_ai_vm4#vm431).
 - VM4.3 — **The front end, the optimizer, the assembler core and the linker are reused unchanged, and only the target-specific parts are written here. That is the whole reason for choosing vbcc over a compiler of our own**, and it is also why [VM1.49](sec_ai_vm1#vm149) can dismiss the stack-machine argument: the historical case for stack VMs is that they need no register allocator, which matters only to a project writing its own compiler.
 
 ```
