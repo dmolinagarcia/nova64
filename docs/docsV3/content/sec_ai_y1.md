@@ -38,6 +38,7 @@ The machine is about to have two filesystems — NVFS on the system volume ([she
 - Y1.15 — **One error space, because these values reach userland through the `COP` ABI** ([J.3](sec_ai_j#j3)). Each driver keeps its internal enumeration — the detail is useful inside the driver and meaningless to a caller — and maps at its `vnode_ops` boundary.
   NOTE: **`E_XDEV` is checked here and cannot be checked anywhere else.** `link` and `rename` compare the two directories' mounts before dispatching; a driver handed a vnode belonging to a different mount dereferences the wrong private pointer, which is not an error it can detect.
   NOTE: **`E_CORRUPT` is sticky.** When a driver reports it the VFS marks the mount read-only and latches the condition. Continuing to write to a filesystem that has already failed a consistency check is how a recoverable problem becomes an unrecoverable one — [Y3.10](sec_ai_y3#y310) states it for ext2, and it belongs here so that it holds for both.
+  NOTE: **The process, memory and dispatch services extend the space without touching it** ([D118](sec_ai_q#d118), [LB1.15](sec_ai_lb1#lb115)): `E_NOMEM` −22 · `E_FAULT` −23 · `E_NOEXEC` −24 · `E_CHILD` −25 · `E_SRCH` −26 · `E_NOTTY` −27 · `E_PIPE` −28 · `E_NOSYS` −29 · `E_2BIG` −30. Every value a process can see stays between −1 and −127, and libnova translates it to `errno` in one table, so the codes here are the ABI and Calypsi's numbering never reaches the kernel ([D119](sec_ai_q#d119)).
 
 ## Unified error space — the values a process sees.
 

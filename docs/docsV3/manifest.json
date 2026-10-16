@@ -317,6 +317,14 @@
       "index": "Programming and toolchain"
     },
     {
+      "file": "sec_ai_lb1",
+      "letter": "LB1",
+      "part": "ai",
+      "area": "Software",
+      "nav": "The C library — libnova",
+      "index": "The C library · libnova, the syscall layer, a program's memory and the SDK · the LIB series"
+    },
+    {
       "file": "sec_ai_v",
       "letter": "V",
       "part": "ai",
