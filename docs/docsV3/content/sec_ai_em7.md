@@ -76,7 +76,7 @@ typedef enum {
 
 #define PA_SDRAM_SIZE  (64u * 1024u * 1024u)
 #define PA_SRAM_BASE   0x10000000u
-#define PA_SRAM_SIZE   (2u  * 1024u * 1024u)
+#define PA_SRAM_SIZE   (1u  * 1024u * 1024u)       /* 1 MB x8, per F.5 */
 
 typedef struct { uint8_t *sdram, *sram; } mem_t;
 
@@ -207,8 +207,10 @@ int main(void)
     assert(s.in.cycles - c0 == 3);
     assert(s.in.bus_idle == 1);             /* and it transferred nothing */
 
-    /* unpopulated physical space reads as open bus, not as zero */
-    assert(bus_read8(&s, 0x0FFFFFF, ACC_READ) == 0xFF);
+    /* Unpopulated physical space reads as open bus, not as zero. Ask the
+     * memory layer: while the map is flat the bus cannot get there, because
+     * every 24-bit address lands inside the 64 MB of SDRAM. */
+    assert(mem_raw_read(&s.mem, PA_SDRAM_SIZE) == 0xFF);
 
     mem_free(&s.mem);
     puts("bus ok");
@@ -218,6 +220,7 @@ int main(void)
 
   **The cycle assertions are the point.** If a later change makes an access cost two cycles, this goes red at once instead of quietly skewing every measurement taken afterwards.
   NOTE: **Trap — making the bus read take a *physical* address.** It must take the address the CPU emits, because translation lands there at [EM7.36](sec_ai_em7#em736). Fix the signature now and you will not have to touch every call site later.
+  NOTE: **The SRAM is 1 MB here because that is the part on the board** ([F.5](sec_ai_f#f5)). The emulator as built still allocates the 2 MB of the design before [D15](sec_ai_q#d15), which is one of the things [EM4.6](sec_ai_em4#em46) records against it.
 
 ## Stage 2 — making it live.
 
@@ -253,6 +256,7 @@ void cpu_reset(system_t *s)
 }
 ```
 
+  Add `cpu_t cpu;` to `system_t`, and `#include <string.h>` for the `memset`.
 - EM7.10 — **Fetch and dispatch, with five opcodes and a loud default.**
 
 ```c
@@ -310,7 +314,8 @@ void cpu_step(system_t *s)
 
     case 0x4C: c->PC = fetch16(s); break;                   /* JMP abs */
     case 0xEA: bus_idle(s); break;                          /* NOP     */
-    case 0xDB: bus_idle(s); c->stopped = true; break;       /* STP     */
+    case 0xDB: bus_idle(s); bus_idle(s);                    /* STP: the fetch */
+               c->stopped = true; break;                    /* and two idles  */
 
     default:   unimplemented(s, op, at); break;
     }
@@ -340,7 +345,7 @@ open(sys.argv[1], "wb").write(img)
 ```c
 system_t s = {0};
 mem_init(&s.mem);
-load_file(&s.mem, "tests/first.bin", 0xE000);
+load_file(&s.mem, "tests/first.bin", 0xE000);   /* fread, then mem_raw_write */
 cpu_reset(&s);
 
 assert(s.cpu.PC == 0xE000);             /* the reset vector was taken */
@@ -350,7 +355,7 @@ while (!s.halted && !s.cpu.stopped) cpu_step(&s);
 
 assert(mem_raw_read(&s.mem, 0x2000) == 0x42);
 assert((s.cpu.A & 0xFF) == 0x42);
-assert(s.in.cycles == 2 + 2 + 4 + 4 + 1);   /* reset, LDA#, STA, LDA, STP */
+assert(s.in.cycles == 2 + 2 + 4 + 4 + 3);   /* reset, LDA#, STA, LDA, STP */
 ```
 
   That last assertion is worth more than it looks: **it pins the emitted cycle sequence**, which is what you will break by accident every time you touch an addressing mode.
@@ -376,12 +381,22 @@ static void wrw(system_t *s, va_t a, uint32_t v, bool wide)
     bus_write8(s, a, (uint8_t)v);
     if (wide) bus_write8(s, (a + 1) & 0xFFFFFF, (uint8_t)(v >> 8));
 }
+
+static inline void setzn(cpu_t *c, uint32_t v, bool wide)   /* setzn8, at either width */
+{
+    uint32_t mask = wide ? 0xFFFFu : 0xFFu, sign = wide ? 0x8000u : 0x80u;
+    c->P = (uint8_t)((c->P & ~(F_Z | F_N))
+         | ((v & mask) == 0 ? F_Z : 0) | ((v & sign) ? F_N : 0));
+}
 ```
 
   **Because these go through the bus, a 16-bit access naturally costs two cycles. You did not have to say so.**
-- EM7.14 — **The three mode-control opcodes, and every clause in them is load-bearing.**
+- EM7.14 — **The three mode-control opcodes, and every clause in them is load-bearing.** `CLC` and `SEC` come along because nothing reaches `XCE` without them.
 
 ```c
+case 0x18: bus_idle(s); c->P &= (uint8_t)~F_C; break;   /* CLC */
+case 0x38: bus_idle(s); c->P |= F_C;           break;   /* SEC */
+
 case 0xC2:                                  /* REP #imm */
     { uint8_t m = fetch8(s); bus_idle(s);
       c->P &= (uint8_t)~m;
@@ -462,14 +477,20 @@ static va_t ea_abs(system_t *s)                 /* absolute */
     return ((va_t)c->DBR << 16) | a;            /* data bank */
 }
 
-static va_t ea_absx(system_t *s)                /* absolute,X */
+/* The extra cycle of an indexed mode is paid by a store, by a 16-bit index,
+ * or by a page crossing. An 8-bit index that stays in its page pays nothing. */
+static bool idx_penalty(const cpu_t *c, va_t base, va_t ea, bool store)
+{
+    return store || idx16(c) || ((base & 0xFF00u) != (ea & 0xFF00u));
+}
+
+static va_t ea_absx(system_t *s, bool store)    /* absolute,X */
 {
     cpu_t *c = &s->cpu;
     uint16_t a = fetch16(s);
     va_t base = ((va_t)c->DBR << 16) | a;
     va_t ea   = (base + c->X) & 0xFFFFFFu;
-    if (!idx16(c) || ((base & 0xFF00u) != (ea & 0xFF00u)))
-        bus_idle(s);                            /* page-cross penalty */
+    if (idx_penalty(c, base, ea, store)) bus_idle(s);
     return ea;
 }
 
@@ -479,14 +500,14 @@ static va_t ea_long(system_t *s)                /* absolute long */
     return lo | ((va_t)fetch8(s) << 16);        /* carries its own bank */
 }
 
-static va_t ea_indy(system_t *s)                /* (dp),Y */
+static va_t ea_indy(system_t *s, bool store)    /* (dp),Y */
 {
     cpu_t *c = &s->cpu;
     va_t p = ea_dp(s);
     uint16_t ptr = (uint16_t)rdw(s, p, true);
     va_t base = ((va_t)c->DBR << 16) | ptr;
     va_t ea   = (base + c->Y) & 0xFFFFFFu;
-    if (!idx16(c) || ((base & 0xFF00u) != (ea & 0xFF00u))) bus_idle(s);
+    if (idx_penalty(c, base, ea, store)) bus_idle(s);
     return ea;
 }
 
@@ -498,7 +519,7 @@ static va_t ea_indlong(system_t *s)             /* [dp] */
 }
 ```
 
-  With those in place an opcode is one line: `case 0xBD: { uint32_t m = rdw(s, ea_absx(s), acc16(c)); load_a(c, m); } break;`
+  With those in place an opcode is one line: `case 0xBD: { uint32_t m = rdw(s, ea_absx(s, false), acc16(c)); load_a(c, m); } break;`
 - EM7.17 — **Which bank an access uses is the most common addressing bug, so it is worth a table rather than a habit.**
 
 | Mode | Bank |
@@ -506,23 +527,36 @@ static va_t ea_indlong(system_t *s)             /* [dp] */
 | Instruction fetch | `PBR` |
 | Direct page, stack | always `$00` |
 | Absolute, absolute indexed, indirect | `DBR` |
-| Long, long indexed, `[dp]`, `[dp],Y` | from the operand |
+| Long, long indexed | from the operand |
+| `[dp]`, `[dp],Y` | from the three-byte pointer in the direct page |
 
 ```c
+s.cpu.E = false;                                    /* native mode */
 s.cpu.DBR = 0x12;  s.cpu.D = 0x0100;  s.cpu.X = 0x0010;
 
 assert(ea_of(&s, 0xA5, (uint8_t[]){0x40})             == 0x000140); /* dp ignores DBR  */
 assert(ea_of(&s, 0xAD, (uint8_t[]){0x00, 0x30})       == 0x123000); /* abs uses DBR    */
 assert(ea_of(&s, 0xAF, (uint8_t[]){0x00, 0x30, 0x7E}) == 0x7E3000); /* long ignores it */
 
-/* absolute,X crossing a page costs an extra cycle in 8-bit index mode */
+/* absolute,X with an 8-bit index: the extra cycle is paid on a page cross... */
 s.cpu.P |= F_X; s.cpu.X = 0xFF;
 cycle_t c0 = s.in.cycles;
 (void)ea_of(&s, 0xBD, (uint8_t[]){0x01, 0x30});
 assert(s.in.cycles - c0 == 4);          /* fetch, lo, hi, penalty */
+
+/* ...and not otherwise */
+s.cpu.X = 0x01; c0 = s.in.cycles;
+(void)ea_of(&s, 0xBD, (uint8_t[]){0x01, 0x30});
+assert(s.in.cycles - c0 == 3);          /* fetch, lo, hi */
+
+/* with a 16-bit index it is always paid, crossing or not */
+s.cpu.P &= (uint8_t)~F_X; c0 = s.in.cycles;
+(void)ea_of(&s, 0xBD, (uint8_t[]){0x01, 0x30});
+assert(s.in.cycles - c0 == 4);
 ```
 
   NOTE: **Trap — direct page wraps within bank zero.** `D = $FFF0` with offset `$20` gives `$000010`, not `$010010`. Cast through `uint16_t` and the wrap is free.
+  NOTE: **Trap — the indexed penalty has three causes and the obvious reading gets it backwards.** It is not "8-bit index, or a page cross": an 8-bit index inside its page is the one case that pays nothing, a 16-bit index always pays, and a store always pays. The published vectors settle it in one opcode file — `LDA abs,X` is four cycles with an 8-bit index and no crossing, five otherwise ([EM7.23](sec_ai_em7#em723)).
 
 ## Stage 5 — the ALU and the flags.
 
@@ -567,7 +601,7 @@ if (c->P & F_D) {
 }
 ```
 
-- EM7.20 — **Read-modify-write instructions read, spend an internal cycle, then write — and forgetting that idle leaves every one of them a cycle short.**
+- EM7.20 — **Read-modify-write instructions read, spend an internal cycle, then write — and forgetting that idle leaves every one of them a cycle short.** A 16-bit one writes **the high byte first**, the reverse of the order it read in and the reverse of an ordinary store, so it cannot reuse `wrw`.
 
 ```c
 static void rmw(system_t *s, va_t a, uint32_t (*f)(cpu_t *, uint32_t, bool))
@@ -575,7 +609,9 @@ static void rmw(system_t *s, va_t a, uint32_t (*f)(cpu_t *, uint32_t, bool))
     bool w = acc16(&s->cpu);
     uint32_t v = rdw(s, a, w);
     bus_idle(s);                    /* the modify cycle is a bus cycle */
-    wrw(s, a, f(&s->cpu, v, w), w);
+    uint32_t r = f(&s->cpu, v, w);
+    if (w) bus_write8(s, (a + 1) & 0xFFFFFF, (uint8_t)(r >> 8));   /* high first */
+    bus_write8(s, a, (uint8_t)r);
 }
 ```
 
@@ -598,16 +634,19 @@ assert(adc_decimal(0x99, 0x01, 0) == 0x00);     /* and carry set */
 ## Stage 6 — validation against the only oracle you have.
 
 - EM7.22 — [[!blocking]] **This is the most important stage in the course.** Everything else in this project is validated against your own reading of a specification, which means **a consistent misunderstanding passes silently**. The CPU core is the one exception: other people have published exhaustive tests.
-- EM7.23 — **Two suites, and the first checks the thing Stages 1 to 4 were built to make checkable.** The **SingleStepTests / Tom Harte** processor tests give, per instruction, an initial state, a final state and **the complete bus cycle trace** — so they check the *sequence*, not merely the count. **Klaus Dormann's functional tests** are a binary that exercises 6502 behaviour exhaustively and traps on failure, covering emulation mode. Check the current repository layout before writing a loader; the format has changed over time.
+- EM7.23 — **Two suites, and the first checks the thing Stages 1 to 4 were built to make checkable.** The **SingleStepTests / Tom Harte** processor tests give, per instruction, an initial state, a final state and **the complete bus cycle trace** — so they check the *sequence*, not merely the count. **Klaus Dormann's functional tests** are a binary that exercises 6502 behaviour exhaustively and traps on failure, covering emulation mode. Check the current repository layout before writing a loader; the format has changed over time. A case has this shape — `LDA $3412` at `$00:1234`, in native mode with an 8-bit accumulator:
 
 ```json
-{ "name": "ad 12 34",
-  "initial": { "pc": 1234, "s": 511, "a": 0, "x": 0, "y": 0,
-               "p": 36, "dbr": 0, "pbr": 0, "d": 0, "e": 0,
-               "ram": [[4660, 18], [4661, 52]] },
-  "final":   { "...": "..." },
-  "cycles":  [[4660, 173, "--r"]] }
+{ "name": "ad n 1",
+  "initial": { "pc": 4660, "s": 511, "p": 36, "a": 0, "x": 0, "y": 0,
+               "dbr": 0, "d": 0, "pbr": 0, "e": 0,
+               "ram": [[4660, 173], [4661, 18], [4662, 52], [13330, 66]] },
+  "final":   { "pc": 4663, "a": 66, "...": "..." },
+  "cycles":  [[4660, 173, "dp-r-m--"], [4661, 18, "-p-r-m--"],
+              [4662,  52, "-p-r-m--"], [13330, 66, "d--r-m--"]] }
 ```
+
+  Each cycle is an address, a value and the state of the pins — `VDA`, `VPA`, `VPB`, read or write, `E`, `M`, `X`, `MLB`. **An internal cycle carries `null` where its value would be**, because nothing was selected to drive the bus, so a loader that assumes a number there fails on the first `NOP`.
 
 - EM7.24 — **The harness, and recording the trace is a few lines in the bus layer — another dividend of [EM7.7](sec_ai_em7#em77).**
 
@@ -638,7 +677,8 @@ static int run_case(const testcase_t *t)
     bad += cmp_int("cycle count", s.trace_n, t->n_cycles);
     for (int i = 0; i < t->n_cycles && i < s.trace_n; i++) {
         bad += cmp_u32("cycle addr", s.trace[i].addr, t->cycles[i].addr);
-        bad += cmp_u8 ("cycle data", s.trace[i].val,  t->cycles[i].val);
+        if (t->cycles[i].has_val)       /* an internal cycle records none */
+            bad += cmp_u8("cycle data", s.trace[i].val, t->cycles[i].val);
     }
     mem_free(&s.mem);
     return bad;
@@ -647,7 +687,7 @@ static int run_case(const testcase_t *t)
 
 - EM7.25 — **Run one opcode's file, fix, repeat — never all 256 at once.** A wall of failures teaches nothing, while a whole addressing mode failing identically means the bug is in the mode function and one fix repairs twenty opcodes. **Expect the first pass to fail**, with the causes in roughly this order: a missing idle in a read-modify-write or a branch; width handling on immediates; direct page not wrapping in bank zero; page-cross penalties applied in the wrong direction; flags after decimal arithmetic.
 - EM7.26 — **Once the CPU may deliberately diverge from a stock part, these suites stop covering the divergence.** **Additive divergence keeps them valid**: WDC reserved `WDM` (`$42`) precisely as an escape prefix with no defined behaviour, so extensions behind it leave every published test passing. **Modifying an existing opcode invalidates them exactly where it lands**, and that should be a recorded decision rather than something noticed later ([EM6.15](sec_ai_em6#em615)).
-  NOTE: [[!blocking]] **This document has already ruled the other way, for a different use.** [M.3](sec_ai_m#m3) rejected a `WDM` command channel to Helium in favour of memory-mapped registers, and its note goes further than the rejection: **`WDM` stays a reserved no-op and a softcore must implement it as one, decoding nothing.** An extension prefix decodes the signature byte, so the two positions cannot both stand. The distinction that might save it is that M.3 refused a *hardware* channel while this is a *core* extension, but that is a distinction the softcore of [sheet E](sec_ai_e) would have to honour in silicon (→ [Q115](sec_ai_q#q115)).
+  NOTE: [[!blocking]] **This document has already ruled the other way, for a different use.** [M.3](sec_ai_m#m3) rejected a `WDM` command channel to Helium in favour of memory-mapped registers, and its note goes further than the rejection: **`WDM` stays a reserved no-op and a softcore must implement it as one, decoding nothing.** An extension prefix decodes the signature byte, so the two positions cannot both stand. The distinction that might save it is that M.3 refused a *hardware* channel while this is a *core* extension, but that is a distinction the softcore of [sheet E](sec_ai_e) would have to honour in silicon (→ [D89](sec_ai_q#d89), which the next note records).
   NOTE: **[D89](sec_ai_q#d89) takes exactly that distinction and a core now honours it in silicon, so the two positions both stand.** [M.3](sec_ai_m#m3)'s four objections are all objections to **Helium snooping `WDM` on the bus**; none of them applies when the CPU itself decodes the opcode and nothing on the bus does. Argon 2 implements `WDM #VMENTER` as its NVM32 mode gate and `WDM #WDM_CPUID` as its identity ([NV1.12](sec_ai_nv1#nv112), [VM2.21](sec_ai_vm2#vm221)) — **additive divergence of precisely the kind this item argues keeps the published suites valid.**
   NOTE: **What the resolution costs is one rule, and it points the other way: in noVa64 mode the emulator must model `WDM` as a two-byte no-op** ([EM4.3](sec_ai_em4#em43)). The mode decides — a part claiming to be a W65C816S answers nothing, a core claiming to be Argon 2 answers a signature — and **that is what makes the probe able to tell them apart at all.**
 - EM7.27 — [[!blocking]] **Outside the CPU there is no oracle at all, and that is grounds for humility about every other green test in the tree.** The MMU, cache and blitter tests encode this document **as the person writing them read it**, so a consistent misreading passes. When the emulator later disagrees with hardware, **the specification is a suspect alongside the code** — which is not a weakness of the method, it is [EM1.3](sec_ai_em1#em13).
@@ -660,7 +700,7 @@ static int run_case(const testcase_t *t)
 typedef struct {
     double   phi2_mhz;
     uint32_t cache_size, cache_line_bytes, cache_ways;
-    uint32_t tlb_entries, tlb_ways;
+    uint32_t tlb_entries, tlb_ways, tlb_walk_accesses;
     double   sram_access_ns, sdram_clock_mhz;
     uint32_t sdram_cas_latency, sdram_trcd, sdram_trp, sdram_burst_len;
 } params_t;
@@ -721,7 +761,8 @@ uint32_t hi = io_read8(&s, IO_CLK1)
             | (io_read8(&s, IO_CLK3) << 16);
 assert(read_clock(&s) - (lo | (hi << 8)) > 9900);   /* the old value, intact */
 
-/* under stretching, a miss costs time but not cycles */
+/* under stretching, a miss costs time but not cycles -- this one stays red
+ * until Stage 9 gives the bus a cache to miss in */
 cycle_t c0 = s.in.cycles; double w0 = s.in.wall_ns;
 (void)bus_read8(&s, 0x400000, ACC_READ);
 assert(s.in.cycles - c0 == 1);
@@ -735,6 +776,16 @@ assert(s.in.wall_ns - w0 > 1000.0 / s.p.phi2_mhz);
 - EM7.34 — **Do not model the data.** The backing arrays are authoritative and nothing can observe cache contents except through timing, so storing lines would be a week of work producing nothing any program could detect ([EM1.9](sec_ai_em1#em19)).
 
 ```c
+static double sdram_fill_ns(const params_t *p, uint32_t line_bytes)
+{
+    double sdram_ns = 1000.0 / p->sdram_clock_mhz;
+    uint32_t beats  = (line_bytes + 1) / 2;              /* x16 device */
+    uint32_t bursts = (beats + p->sdram_burst_len - 1) / p->sdram_burst_len;
+    double clocks = bursts * (p->sdram_trcd + p->sdram_cas_latency
+                            + p->sdram_burst_len + p->sdram_trp);
+    return clocks * sdram_ns;
+}
+
 double cache_access(cache_t *c, const params_t *p, instr_t *in,
                     pa_t pa, bool is_write)
 {
@@ -763,16 +814,6 @@ double cache_access(cache_t *c, const params_t *p, instr_t *in,
     c->lru  [base+victim] = c->tick;
     return stall;
 }
-
-static double sdram_fill_ns(const params_t *p, uint32_t line_bytes)
-{
-    double sdram_ns = 1000.0 / p->sdram_clock_mhz;
-    uint32_t beats  = (line_bytes + 1) / 2;              /* x16 device */
-    uint32_t bursts = (beats + p->sdram_burst_len - 1) / p->sdram_burst_len;
-    double clocks = bursts * (p->sdram_trcd + p->sdram_cas_latency
-                            + p->sdram_burst_len + p->sdram_trp);
-    return clocks * sdram_ns;
-}
 ```
 
 - EM7.35 — **Two numbers you can predict by hand, and almost any indexing error in the tag computation breaks one of them.** Stride exactly one line and every access misses; halve the stride and every second access hits.
@@ -782,8 +823,10 @@ set_params(&s, .line_bytes = 32, .ways = 2);
 for (int i = 0; i < 1024; i++) (void)bus_read8(&s, i * 32, ACC_READ);
 assert(s.in.cache_miss == 1024);
 
-for (int i = 0; i < 1024; i++) (void)bus_read8(&s, i * 16, ACC_READ);
-assert(s.in.cache_miss == 512);
+/* a region the first loop did not touch, or its lines are still resident */
+uint64_t m0 = s.in.cache_miss;
+for (int i = 0; i < 1024; i++) (void)bus_read8(&s, 0x100000 + i * 16, ACC_READ);
+assert(s.in.cache_miss - m0 == 512);
 
 /* 32-byte line, x16 SDRAM at 100 MHz, CL3, tRCD 3, 8-beat bursts:
  *   2 bursts x (3 + 3 + 8 + 3) = 34 clocks = 340 ns */
@@ -798,6 +841,7 @@ assert(fabs(sdram_fill_ns(&p, 32) - 340.0) < 1.0);
 
 ```c
 #define PAGE_SHIFT      11u
+#define PAGE_SIZE       (1u << PAGE_SHIFT)
 #define PTE_VALID       0x01u
 #define PTE_READ        0x02u
 #define PTE_WRITE       0x04u
@@ -818,7 +862,7 @@ bool mmu_translate(system_t *s, va_t va, access_t kind,
     if (e) pte = e->pte;
     else {
         pte = read32(&s->mem, u->pt_base + (pa_t)vpn * 4u);
-        *stall_ns += 2.0 * s->p.sram_access_ns;   /* two halfword reads */
+        *stall_ns += s->p.tlb_walk_accesses * s->p.sram_access_ns;  /* 4 on x8 */
         if (!(pte & PTE_VALID)) { *cause = ABORT_UNMAPPED; return false; }
         tlb_insert(u, u->asid, vpn, pte);
     }
@@ -835,6 +879,8 @@ bool mmu_translate(system_t *s, va_t va, access_t kind,
 }
 ```
 
+  NOTE: **Trap — the bit layout above is one we invented, and the machine has its own.** [L.5](sec_ai_l#l5) finalises the PTE as a 16-bit frame, `P · W · X · U · D · A · NC · PIN` and eight software bits: no read bit, and no copy-on-write bit, because copy-on-write is a store to a `W=0` page that the kernel recognises for itself. Build yours from that sheet. Ours passes its directed tests and would not run a kernel written for the real MMU ([EM4.6](sec_ai_em4#em46)).
+  NOTE: **The walk cost is a parameter, not a two.** A 32-bit PTE on a ×8 SRAM is four reads ([L.8](sec_ai_l#l8)); our figures were taken at two, on the wider part the design no longer has.
 - EM7.37 — **Tag TLB entries with the address space identifier as well as the page number.** Without it a context switch silently lets one process read another's mappings — **a bug that cannot appear until you have two processes and will then be very hard to find.**
 
 ```c
@@ -939,6 +985,7 @@ io_write8(&s, IO_MBX_POP, 0);
 assert(io_read8(&s, IO_MBX_STATUS) == 0);
 ```
 
+  NOTE: **Trap — a register that changes when it is read.** `IO_CON_DATA` above takes the byte out of the buffer as it returns it, and that is the shape to avoid: the 65816 performs reads the program never asked for, in its indexed and read-modify-write forms, and [D92](sec_ai_q#d92) requires every register to survive them. **Read in place and pop by an explicit write**, as the mailbox below does with `IO_MBX_POP` ([EM4.10](sec_ai_em4#em410)).
   NOTE: **Trap — adding convenience registers.** Every one is something the guest will be written against and the hardware will have to provide. Ours has exactly one host-only register and its name says so — and it still put the whole map in the wrong bank ([EM4.10](sec_ai_em4#em410)).
 
 ## Stage 13 — determinism.
@@ -1182,9 +1229,9 @@ done
 | Question | Answer |
 |---|---|
 | What does a cache miss cost at 8 MHz? | about 340 ns, three cycles |
-| What does a page walk cost? | 20 ns stretched, a full cycle with wait states |
+| What does a page walk cost? | 20 ns stretched, a full cycle with wait states — at two SRAM reads; four on the ×8 part ([EM4.6](sec_ai_em4#em46)) |
 | What does a Neon command cost to emit? | 52 cycles, and 188 if you write the obvious loop |
-| What does hardware text mode save? | 17 cycles per character, and a free scroll |
+| What does hardware text mode cost? | 17 cycles per character against 52 for a blit, and a free scroll |
 | What would a 50 MHz softcore give? | 3.97×, not 6.25× |
 
 - EM7.58 — **Sanity-check every measurement by hand, and the check is arithmetic you can do on paper.** Two bursts of `3 + 3 + 8 + 3` SDRAM clocks is 34 clocks is 340 ns, and 340 over 125 is 2.7, so three PHI2 cycles. **The measurement agreed. Had it not, one of the two was wrong and both were worth checking.**

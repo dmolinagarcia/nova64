@@ -2,6 +2,7 @@
 
 | Date     | Version | Changes                                                                               |
 |----------|---------|---------------------------------------------------------------------------------------|
+|          |         |Emulator sheets EM1–EM7 reviewed: course code and tests fixed, divergences logged      |
 |          |         |Kernel moved to upper memory (F0:FD)                                                   |
 |          |         |Sheet CN1. Command line interface                                                      |
 |09/23/2026|0.2.5    |Sheet A3. How to read this document human-reviewed                                     |
