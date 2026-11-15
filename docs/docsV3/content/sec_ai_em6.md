@@ -21,6 +21,7 @@ Everything below is provisional, and the reason is worth stating before the firs
 | Cache line size sensitivity, 8 MHz / 50 MHz | 4% / **26%** |
 
   NOTE: The fill figure was predicted by hand before it was measured — two bursts of `3 + 3 + 8 + 3` SDRAM clocks is 34 clocks is 340 ns is 2.7 PHI2 cycles — and the two agreed. **Had they not, one of the two was wrong and both were worth checking**, which is the only reason a sanity calculation is worth doing at all.
+  NOTE: **The walk row is two 10 ns reads of a ×16 SRAM, and this machine has a ×8 one.** At four accesses it is 40 ns stretched against the ≈100 ns [L.8](sec_ai_l#l8) budgets, and still a single whole cycle under wait states. The conclusion stands and the number does not ([EM4.6](sec_ai_em4#em46)).
 - EM6.2 — **The command port should be two bytes wide, and this document already says so.** On a 65816 a 16-bit store writes to an address and the one after it, so a one-byte port makes every command cost twice the stores it needs — the 52-cycle figure requires a two-byte port **and** an unrolled emitter, and the obvious counted loop costs 3.6× more. The emulator recorded this as a hardware decision it had surfaced; in fact [M.4](sec_ai_m#m4) already fixes registers at 16 bits accessed with `M=0`. **So the measurement confirms an existing decision rather than forcing a new one**, which is exactly the kind of agreement [EM1.3](sec_ai_em1#em13) was hoping for.
 - EM6.3 — **The loop matters as much as the port.** Leaving the width-switching instructions inside the character loop costs 23 cycles per character; hoisting them out costs 17. **Six cycles, a third of the budget, from the placement of two instructions** — which says that the emission figures this subsystem is designed around are a property of the emitter as much as of the hardware, and that any number quoted for them has to name the code that produced it.
 - EM6.4 — **Text mode's win is the scroll, not the per-character cost.** The per-character improvement over one blit per glyph is 3×, which is useful. The result that matters is that **characters already on screen are never re-sent and a scroll is a register write rather than a full repaint**, so incremental output costs only the characters actually written and a scrolling console costs nothing instead of 62 ms per line.
@@ -42,7 +43,7 @@ Everything below is provisional, and the reason is worth stating before the firs
 
   NOTE: The top row exceeds the ~1.3 MB/s that [T1.2](sec_ai_t1#t12) budgets for the aperture, and is close to its ~1.6 MB/s best case. The discrepancy is small and unexplained, and it is a reason to treat both numbers as the same estimate rather than as an independent confirmation.
 - EM6.9 — **Against the emitter that produced the measured 52 cycles, block moves are 62% slower per byte, so the honest scope is narrow.** For emitting a single command the CPU has just computed in direct page, the stores win outright. **The comparison that matters is against streaming a *pre-built* list out of SDRAM** — which is what the per-window command sublists of [T1.39](sec_ai_t1#t139) are. There the store loop needs an indexed load, a long store, an increment and a compare per two bytes: ten cycles per byte against seven. The block move is 30% faster, about six instructions shorter, and takes no register pressure beyond the three it already uses. **Block moves for pre-built lists, stores for one-off commands. Both, not either.**
-- EM6.10 — **It is not the answer for bulk pixel data and does not change the order of magnitude.** 1.14 MB/s means a 76,800-byte mono framebuffer takes 67 ms to push and a four-plane mode takes 135 ms. If bitmap upload ever becomes a real workload, **neither instruction sequence is the answer and a DMA engine in Helium is** — reading SDRAM and feeding Neon's port at bus rate, costing the CPU nothing. That question should be decided on its own terms rather than as a corollary of this one (→ [Q135](sec_ai_q#q135)).
+- EM6.10 — **It is not the answer for bulk pixel data and does not change the order of magnitude.** 1.14 MB/s means a 76,800-byte mono framebuffer takes 67 ms to push and a four-plane mode takes 135 ms. If bitmap upload ever becomes a real workload, **neither instruction sequence is the answer and a DMA engine in Helium is** — reading SDRAM and feeding Neon's port at bus rate, costing the CPU nothing. That question should be decided on its own terms rather than as a corollary of this one (→ [Q190](sec_ai_q#q190)).
 - EM6.11 — [[!blocking]] **[E.21](sec_ai_e#e21) forbids `MVN` and `MVP` against pageable memory, categorically, and Neon's aperture is pageable.** That ban exists because a block move straddles many pages, its per-byte state is mid-instruction, and the abort corruption windows of [E.18](sec_ai_e#e18) sit inside it. **Bank `$FE` is user-mappable by [L.10](sec_ai_l#l10) and [J.5](sec_ai_j#j5) maps aperture pages into a process**, so a block move into the aperture is a block move against pageable memory whichever end faults. Either the aperture pages are pinned for the duration, or the ban gets an explicit and argued exception, or the proposal does not survive. **It is not enough that the destination is a device.**
 - EM6.12 — **Three consequences to weigh, and one of them decides whether it can be measured at all.** The instruction **loads the data bank register as a side effect** and software has to restore it. It is **interruptible** and restarts — good for latency, but an interrupt handler that touches Neon mid-move leaves interleaved bytes in the FIFO, so it needs a lock or a rule. And **neither instruction is implemented in the core** ([EM4.3](sec_ai_em4#em43)), so every figure in [EM6.8](sec_ai_em6#em68) is arithmetic derived from a datasheet cycle count. **Implement them and measure before adopting any of this.**
 
@@ -61,7 +62,7 @@ Everything below is provisional, and the reason is worth stating before the firs
 | A fixed-frequency counter software can read | **New requirement**, created by the stretched clock ([EM2.6](sec_ai_em2#em26)). Only a 100 Hz tick exists; the register block is part of what [Q22](sec_ai_q#q22) is owed |
 | The touch panel discarded; GT911 and its I2C bus released | **Consequences unreflected** — [C.13](sec_ai_c#c13), [H.3](sec_ai_h#h3), the EC pin budget, and the panel part number ([EM3.11](sec_ai_em3#em311)) |
 | Neon command encoding, opcodes and the 12-byte command size | Open. The 12-byte assumption forced a restriction a different size would remove |
-| Text mode register map, cell geometry, character buffer size | **Contradicted** — [T1.53](sec_ai_t1#t153) fixes 128 × 32 at 8 × 16 ([EM4.9](sec_ai_em4#em49)) |
+| Text mode register map, cell geometry, character buffer size | **Contradicted** — [T1.53](sec_ai_t1#t153) fixes 128 × 32 at 8 × 16 ([EM4.9](sec_ai_em4#em49)), and [D105](sec_ai_q#d105) takes control characters out of Neon ([EM4.8](sec_ai_em4#em48)). The register map itself is still owed (→ [Q179](sec_ai_q#q179)) |
 | Framebuffer organisation: planar against chunky indexed | **Contradicted** — [T1.33](sec_ai_t1#t133) and [sheet T2](sec_ai_t2) fix 8 bpp indexed ([EM4.9](sec_ai_em4#em49)) |
 | The I/O window base | **Contradicted** — [T1.21](sec_ai_t1#t121) and [M.4](sec_ai_m#m4) fix the banks ([EM4.10](sec_ai_em4#em410)) |
 | Neon command port width | **Already fixed** at 16 bits by [M.4](sec_ai_m#m4) ([EM6.2](sec_ai_em6#em62)) |
@@ -70,9 +71,11 @@ Everything below is provisional, and the reason is worth stating before the firs
 | Pointer transport, and delta against absolute position | Open, and it decides [EM3.13](sec_ai_em3#em313) |
 | Target-side character device for the console | Open, and narrower than it looked ([EM3.6](sec_ai_em3#em36)) |
 | Cache and TLB geometry, replacement and write policy | Open. [EM6.21](sec_ai_em6#em621) is meant to close it |
-| Page table entry bit layout | Open against [sheet L](sec_ai_l) |
+| Page table entry bit layout, and the abort causes | **Contradicted** — [L.5](sec_ai_l#l5) finalises the format and [M.13](sec_ai_m#m13) the causes ([EM4.6](sec_ai_em4#em46)) |
+| SRAM size and width, and the accesses a page walk costs | **Contradicted** — [D15](sec_ai_q#d15) and [F.5](sec_ai_f#f5) fix 1 MB ×8, [L.8](sec_ai_l#l8) four accesses ([EM4.6](sec_ai_em4#em46)) |
+| Registers that change state when read | **Contradicted** — [D92](sec_ai_q#d92) and [M.15](sec_ai_m#m15) require idempotent reads; the console and SD data ports are not ([EM4.10](sec_ai_em4#em410)) |
 | A bank-aliased write aperture, and a DMA path at all | Open, and constrained by [EM6.11](sec_ai_em6#em611) |
-| SD register layout as Helium presents it | Placement fixed by [G.6](sec_ai_g#g6); the registers themselves open |
+| SD register layout as Helium presents it | Offsets fixed by [sheet G](sec_ai_g)'s register map, the base still [Q22](sec_ai_q#q22)'s. The emulator's layout predates it, and its data port is the one [Q181](sec_ai_q#q181) is about |
 | SDRAM controller clock and burst configuration; arbitration policy | Open |
 
 ## Pending work.
@@ -84,7 +87,7 @@ Everything below is provisional, and the reason is worth stating before the firs
 
 ## Where it stands against its own build order.
 
-- [x] EMU1 — **65816 core, cycle-stepped, flat 16 MB, with record and replay infrastructure.**
+- [~] EMU1 — **65816 core, cycle-stepped, flat 16 MB, with record and replay infrastructure.**
   TEST: the external suites pass. **Not met** — the core runs and is unvalidated ([EM6.17](sec_ai_em6#em617)).
 - [x] EMU2 — **Memory map layer with a per-access hook; SRAM and SDRAM region model.**
   TEST: regions decoded correctly and the hook fires on every access.
