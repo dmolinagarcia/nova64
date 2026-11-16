@@ -1,0 +1,5 @@
+noVa64 BIOS
+kernel: staged image
+noVa64 kernel (monolithic)
+cpu: W65C816S, 16384 KB, text 128x32
+panic: clock: Helium's counter is not running

@@ -1,0 +1,8 @@
+noVa64 BIOS
+kernel: loaded from sd0p1
+noVa64 kernel (monolithic)
+cpu: W65C816S, 16384 KB, text 128x32
+root: mount failed, error 10
+(no root)> ls
+ls: .: no root file system
+(no root)>

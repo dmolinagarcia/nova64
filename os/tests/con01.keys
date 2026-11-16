@@ -1,0 +1,25 @@
+help
+echo hola   "dos  palabras" tres\ cuatro "" fin
+echo ñandú ¿qué? ¡Año! €uro çÇ ºª · ¬
+echo àèìòù ÀÈÌÒÙ áéíóúý ÁÉÍÓÚÝ âêîôû ÂÊÎÔÛ äëïöüÿ ÄËÏÖÜ
+echo `^ {K:34}x \{K:34:2}x | @ # ~ [ ] {K:34:40} {K:31:40} \\ < \>
+echo abc{BS}{BS}xy{DEL}z
+echo discarded{C-u}echo kept
+echo {CAPS}caps ñç{CAPS} Off
+echo interrupted{C-c}echo after
+{C-d}echo end of file ignored
+{SNAP con01a}
+clear
+sysinfo
+ls
+pwd
+nosuch arg
+echo "open
+echo 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+echo 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+echo >
+echo a > 
+{SNAP con01b}
+clear
+echo cleared
+{SNAP con01c}

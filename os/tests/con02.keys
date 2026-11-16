@@ -1,0 +1,25 @@
+ls
+ls -l
+cd etc
+cat motd
+cd /nope
+cd motd
+cd ..
+pwd
+ls -l docs
+cat docs/fox.txt docs/zorro hello
+{SNAP con02a}
+clear
+stat docs/fox.txt
+stat docs
+stat /dev/tty
+ls /dev
+cat docs
+cat nothing
+cd docs/../etc/./
+pwd
+cd
+echo x > /f
+mkdir /d
+rm /etc/motd
+{SNAP con02}

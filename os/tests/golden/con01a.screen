@@ -1,0 +1,30 @@
+noVa64 BIOS
+kernel: staged image
+noVa64 kernel (monolithic)
+cpu: W65C816S, 16384 KB, text 128x32
+blk: no card
+(no root)> help
+help  echo  clear  sysinfo
+pwd  cd [dir]  ls [-l] [path]  cat file...  stat path
+mkdir dir...  rmdir dir...  rm file...  mv from to  cp from to  sync
+output: > file   >> file
+(no root)> echo hola   "dos  palabras" tres\ cuatro "" fin
+hola dos  palabras tres cuatro  fin
+(no root)> echo ñandú ¿qué? ¡Año! €uro çÇ ºª · ¬
+ñandú ¿qué? ¡Año! €uro çÇ ºª · ¬
+(no root)> echo àèìòù ÀÈÌÒÙ áéíóúý ÁÉÍÓÚÝ âêîôû ÂÊÎÔÛ äëïöüÿ ÄËÏÖÜ
+àèìòù ÀÈÌÒÙ áéíóúý ÁÉÍÓÚÝ âêîôû ÂÊÎÔÛ äëïöüÿ ÄËÏÖÜ
+(no root)> echo `^ 'x \"x | @ # ~ [ ] { } \\ < \>
+`^ 'x "x | @ # ~ [ ] { } \ < >
+(no root)> echo axz
+axz
+(no root)> echo kept
+kept
+(no root)> echo CAPS ÑÇ Off
+CAPS ÑÇ Off
+(no root)> echo interrupted^C
+(no root)> echo after
+after
+(no root)> (no root)> echo end of file ignored
+end of file ignored
+(no root)>

@@ -1,0 +1,33 @@
+mkdir work work/sub
+cd work
+echo first line > notes
+echo second line >> notes
+cat notes
+cp notes sub
+cp /docs/lines.txt big
+mv notes sub/renamed
+ls -l sub
+ls -l
+cp big big
+mv sub sub/inside
+rmdir sub
+rmdir /work
+{SNAP con03a}
+clear
+rm sub
+rm sub/notes sub/renamed
+rmdir sub
+mkdir sub
+mv big sub
+mv sub /moved
+ls /moved
+rm ghost > ghost
+ls
+echo over > /docs/fox.txt
+cat /docs/fox.txt
+mkdir /moved
+cd /
+rmdir work
+ls -l
+sync
+{SNAP con03}

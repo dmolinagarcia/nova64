@@ -33,9 +33,11 @@ static uint8_t neon_reg[256];
 static uint16_t he_reg[128];
 
 /* ---- options ---- */
-static int opt_no_kbd, opt_quiet;
+static int opt_no_kbd, opt_quiet, opt_no_clock;
 static FILE *trace_fp;
 static long opt_write_limit = -1;   /* crash injection: stop after N sector writes */
+static long opt_cmd_limit = -1;     /* ... or after N write commands, each one whole */
+static long sd_write_cmds;
 static uint64_t opt_max_cycles = 4000000000ull;
 
 /* ---- SD card ---- */
@@ -73,6 +75,11 @@ static void sd_xfer(int write, unsigned count) {
     uint32_t lba = sd_reg[0] | ((uint32_t)sd_reg[1] << 16);
     uint32_t addr = ((uint32_t)sd_reg[2] << 11) + sd_reg[3];
     if (sd_reg[3] & 0x1FF) { sd_fail(0x20); return; }          /* not block-aligned */
+    if (write && !sd_ro && opt_cmd_limit >= 0 && sd_write_cmds++ >= opt_cmd_limit) {
+        fflush(sd_fp);
+        fprintf(stderr, "emu: power cut after %ld write commands\n", opt_cmd_limit);
+        cpu.stopped = 3; return;
+    }
     for (unsigned i = 0; i < count; i++, lba++, addr += 512) {
         if (lba >= sd_sectors || addr + 512 > 0xFE0000) { sd_fail(0x10); return; }
         fseek(sd_fp, (long)lba * 512, SEEK_SET);
@@ -143,7 +150,7 @@ static uint16_t io_read16(uint32_t a) {
         }
     }
     if (off >= 0x100 && off < 0x200) {
-        uint32_t ms = (uint32_t)(cpu.cycles / CYCLES_PER_MS);
+        uint32_t ms = opt_no_clock ? 0 : (uint32_t)(cpu.cycles / CYCLES_PER_MS);
         if (off == 0x100) return ms & 0xFFFF;
         if (off == 0x102) return ms >> 16;
         return 0;
@@ -338,7 +345,9 @@ static void usage(void) {
         "  --snap-dir dir      where {SNAP name} writes its screens\n"
         "  --screen file       write the final screen to file ('-' for stdout)\n"
         "  --no-kbd            report no HID queue\n"
-        "  --power-cut n       cut power after n SD sector writes (crash injection)\n"
+        "  --no-clock          a millisecond counter that never advances\n"
+        "  --power-cut n       cut power after n SD write commands, each completing whole\n"
+        "  --power-cut-sectors n   cut power after n sectors: a command can be torn part-way\n"
         "  --max-cycles n      stop after n PHI2 cycles\n"
         "  --quiet             no summary on stderr\n"
         "  --trace file        one line per instruction: PC, registers, opcode\n"
@@ -360,7 +369,9 @@ int main(int argc, char **argv) {
         else if (!strcmp(a, "--snap-dir")) snap_dir = ARG;
         else if (!strcmp(a, "--screen")) screen = ARG;
         else if (!strcmp(a, "--no-kbd")) opt_no_kbd = 1;
-        else if (!strcmp(a, "--power-cut")) opt_write_limit = atol(ARG);
+        else if (!strcmp(a, "--no-clock")) opt_no_clock = 1;
+        else if (!strcmp(a, "--power-cut")) opt_cmd_limit = atol(ARG);
+        else if (!strcmp(a, "--power-cut-sectors")) opt_write_limit = atol(ARG);
         else if (!strcmp(a, "--max-cycles")) opt_max_cycles = strtoull(ARG, 0, 10);
         else if (!strcmp(a, "--quiet")) opt_quiet = 1;
         else if (!strcmp(a, "--trace")) trace_fp = fopen(ARG, "w");
@@ -410,14 +421,20 @@ int main(int argc, char **argv) {
             if (idle_polls >= 4000) break;
         } else if (cpu.cycles >= next_host) {
             next_host = cpu.cycles + 40000;
-            unsigned char buf[64]; int n = read(0, buf, sizeof buf - 8);
-            if (n > 0) {
-                buf[n] = 0; const unsigned char *p = buf;
-                while (p < buf + n) {
-                    if (*p == 0x1D) return 0;
-                    if (*p == 0x1B && p[1] == '[') { p += 3; continue; }     /* cursor keys: nothing yet (CN1.11) */
-                    type_cp(utf8_next(&p));
-                }
+            /* host input waits here and goes in as the queue has room: a paste must not overrun it */
+            static unsigned char pend[4096]; static int pend_n, pend_pos;
+            if (pend_pos == pend_n) {
+                pend_pos = 0;
+                pend_n = read(0, pend, sizeof pend - 8);
+                if (pend_n < 0) pend_n = 0;
+                pend[pend_n] = 0;
+            }
+            while (pend_pos < pend_n && hid_count <= HIDQ - 6) {
+                const unsigned char *p = pend + pend_pos;
+                if (*p == 0x1D) return 0;
+                if (*p == 0x1B && p[1] == '[') { pend_pos += 3; continue; }  /* cursor keys: nothing yet (CN1.11) */
+                type_cp(utf8_next(&p));
+                pend_pos = p - pend;
             }
             if (screen_dirty) {
                 screen_dirty = 0; printf("\x1b[H"); screen_dump(stdout, 0);
