@@ -3,7 +3,9 @@
 | Date     | Version | Changes                                                                               |
 |----------|---------|---------------------------------------------------------------------------------------|
 |          |         |Kernel moved to upper memory (F0:FD)                                                   |
-|          |         |Sheet CN1. Command line interface                                                      |
+|          |         |Sheet CN1. Command line interface. Pending human                                       |
+|          |         |Sheet LB1. C library (Calypsi clib + libnova). Pending human review                    |
+|          |         |Sheet TP1. Training plan. Pending human review                                         |
 |09/23/2026|0.2.5    |Sheet A3. How to read this document human-reviewed                                     |
 |          |         |NVM32 added. (VM1-VM4). An emulated 32bit cpu on top of the CPU. Pending human review  |
 |          |         |NV1. Future roadmap for noVa. Pending human review                                     |
