@@ -1,0 +1,31 @@
+noVa64 BIOS
+kernel: loaded from sd0p1
+noVa64 kernel (monolithic)
+cpu: W65C816S, 16384 KB, text 128x32
+root: NVFS on sd0p2
+Welcome to noVa64.
+/> mkdir work work/sub
+/> cd work
+/work> echo first line > notes
+/work> echo second line >> notes
+/work> cat notes
+first line
+second line
+/work> cp notes sub
+/work> cp /docs/lines.txt big
+/work> mv notes sub/renamed
+/work> ls -l sub
+-         23  notes
+-         23  renamed
+/work> ls -l
+d       2048  sub/
+-       6000  big
+/work> cp big big
+cp: big: invalid argument
+/work> mv sub sub/inside
+mv: sub: invalid argument
+/work> rmdir sub
+rmdir: sub: directory not empty
+/work> rmdir /work
+rmdir: /work: busy
+/work>

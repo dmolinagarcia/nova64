@@ -1,0 +1,12 @@
+noVa64 BIOS
+kernel: staged image
+noVa64 kernel (monolithic)
+cpu: W65C816S, 16384 KB, text 128x32
+blk: no card
+(no root)> echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxx
+sh: line too long
+(no root)> echo after the long line
+after the long line
+(no root)>

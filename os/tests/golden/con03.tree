@@ -1,0 +1,10 @@
+bin/
+docs/
+docs/fox.txt 5 20d41360
+docs/lines.txt 6000 5a4dc8bd
+docs/zorro -> fox.txt
+etc/
+etc/motd 19 2a493c9c
+hello -> /etc/motd
+moved/
+moved/big 6000 5a4dc8bd

@@ -1,0 +1,26 @@
+/work> rm sub
+rm: sub: is a directory
+/work> rm sub/notes sub/renamed
+/work> rmdir sub
+/work> mkdir sub
+/work> mv big sub
+/work> mv sub /moved
+/work> ls /moved
+big
+/work> rm ghost > ghost
+/work> ls
+/work> echo over > /docs/fox.txt
+/work> cat /docs/fox.txt
+over
+/work> mkdir /moved
+mkdir: /moved: exists
+/work> cd /
+/> rmdir work
+/> ls -l
+d       2048  bin/
+d       2048  docs/
+d       2048  etc/
+-         19  hello
+d       2048  moved/
+/> sync
+/>

@@ -1,0 +1,32 @@
+noVa64 BIOS
+kernel: loaded from sd0p1
+noVa64 kernel (monolithic)
+cpu: W65C816S, 16384 KB, text 128x32
+root: NVFS on sd0p2, read-only
+Welcome to noVa64.
+/> ls
+bin/  docs/  etc/  hello
+/> ls -l
+d       2048  bin/
+d       2048  docs/
+d       2048  etc/
+-         19  hello
+/> cd etc
+/etc> cat motd
+Welcome to noVa64.
+/etc> cd /nope
+cd: /nope: not found
+/etc> cd motd
+cd: motd: not a directory
+/etc> cd ..
+/> pwd
+/
+/> ls -l docs
+-         45  fox.txt
+-       6000  lines.txt
+-         45  zorro
+/> cat docs/fox.txt docs/zorro hello
+The quick brown fox jumps over the lazy dog.
+The quick brown fox jumps over the lazy dog.
+Welcome to noVa64.
+/>

@@ -1,0 +1,32 @@
+  name: docs
+  type: directory
+  size: 2048
+blocks: 4
+ links: 2
+  mode: 0755
+ inode: 12
+/> stat /dev/tty
+  name: /dev/tty
+  type: device
+  size: 0
+blocks: 0
+ links: 1
+  mode: 0666
+ inode: 0
+/> ls /dev
+ls: /dev: not found
+/> cat docs
+cat: docs: is a directory
+/> cat nothing
+cat: nothing: not found
+/> cd docs/../etc/./
+/etc> pwd
+/etc
+/etc> cd
+/> echo x > /f
+sh: /f: read-only file system
+/> mkdir /d
+mkdir: /d: read-only file system
+/> rm /etc/motd
+rm: /etc/motd: read-only file system
+/>
