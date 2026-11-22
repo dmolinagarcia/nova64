@@ -2,6 +2,7 @@
 
 | Date     | Version | Changes                                                                               |
 |----------|---------|---------------------------------------------------------------------------------------|
+|          |         |Emulator sheets EM1–EM7 reviewed: course code and tests fixed, divergences logged      |
 |          |         |Kernel moved to upper memory (F0:FD)                                                   |
 |          |         |Sheet CN1. Command line interface. Pending human                                       |
 |          |         |Sheet LB1. C library (Calypsi clib + libnova). Pending human review                    |
