@@ -23,6 +23,11 @@ tools/links.js      the cross-reference listing: source sheet -> linked section,
                     per sheet or whole-document, and the broken links, see Routes
 tools/numbers.js    assigns the figure and table numbers across the reading order
                     and writes numbering.json — see Figure and table numbers
+tools/pdfs.js       every published trim as a PDF, through Vivliostyle
+tools/kdp.js        checks a built PDF's ink against KDP's paperback margins
+tools/index.js      the sheet index as plain text, in reading order
+tools/progress.js   review progress: lines per part, and the share outside AI
+                    — all seven are listed with their parameters under Tools
 numbering.json      those numbers, the one derived thing this document stores
                     because a single sheet cannot work it out; committed
 style.css           docsV2's stylesheet, plus the few rules these two pages add
@@ -244,6 +249,131 @@ node tools/links.js sec_q --csv       # the same rows, as CSV
 
 A link to a sheet that does not exist, or to an item id no sheet defines, is
 reported as broken and the exit status is 1, so it also stands as a check.
+
+## Tools
+
+Every script under `tools/` runs with plain `node` from `docs/docsV3`, and none
+of them reimplements the document: the ones that need the reading order or the
+markdown load the real `shell.js` and `md.js`. This is the full list of what
+each one accepts. A bare word is positional; everything else is a flag, and a
+flag shown with a value takes it as the next argument.
+
+### tools/prerender.js — the printable edition
+
+```
+node tools/prerender.js [out.html] [--head <file.css>] [--root <dir>]
+```
+
+| Parameter | Effect |
+|---|---|
+| *(none)* | writes `print.html` beside `index.html` |
+| `out.html` | writes it to that path instead; it must still sit beside `style.css` and `figures/`, since the stylesheet is linked |
+| `--head <file.css>` | inlines that file as a stylesheet in the head, after `style.css` and so on top of it — how `tools/pdfs.js` states a trim |
+| `--root <dir>` | assembles a docsV3 tree somewhere else — a throwaway fixture — and writes `print.html` there unless a path is given |
+
+### tools/pdfs.js — every trim, as a PDF
+
+```
+node tools/pdfs.js [trim ...] [--scale s] [--gutter mm] [--binding mm] [--list] [--help]
+```
+
+| Parameter | Effect |
+|---|---|
+| *(none)* | builds every trim |
+| `trim ...` | builds only those: `6x9`, `7.5x9.25`, `8x10`, `8.5x11`, `A4`. An unknown name stops the run and lists the known ones |
+| `--scale s` | type size as a multiplier on the whole document, between 0.2 and 5, default 1. The margins hold still and the type grows inside them, so the page count goes with about s² |
+| `--gutter mm` | how far the inner margin stands above the outer one, 0 to 10, default 3. Paper moves from the thumb edge to the binding edge and the type area does not change; `0` gives symmetric margins for a loose-leaf proof. A gutter that leaves any requested trim an outer margin under 8 mm is refused, with the widest that fits |
+| `--binding mm` | extra paper on the inner margin only, on top of the gutter, 0 to 30, default 10. It narrows the type area, so the page count grows; `0` gives back the type area the trims were calibrated on |
+| `--list` | prints what each trim resolves to — file name, margins, type area, cover and drop — and builds nothing |
+| `--help`, `-h` | the usage text, answered before any other parameter is checked |
+
+The output is `pdfs/nova64_<width>_<height>_<stamp>.pdf`, the trim in inches
+(`nova64_A4_<stamp>.pdf` for A4) and the stamp the `YYYYMMDD-HHMM` the run started at, with
+`_s<scale>`, `_g<gutter>` and `_b<binding>` before the stamp when any differs
+from its default. Every trim except A4 goes through `tools/kdp.js` after it is
+built; a page that falls short is reported and the PDF is written all the same.
+Two runs at once collide, because both rewrite `print.html`.
+
+### tools/kdp.js — the ink against KDP's margins
+
+```
+node tools/kdp.js file.pdf [more.pdf ...]
+```
+
+| Parameter | Effect |
+|---|---|
+| `file.pdf ...` | one or more built PDFs, each measured page by page against KDP's paperback minimums for its page count |
+| `--help`, `-h` | a one-line usage; with no file at all it prints the same and exits 1 |
+
+The exit status is 1 when any page of any file falls short, or a file cannot be
+read. pdf.js is fetched through `npx` on first use.
+
+### tools/numbers.js — figure and table numbers
+
+```
+node tools/numbers.js [--check | --quiet] [--root <dir>] [--content <dir>] [--manifest <file>] [--out <file>]
+```
+
+| Parameter | Effect |
+|---|---|
+| *(none)* | assigns the numbers, writes `numbering.json` and prints the report |
+| `--check` | writes nothing and exits 1 if `numbering.json` is not current, or on a duplicate identifier, a dangling reference, a table caption with no table under it, or a missing SVG |
+| `--quiet` | writes without the report |
+| `--root <dir>` | a whole docsV3 tree elsewhere — for the fixtures |
+| `--content <dir>` | only the sheets, overriding `<root>/content` |
+| `--manifest <file>` | only the manifest, overriding `<root>/manifest.json` |
+| `--out <file>` | where `numbering.json` goes, overriding `<root>/numbering.json` |
+| `--help`, `-h` | the usage text |
+
+### tools/links.js — the cross-references
+
+```
+node tools/links.js [sheet[#item]] [--reverse | --broken | --csv | --summary]
+```
+
+| Parameter | Effect |
+|---|---|
+| *(none)* | every link, grouped by source sheet |
+| `sheet` | narrows to one sheet, in both directions — what it links out to and what links in. Named as `sec_q`, `content/sec_q.md` or anything between |
+| `sheet#item` | narrows further to one item: `sec_q#q3` |
+| `--reverse` | the same links, grouped by target |
+| `--broken` | only the links that resolve to nothing; with a sheet named, only its broken ones in either direction |
+| `--csv` | `source,line,text,target,anchor,item,status`, for the whole document or the named sheet |
+| `--summary` | links out and in per sheet, and the sheets nothing links to |
+
+`--csv` wins over everything, and a named sheet wins over the other three modes.
+The exit status is 1 when a link shown is broken.
+
+### tools/index.js — the sheet index, as text
+
+```
+node tools/index.js [--nav] [--files] [--notes]
+```
+
+| Parameter | Effect |
+|---|---|
+| *(none)* | parts, areas and sheets in reading order, with the index titles |
+| `--nav` | the short sidebar titles instead |
+| `--files` | each sheet followed by its `content/<file>.md` |
+| `--notes` | each part followed by its note, wrapped |
+
+The flags combine freely.
+
+### tools/progress.js — review progress
+
+```
+node tools/progress.js [--sheets] [--prose]
+```
+
+| Parameter | Effect |
+|---|---|
+| *(none)* | lines per part, and the share outside the `ai` part — how much has been reviewed |
+| `--sheets` | every sheet listed under its part |
+| `--prose` | counts prose only: no blank lines and no fenced listings, which would otherwise let a kit of scripts dominate |
+| `--help`, `-h` | the usage text |
+
+A file in `content/` that the manifest does not list is left out of the total
+and named at the end.
 
 ## The dialect
 
