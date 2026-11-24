@@ -36,7 +36,7 @@ It is **Phase 1** of the three phases of [sheet P1](sec_ai_p1): the training rig
 | | | **Total** | **82 / 106** | **24** |
 
   NOTE: **The CPU bus occupies one contiguous block and must not be split.** Synchronous bus signals spread across distant connector regions and different ECP5 banks is where skew problems are manufactured. The 10 spare pins in block A become a probe header beside the CPU — the place they will actually be wanted. Block C's scattering is harmless for SPI at a few MHz and fatal for anything parallel, which is why the EC link is the correct occupant.
-- P2.06 — **The 65816 bus, 38 pins.** A0–A15 (16) · D0–D7 multiplexed with the bank byte (8) · FPGA outputs PHI2, RESB, ABORTB, IRQB, NMIB, BE (6) · FPGA inputs RWB, VPA, VDA, VPB, MLB, E, MX (7) · RDY bidirectional (1).
+- P2.06 — **The 65816 bus, 38 pins.** A0–A15 (16) · D0–D7 multiplexed with the bank byte (8) · FPGA outputs PHI2, RESB, ABORTB, IRQB, NMIB, BE (6) · FPGA inputs RWB, VPA, VDA, VPB, MLB, E, MX (7) · RDY input, the CPU's `WAI` indication (1).
   NOTE: **A0–A10 and D0–D7 must be bidirectional FPGA pins, and this has to be settled before ball assignment.** During CPU cycles the FPGA observes them; during a walk, a fill or the EC's preload it drives them with `BE` low to tristate the CPU. That is [F.4](sec_ai_f#f4) verbatim, and it is the single most layout-critical net here as it is there.
 - P2.07 — **SRAM — the same 1 MB ×8 part as the target board**, AS7C38096A-10TIN ([D15](sec_ai_q#d15), [F.5](sec_ai_f#f5)): 13 pins, A11–A19 (9) plus CEB, OEB, WEB (3) and the shared-net arrangement of [F.2](sec_ai_f#f2), where A0–A10 and D0–D7 cost nothing because they are already on the bus. **A ×16 part would be a mistake dressed as convenience** — it would hand the prototype a byte-lane topology the target does not have, and the whole point of the carrier is to rehearse the topology that does (→ [D43](sec_ai_q#d43)).
 - P2.08 — **Video — VGA through an R-2R ladder, 18 bits.** The ECP5 has no DAC; conversion is 6 bits per channel into 1 % ladders terminated against the monitor's 75 Ω, plus HSYNC and VSYNC, into a DE-15. Six bits is not a compromise: the target panel is driven at **18 bpp over direct RGB-TTL** ([D05](sec_ai_q#d05), [E0.4](sec_ai_p3#e04)), so the palette entry is 18 bits on both boards and there is no truncation, no format conversion and no software difference. RGB444 would save six pins that are not needed and buy a divergence.
@@ -118,7 +118,7 @@ Each row is a convenience here that becomes a defect there.
 | Any Helium–Neon signal outside [P2.13](sec_ai_p2#p213) | The target has three control nets and a shared bus |
 | Bandwidth figures from ×32 shared memory | The target's memory topology differs |
 | Debug reaching Neon by the internal path only | The target needs the external bus cycle path |
-| The absence of Argon | The softcore option stays untested until the target board |
+| The absence of Argon | A second bus master beside the 65816 stays untested until the target board |
 | The absence of a power path | The target sequences rails before configuration |
 
 ## Prototype stages · P0–P5

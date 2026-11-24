@@ -2,6 +2,11 @@
 
 | Date     | Version | Changes                                                                               |
 |----------|---------|---------------------------------------------------------------------------------------|
+|11/24/2026|0.2.6    |Argon settled: optional NVM32 coprocessor; Argon 2 sole noVa128 CPU (D131, D132)       |
+|          |         |Argon bus in noVa64: shared pins, independent BE, CPU on its own PHI2 (D133)           |
+|          |         |RDY never stops the CPU: every stall holds PHI2                                        |
+|          |         |Vision (A2.3, A2.5): backward compatibility within the noVa family                     |
+|          |         |Sheet EM8. Source-level debugging. Pending human review                                |
 |          |         |Kernel moved to upper memory (F0:FD)                                                   |
 |          |         |Sheet CN1. Command line interface. Pending human                                       |
 |          |         |Sheet LB1. C library (Calypsi clib + libnova). Pending human review                    |
